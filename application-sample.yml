@@ -1,0 +1,5 @@
+dehumidifier:
+   midea:
+      loginAccount: bob@example.org
+      password: secret
+   

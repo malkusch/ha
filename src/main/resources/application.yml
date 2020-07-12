@@ -1,0 +1,15 @@
+dehumidifier:
+   midea:
+      appKey: 3742e9e5842d4ad59c2db887e12449f9
+      request-parameters:
+         appId: 1017
+         format: 2
+         clientType: 1
+         language: en_US
+         src: 17
+http:
+   timeout: PT10S
+   userAgent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36
+   retry:
+      delay: PT5S
+      retries: 5
