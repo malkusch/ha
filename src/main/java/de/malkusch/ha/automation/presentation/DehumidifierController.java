@@ -26,7 +26,7 @@ public final class DehumidifierController {
     }
 
     @PutMapping("/dehumidifier/{id}/off")
-    public void turnOff(@PathVariable String id) throws NotFoundException, ApiException {
+    public void turnOff(@PathVariable String id) throws NotFoundException, ApiException, InterruptedException {
         var command = new DehumidifierApplicationService.TurnOff(id);
         api.turnOff(command);
     }

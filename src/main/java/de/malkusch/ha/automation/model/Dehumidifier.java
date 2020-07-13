@@ -2,10 +2,12 @@ package de.malkusch.ha.automation.model;
 
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 import lombok.Value;
 
 @RequiredArgsConstructor
 @EqualsAndHashCode(of = "id")
+@ToString(of = "id")
 public final class Dehumidifier {
 
     @Value
@@ -20,7 +22,7 @@ public final class Dehumidifier {
     public static interface Api {
         void turnOn(DehumidifierId id, FanSpeed fanSpeed) throws ApiException;
 
-        void turnOff(DehumidifierId id) throws ApiException;
+        void turnOff(DehumidifierId id) throws ApiException, InterruptedException;
     }
 
     public static enum FanSpeed {
@@ -34,7 +36,7 @@ public final class Dehumidifier {
         api.turnOn(id, fanSpeed);
     }
 
-    public void turnOff() throws ApiException {
+    public void turnOff() throws ApiException, InterruptedException {
         api.turnOff(id);
     }
 }

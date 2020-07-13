@@ -33,7 +33,7 @@ public final class DehumidifierApplicationService {
         private final String id;
     }
 
-    public void turnOff(TurnOff command) throws NotFoundException, ApiException {
+    public void turnOff(TurnOff command) throws NotFoundException, ApiException, InterruptedException {
         var id = new DehumidifierId(command.id);
         var dehumidifier = dehumidifiers.find(id);
 

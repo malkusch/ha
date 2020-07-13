@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.malkusch.ha.automation.infrastructure.MapRepository;
+import de.malkusch.ha.automation.infrastructure.dehumidifier.midea.MideaApi;
 import de.malkusch.ha.automation.model.ApiException;
 import de.malkusch.ha.automation.model.Dehumidifier.DehumidifierRepository;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
@@ -34,7 +35,9 @@ class DehumidifierConfiguration {
     }
 
     @Bean
-    public MideaApi mideaApi(ApiProperties properties, HttpClient http, ObjectMapper mapper) {
+    public MideaApi mideaApi(ApiProperties properties, HttpClient http, ObjectMapper mapper)
+            throws ApiException, InterruptedException {
+
         var requestParameters = properties.requestParameters.entrySet().stream()
                 .map(it -> new Field(it.getKey(), it.getValue())).toArray(Field[]::new);
         return new MideaApi(properties.appKey, properties.loginAccount, properties.password, requestParameters, http,

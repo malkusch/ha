@@ -12,8 +12,8 @@ public interface HttpClient {
     public HttpResponse post(String url, Field... fields) throws IOException, InterruptedException;
 
     public static final class Field {
-        final String name;
-        final String value;
+        public final String name;
+        public final String value;
 
         public Field(String name, String value) {
             this.name = name;
