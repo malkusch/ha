@@ -3,6 +3,7 @@ package de.malkusch.ha.automation.infrastructure.dehumidifier.midea;
 import static java.lang.System.arraycopy;
 import static java.util.Arrays.copyOf;
 import static java.util.Arrays.copyOfRange;
+import static org.apache.commons.lang3.StringUtils.join;
 
 import lombok.RequiredArgsConstructor;
 
@@ -39,6 +40,17 @@ final class PacketBuilder {
         return this;
     }
 
+    public byte[] build() {
+        var command = buildCommand();
+        var packet = packet(command);
+        return encode(packet);
+    }
+
+    private static byte[] encode(byte[] packet) {
+        var string = join(packet, ',');
+        return string.getBytes();
+    }
+
     private byte[] buildCommand() {
         command[0x1d] = crc8(command, 16);
         command[0x01] = (byte) command.length;
@@ -58,8 +70,7 @@ final class PacketBuilder {
             0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00 //
     };
 
-    byte[] build() {
-        var command = buildCommand();
+    private static byte[] packet(byte[] command) {
         var packet = copyOf(HEADER, HEADER.length + 47);
         arraycopy(command, 0, packet, HEADER.length, command.length);
 

@@ -11,7 +11,6 @@ import static java.util.stream.Collectors.joining;
 import static org.apache.commons.codec.digest.DigestUtils.sha256Hex;
 import static org.apache.commons.lang3.ArrayUtils.add;
 import static org.apache.commons.lang3.ArrayUtils.addAll;
-import static org.apache.commons.lang3.StringUtils.join;
 
 import java.io.IOException;
 import java.net.URI;
@@ -30,7 +29,9 @@ import de.malkusch.ha.automation.model.Dehumidifier.FanSpeed;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient.Field;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public final class MideaApi implements Api {
 
     private final String appKey;
@@ -82,13 +83,12 @@ public final class MideaApi implements Api {
 
     private void send(byte[] data, DehumidifierId id) throws ApiException, InterruptedException {
         var url = "https://mapp.appsmb.com/v1/appliance/transparent/send";
-        var encoded = join(data, ",");
-        var encrypted = encrypt(encoded);
+        var encrypted = encrypt(data);
         apiRequest(url, new Field("order", encrypted), new Field("funId", "0000"), new Field("applianceId", id.getId()),
                 sessionId());
     }
 
-    private String encrypt(String data) {
+    private String encrypt(byte[] data) {
         return null;
     }
 
@@ -114,6 +114,7 @@ public final class MideaApi implements Api {
         var url = "https://mapp.appsmb.com/v1/user/login";
         var json = apiRequest(url, new Field("loginAccount", loginAccount), new Field("password", encryptedPassword));
         session = mapper.convertValue(json, Session.class);
+        log.debug("Logged in: {}", json);
     }
 
     private JsonNode apiRequest(String url, Field... fields) throws ApiException, InterruptedException {
