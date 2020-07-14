@@ -2,12 +2,14 @@ package de.malkusch.ha.automation.infrastructure.dehumidifier.midea;
 
 import static de.malkusch.ha.automation.infrastructure.dehumidifier.midea.PacketBuilder.Device.DEHUMIDIFIER;
 import static de.malkusch.ha.automation.infrastructure.dehumidifier.midea.PacketBuilder.PowerState.OFF;
+import static de.malkusch.ha.automation.infrastructure.dehumidifier.midea.PacketBuilder.PowerState.ON;
 import static java.time.LocalDateTime.now;
 import static java.time.format.DateTimeFormatter.ofPattern;
 import static java.util.Arrays.stream;
 import static java.util.Comparator.comparing;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.joining;
+import static org.apache.commons.codec.binary.Hex.encodeHexString;
 import static org.apache.commons.codec.digest.DigestUtils.sha256Hex;
 import static org.apache.commons.lang3.ArrayUtils.add;
 import static org.apache.commons.lang3.ArrayUtils.addAll;
@@ -45,6 +47,7 @@ public final class MideaApi implements Api {
     private static class Session {
         public String sessionId;
         public String accessToken;
+        public Encryption encryption;
     }
 
     public MideaApi(String appKey, String loginAccount, String password, Field[] requestParameters, HttpClient http,
@@ -70,26 +73,20 @@ public final class MideaApi implements Api {
     }
 
     @Override
-    public void turnOn(DehumidifierId id, FanSpeed fanSpeed) throws ApiException {
-        // TODO Auto-generated method stub
-
+    public void turnOn(DehumidifierId id, FanSpeed fanSpeed) throws ApiException, InterruptedException {
+        send(id, new PacketBuilder(DEHUMIDIFIER).setPowerState(ON).build());
     }
 
     @Override
     public void turnOff(DehumidifierId id) throws ApiException, InterruptedException {
-        var packet = new PacketBuilder(DEHUMIDIFIER).setPowerState(OFF).build();
-        send(packet, id);
+        send(id, new PacketBuilder(DEHUMIDIFIER).setPowerState(OFF).build());
     }
 
-    private void send(byte[] data, DehumidifierId id) throws ApiException, InterruptedException {
+    private void send(DehumidifierId id, byte[] data) throws ApiException, InterruptedException {
         var url = "https://mapp.appsmb.com/v1/appliance/transparent/send";
-        var encrypted = encrypt(data);
-        apiRequest(url, new Field("order", encrypted), new Field("funId", "0000"), new Field("applianceId", id.getId()),
-                sessionId());
-    }
-
-    private String encrypt(byte[] data) {
-        return null;
+        var order = session.encryption.encrypt(data);
+        apiRequest(url, new Field("order", encodeHexString(order)), new Field("funId", "0000"),
+                new Field("applianceId", id.getId()), sessionId());
     }
 
     public Stream<Dehumidifier> detect() throws ApiException, InterruptedException {
@@ -113,7 +110,9 @@ public final class MideaApi implements Api {
     private void login() throws ApiException, InterruptedException {
         var url = "https://mapp.appsmb.com/v1/user/login";
         var json = apiRequest(url, new Field("loginAccount", loginAccount), new Field("password", encryptedPassword));
-        session = mapper.convertValue(json, Session.class);
+        var session = mapper.convertValue(json, Session.class);
+        session.encryption = new Encryption(appKey, session.accessToken);
+        this.session = session;
         log.debug("Logged in: {}", json);
     }
 

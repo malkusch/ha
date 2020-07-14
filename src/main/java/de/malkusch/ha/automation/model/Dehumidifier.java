@@ -20,7 +20,7 @@ public final class Dehumidifier {
     }
 
     public static interface Api {
-        void turnOn(DehumidifierId id, FanSpeed fanSpeed) throws ApiException;
+        void turnOn(DehumidifierId id, FanSpeed fanSpeed) throws ApiException, InterruptedException;
 
         void turnOff(DehumidifierId id) throws ApiException, InterruptedException;
     }
@@ -32,7 +32,7 @@ public final class Dehumidifier {
     public final DehumidifierId id;
     private final Api api;
 
-    public void turnOn(FanSpeed fanSpeed) throws ApiException {
+    public void turnOn(FanSpeed fanSpeed) throws ApiException, InterruptedException {
         api.turnOn(id, fanSpeed);
     }
 

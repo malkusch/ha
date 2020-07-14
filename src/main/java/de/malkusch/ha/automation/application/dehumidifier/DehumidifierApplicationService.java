@@ -21,7 +21,7 @@ public final class DehumidifierApplicationService {
         private final FanSpeed fanSpeed;
     }
 
-    public void turnOn(TurnOn command) throws NotFoundException, ApiException {
+    public void turnOn(TurnOn command) throws NotFoundException, ApiException, InterruptedException {
         var id = new DehumidifierId(command.id);
         var dehumidifier = dehumidifiers.find(id);
 

@@ -19,7 +19,7 @@ public final class DehumidifierController {
 
     @PutMapping("/dehumidifier/{id}/on")
     public void turnOn(@PathVariable String id, @RequestParam FanSpeed fanSpeed)
-            throws NotFoundException, ApiException {
+            throws NotFoundException, ApiException, InterruptedException {
 
         var command = new DehumidifierApplicationService.TurnOn(id, fanSpeed);
         api.turnOn(command);
