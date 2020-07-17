@@ -13,7 +13,7 @@ import de.malkusch.ha.shared.infrastructure.http.HttpClient;
 class PrometheusConfiguration {
 
     @Bean
-    public Electricity electricity(HttpClient http, ObjectMapper mapper, @Value("${prometheus.host}") String host) {
-        return new PrometheusElectricity(http, mapper, host);
+    public Electricity electricity(HttpClient http, ObjectMapper mapper, @Value("${prometheus.url}") String url) {
+        return new PrometheusElectricity(http, mapper, url);
     }
 }

@@ -23,7 +23,7 @@ final class PrometheusElectricity implements Electricity {
 
     private final HttpClient http;
     private final ObjectMapper mapper;
-    private final String host;
+    private final String baseUrl;
 
     private static Map<Aggregation, String> AGGREGATIONS = Map.of(//
             MINIMUM, "min_over_time", //
@@ -48,7 +48,7 @@ final class PrometheusElectricity implements Electricity {
         var query = String.format(
                 "%s(((batterie_production - batterie_consumption + (batterie_battery_consumption < 0)) > 0)[%s:])",
                 AGGREGATIONS.get(aggregation), promDuration);
-        var url = "http://" + host + "/api/v1/query?query=" + encode(query, UTF_8);
+        var url = baseUrl + "/api/v1/query?query=" + encode(query, UTF_8);
         try (var response = http.get(url)) {
             var json = mapper.readValue(response.body, Response.class);
 
