@@ -17,6 +17,7 @@ public final class PythonMideaApi implements Api {
 
     private final String loginAccount;
     private final String password;
+    private final String path;
 
     private static final Map<FanSpeed, String> FAN_SPEEDS = Map.of( //
             FanSpeed.LOW, "40", //
@@ -39,6 +40,6 @@ public final class PythonMideaApi implements Api {
     }
 
     private Session session(DehumidifierId id) throws ApiException {
-        return new Session(id, loginAccount, password);
+        return new Session(id, loginAccount, password, path);
     }
 }

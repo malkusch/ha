@@ -37,6 +37,7 @@ class DehumidifierConfiguration {
     public static class ApiProperties {
         private String appKey;
         private int power;
+        private String path;
         private String loginAccount;
         private String password;
         private Map<String, String> requestParameters;
@@ -46,7 +47,7 @@ class DehumidifierConfiguration {
     public DehumidifierRepository dehumidifiers(ApiProperties properties, HttpClient http, ObjectMapper mapper)
             throws ApiException, InterruptedException, IOException {
 
-        var pythonApi = new PythonMideaApi(properties.loginAccount, properties.password);
+        var pythonApi = new PythonMideaApi(properties.loginAccount, properties.password, properties.path);
 
         var requestParameters = properties.requestParameters.entrySet().stream()
                 .map(it -> new Field(it.getKey(), it.getValue())).toArray(Field[]::new);

@@ -20,10 +20,10 @@ final class Session implements AutoCloseable {
     private final BufferedReader stdout;
     private final OutputStream stdin;
 
-    public Session(DehumidifierId id, String loginAccount, String password) throws ApiException {
+    public Session(DehumidifierId id, String loginAccount, String password, String path) throws ApiException {
         try {
-            process = new ProcessBuilder("python3", "/home/malkusch/tmp/midea_inventor_dehumidifier/dehumi_control.py",
-                    "-e", loginAccount, "-p", password).redirectErrorStream(true).start();
+            process = new ProcessBuilder("python3", path, "-e", loginAccount, "-p", password).redirectErrorStream(true)
+                    .start();
             stdout = new BufferedReader(new InputStreamReader(process.getInputStream()));
             stdin = process.getOutputStream();
 
@@ -56,7 +56,10 @@ final class Session implements AutoCloseable {
             stdin.flush();
 
             var result = readUntilPrompt();
-            if (result.contains("ERROR") || !process.isAlive()) {
+            if (result.contains("ERROR")) {
+                throw new ApiException(String.format("%s failed: %s ", command, result));
+            }
+            if (!process.isAlive() && command != Command.EXIT) {
                 throw new ApiException(String.format("%s failed: %s ", command, result));
             }
 
