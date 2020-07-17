@@ -24,10 +24,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.malkusch.ha.automation.model.ApiException;
-import de.malkusch.ha.automation.model.Dehumidifier;
-import de.malkusch.ha.automation.model.Dehumidifier.Api;
-import de.malkusch.ha.automation.model.Dehumidifier.DehumidifierId;
-import de.malkusch.ha.automation.model.Dehumidifier.FanSpeed;
+import de.malkusch.ha.automation.model.Watt;
+import de.malkusch.ha.automation.model.dehumidifier.Dehumidifier;
+import de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.Api;
+import de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.DehumidifierId;
+import de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.FanSpeed;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient.Field;
 import lombok.SneakyThrows;
@@ -89,8 +90,8 @@ public final class MideaApi implements Api {
                 new Field("applianceId", id.getId()), sessionId());
     }
 
-    public Stream<Dehumidifier> detect() throws ApiException, InterruptedException {
-        return homegroups().stream().flatMap(this::list).map(it -> new Dehumidifier(it, this));
+    public Stream<Dehumidifier> detect(Watt power) throws ApiException, InterruptedException {
+        return homegroups().stream().flatMap(this::list).map(it -> new Dehumidifier(it, power, this));
     }
 
     @SneakyThrows

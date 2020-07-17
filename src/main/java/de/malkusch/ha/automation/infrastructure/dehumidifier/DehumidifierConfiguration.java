@@ -2,6 +2,8 @@ package de.malkusch.ha.automation.infrastructure.dehumidifier;
 
 import static java.util.stream.Collectors.toUnmodifiableMap;
 
+import java.io.IOException;
+import java.util.Collection;
 import java.util.Map;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -13,8 +15,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.malkusch.ha.automation.infrastructure.MapRepository;
 import de.malkusch.ha.automation.infrastructure.dehumidifier.midea.MideaApi;
+import de.malkusch.ha.automation.infrastructure.dehumidifier.midea_python.PythonMideaApi;
 import de.malkusch.ha.automation.model.ApiException;
-import de.malkusch.ha.automation.model.Dehumidifier.DehumidifierRepository;
+import de.malkusch.ha.automation.model.NotFoundException;
+import de.malkusch.ha.automation.model.Watt;
+import de.malkusch.ha.automation.model.dehumidifier.Dehumidifier;
+import de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.DehumidifierId;
+import de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.DehumidifierRepository;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient.Field;
 import lombok.Data;
@@ -27,28 +34,38 @@ class DehumidifierConfiguration {
     @ConfigurationProperties("dehumidifier.midea")
     @Component
     @Data
-    public class ApiProperties {
+    public static class ApiProperties {
         private String appKey;
+        private int power;
         private String loginAccount;
         private String password;
         private Map<String, String> requestParameters;
     }
 
     @Bean
-    public MideaApi mideaApi(ApiProperties properties, HttpClient http, ObjectMapper mapper)
-            throws ApiException, InterruptedException {
+    public DehumidifierRepository dehumidifiers(ApiProperties properties, HttpClient http, ObjectMapper mapper)
+            throws ApiException, InterruptedException, IOException {
+
+        var pythonApi = new PythonMideaApi(properties.loginAccount, properties.password);
 
         var requestParameters = properties.requestParameters.entrySet().stream()
                 .map(it -> new Field(it.getKey(), it.getValue())).toArray(Field[]::new);
-        return new MideaApi(properties.appKey, properties.loginAccount, properties.password, requestParameters, http,
-                mapper);
-    }
+        var restApi = new MideaApi(properties.appKey, properties.loginAccount, properties.password, requestParameters,
+                http, mapper);
 
-    @Bean
-    public DehumidifierRepository dehumidifiers(MideaApi api) throws ApiException, InterruptedException {
-        var dehumidifiers = api.detect().collect(toUnmodifiableMap(it -> it.id, it -> it));
+        var power = new Watt(properties.power);
+        var dehumidifiers = restApi.detect(power).map(it -> new Dehumidifier(it.id, it.power, pythonApi))
+                .collect(toUnmodifiableMap(it -> it.id, it -> it));
         dehumidifiers.values().forEach(it -> log.info("Found dehumidifier {}", it));
         var repository = new MapRepository<>(dehumidifiers);
-        return repository::find;
+        return new DehumidifierRepository() {
+            public Dehumidifier find(DehumidifierId id) throws NotFoundException {
+                return repository.find(id);
+            }
+
+            public Collection<Dehumidifier> findAll() {
+                return repository.findAll();
+            }
+        };
     }
 }

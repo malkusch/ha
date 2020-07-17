@@ -2,6 +2,7 @@ package de.malkusch.ha.automation.presentation;
 
 import static org.springframework.http.HttpStatus.BAD_GATEWAY;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.TOO_MANY_REQUESTS;
 
 import java.util.UUID;
 
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import de.malkusch.ha.automation.infrastructure.Debouncer.DebounceException;
 import de.malkusch.ha.automation.model.ApiException;
 import de.malkusch.ha.automation.model.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -32,5 +34,12 @@ final class ErrorHandler {
         var reference = UUID.randomUUID();
         log.error("Upstream API error [{}]", reference, error);
         return String.format("Upstream API error [%s]", reference);
+    }
+
+    @ExceptionHandler(DebounceException.class)
+    @ResponseStatus(TOO_MANY_REQUESTS)
+    @ResponseBody
+    public String apiError(DebounceException error) {
+        return String.format("Too many requests. Try again after %s", error.retryAfter);
     }
 }

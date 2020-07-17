@@ -6,9 +6,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import de.malkusch.ha.automation.application.dehumidifier.DehumidifierApplicationService;
+import de.malkusch.ha.automation.infrastructure.Debouncer.DebounceException;
 import de.malkusch.ha.automation.model.ApiException;
-import de.malkusch.ha.automation.model.Dehumidifier.FanSpeed;
 import de.malkusch.ha.automation.model.NotFoundException;
+import de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.FanSpeed;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -19,14 +20,16 @@ public final class DehumidifierController {
 
     @PutMapping("/dehumidifier/{id}/on")
     public void turnOn(@PathVariable String id, @RequestParam FanSpeed fanSpeed)
-            throws NotFoundException, ApiException, InterruptedException {
+            throws NotFoundException, ApiException, InterruptedException, DebounceException {
 
         var command = new DehumidifierApplicationService.TurnOn(id, fanSpeed);
         api.turnOn(command);
     }
 
     @PutMapping("/dehumidifier/{id}/off")
-    public void turnOff(@PathVariable String id) throws NotFoundException, ApiException, InterruptedException {
+    public void turnOff(@PathVariable String id)
+            throws NotFoundException, ApiException, InterruptedException, DebounceException {
+
         var command = new DehumidifierApplicationService.TurnOff(id);
         api.turnOff(command);
     }

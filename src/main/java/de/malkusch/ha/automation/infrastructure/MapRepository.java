@@ -2,6 +2,7 @@ package de.malkusch.ha.automation.infrastructure;
 
 import static java.util.Optional.ofNullable;
 
+import java.util.Collection;
 import java.util.Map;
 
 import de.malkusch.ha.automation.model.NotFoundException;
@@ -14,5 +15,9 @@ public final class MapRepository<ID, ENTITY> {
 
     public ENTITY find(ID id) throws NotFoundException {
         return ofNullable(map.get(id)).orElseThrow(() -> new NotFoundException(id + " not found"));
+    }
+
+    public Collection<ENTITY> findAll() {
+        return map.values();
     }
 }

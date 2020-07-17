@@ -1,0 +1,3 @@
+[submodule "src/main/resources/midea_inventor_dehumidifier"]
+	path = src/main/resources/midea_inventor_dehumidifier
+	url = https://github.com/barban-dev/midea_inventor_dehumidifier.git
