@@ -27,6 +27,7 @@ final class Session implements AutoCloseable {
             stdout = new BufferedReader(new InputStreamReader(process.getInputStream()));
             stdin = process.getOutputStream();
 
+            readUntilPrompt();
             enter(Command.LOGIN);
             enter(Command.SET_ID, id.getId());
             enter(Command.GET_STATUS);
@@ -54,9 +55,25 @@ final class Session implements AutoCloseable {
             }
             stdin.flush();
 
+            var result = readUntilPrompt();
+            if (result.contains("ERROR") || !process.isAlive()) {
+                throw new ApiException(String.format("%s failed: %s ", command, result));
+            }
+
         } catch (IOException e) {
             throw new ApiException("Failed to execute " + command, e);
         }
+    }
+
+    private static final String PROMPT = "99: Exit";
+
+    private String readUntilPrompt() throws IOException {
+        var buffer = new StringBuilder();
+        for (var line = ""; line != null && !line.startsWith(PROMPT); line = stdout.readLine()) {
+            buffer.append(line);
+            buffer.append("\n");
+        }
+        return buffer.toString();
     }
 
     @Override
