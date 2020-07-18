@@ -4,9 +4,12 @@ import static de.malkusch.ha.automation.model.Electricity.Aggregation.MAXIMUM;
 import static de.malkusch.ha.automation.model.Electricity.Aggregation.MINIMUM;
 import static java.net.URLEncoder.encode;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.time.Instant.now;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -24,11 +27,37 @@ final class PrometheusElectricity implements Electricity {
     private final HttpClient http;
     private final ObjectMapper mapper;
     private final String baseUrl;
+    private final Duration delay;
 
     private static Map<Aggregation, String> AGGREGATIONS = Map.of(//
             MINIMUM, "min_over_time", //
             MAXIMUM, "max_over_time" //
     );
+
+    @Override
+    public Watt excess(Aggregation aggregation, Duration duration) throws ApiException, InterruptedException {
+        var promDuration = duration.toSeconds() + "s";
+        var query = String.format(
+                "%s(((batterie_production - batterie_consumption + (batterie_battery_consumption < 0)) > 0)[%s:])",
+                AGGREGATIONS.get(aggregation), promDuration);
+        return new Watt(query(query));
+    }
+
+    private int query(String query) throws ApiException, InterruptedException {
+        delay();
+        var url = baseUrl + "/api/v1/query?query=" + encode(query, UTF_8);
+        try (var response = http.get(url)) {
+            var json = mapper.readValue(response.body, Response.class);
+
+            if (json.data.result.isEmpty()) {
+                return 0;
+            }
+            return json.data.result.get(0).value.get(1);
+
+        } catch (IOException e) {
+            throw new ApiException("Faild to query " + query, e);
+        }
+    }
 
     private static class Response {
         public Data data;
@@ -42,23 +71,12 @@ final class PrometheusElectricity implements Electricity {
         }
     }
 
-    @Override
-    public Watt excess(Aggregation aggregation, Duration duration) throws ApiException, InterruptedException {
-        var promDuration = duration.getSeconds() + "s";
-        var query = String.format(
-                "%s(((batterie_production - batterie_consumption + (batterie_battery_consumption < 0)) > 0)[%s:])",
-                AGGREGATIONS.get(aggregation), promDuration);
-        var url = baseUrl + "/api/v1/query?query=" + encode(query, UTF_8);
-        try (var response = http.get(url)) {
-            var json = mapper.readValue(response.body, Response.class);
+    private Instant delayUntil = now();
 
-            if (json.data.result.isEmpty()) {
-                return new Watt(0);
-            }
-            return new Watt(json.data.result.get(0).value.get(1));
-
-        } catch (IOException e) {
-            throw new ApiException("Faild to query " + query, e);
+    private void delay() throws InterruptedException {
+        for (var now = now(); now.isBefore(delayUntil); now = now()) {
+            MILLISECONDS.sleep(Duration.between(now, delayUntil).toMillis());
         }
+        delayUntil = now().plus(delay);
     }
 }
