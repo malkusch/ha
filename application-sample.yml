@@ -1,5 +1,8 @@
+logging.level.de.malkusch: DEBUG
+prometheus:
+   url: http://localhost:9090
 dehumidifier:
-   midea:
-      loginAccount: bob@example.org
-      password: secret
-   
+   tasmota:
+   -  name: keller
+      power: 250
+      url: http://tasmota-1
