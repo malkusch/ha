@@ -9,17 +9,7 @@ dehumidifier:
       turnOff:
          window: PT30m
          evaluationRate: PT10m
-   midea:
-      power: 250
-      appKey: 3742e9e5842d4ad59c2db887e12449f9
-      request-parameters:
-         appId: 1017
-         format: 2
-         clientType: 1
-         language: en_US
-         src: 17
 prometheus:
-   url: http://nas:9090
    delay: PT21s
 http:
    timeout: PT10S

@@ -1,8 +1,8 @@
 package de.malkusch.ha.automation.model.dehumidifier;
 
 import static de.malkusch.ha.automation.model.Electricity.Aggregation.MINIMUM;
+import static de.malkusch.ha.automation.model.State.ON;
 import static de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.FanSpeed.LOW;
-import static de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.State.ON;
 
 import java.time.Duration;
 

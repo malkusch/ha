@@ -1,7 +1,7 @@
 package de.malkusch.ha.automation.model.dehumidifier;
 
 import static de.malkusch.ha.automation.model.Electricity.Aggregation.MAXIMUM;
-import static de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.State.OFF;
+import static de.malkusch.ha.automation.model.State.OFF;
 
 import java.time.Duration;
 

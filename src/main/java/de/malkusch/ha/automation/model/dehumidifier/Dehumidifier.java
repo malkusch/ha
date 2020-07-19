@@ -1,7 +1,7 @@
 package de.malkusch.ha.automation.model.dehumidifier;
 
-import static de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.State.OFF;
-import static de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.State.ON;
+import static de.malkusch.ha.automation.model.State.OFF;
+import static de.malkusch.ha.automation.model.State.ON;
 import static java.time.Duration.ofMinutes;
 
 import java.util.Collection;
@@ -10,6 +10,7 @@ import de.malkusch.ha.automation.infrastructure.Debouncer;
 import de.malkusch.ha.automation.infrastructure.Debouncer.DebounceException;
 import de.malkusch.ha.automation.model.ApiException;
 import de.malkusch.ha.automation.model.NotFoundException;
+import de.malkusch.ha.automation.model.State;
 import de.malkusch.ha.automation.model.Watt;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,8 @@ public final class Dehumidifier {
     }
 
     public static interface Api {
+        State state() throws ApiException, InterruptedException;
+
         void turnOn(DehumidifierId id, FanSpeed fanSpeed) throws ApiException, InterruptedException;
 
         void turnOff(DehumidifierId id) throws ApiException, InterruptedException;
@@ -55,25 +58,23 @@ public final class Dehumidifier {
     public void turnOn(FanSpeed fanSpeed) throws ApiException, InterruptedException, DebounceException {
         debouncer.debounce();
         api.turnOn(id, fanSpeed);
-        state = ON;
+        if (state() != ON) {
+            throw new ApiException(id + " is not on");
+        }
         log.info("Dehumidier {} turned on", id);
     }
 
     public void turnOff() throws ApiException, InterruptedException, DebounceException {
         debouncer.debounce();
         api.turnOff(id);
-        state = OFF;
+        if (state() != OFF) {
+            throw new ApiException(id + " is not off");
+        }
         log.info("Dehumidier {} turned off", id);
     }
 
-    private State state = OFF;
-
-    public static enum State {
-        ON, OFF
-    }
-
-    public State state() {
-        return state;
+    public State state() throws ApiException, InterruptedException {
+        return api.state();
     }
 
     @Override

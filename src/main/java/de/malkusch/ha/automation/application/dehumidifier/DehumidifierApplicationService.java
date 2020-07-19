@@ -11,23 +11,10 @@ import de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.FanSpeed;
 import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public final class DehumidifierApplicationService {
 
     private final DehumidifierRepository dehumidifiers;
-
-    DehumidifierApplicationService(DehumidifierRepository dehumidifiers)
-            throws ApiException, InterruptedException, DebounceException {
-
-        this.dehumidifiers = dehumidifiers;
-
-        turnAllOff();
-    }
-
-    public void turnAllOff() throws ApiException, InterruptedException, DebounceException {
-        for (var dehumidifier : dehumidifiers.findAll()) {
-            dehumidifier.turnOff();
-        }
-    }
 
     @RequiredArgsConstructor
     public static final class TurnOn {
