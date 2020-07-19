@@ -26,12 +26,12 @@ import lombok.Data;
 @Configuration
 class DehumidifierConfiguration {
 
-    @ConfigurationProperties("dehumidifier.tasmota")
+    @ConfigurationProperties("dehumidifier")
     @Component
     @Data
     public static class TasmotaProperties {
 
-        private List<Device> devices;
+        private List<Device> tasmota;
 
         @Data
         public static class Device {
@@ -46,7 +46,7 @@ class DehumidifierConfiguration {
             throws ApiException, InterruptedException, IOException {
 
         var map = new HashMap<DehumidifierId, Dehumidifier>();
-        for (var device : properties.devices) {
+        for (var device : properties.tasmota) {
             var api = new TasmotaDehumidiferApi(new TasmotaApi(device.url, http, mapper));
             var id = new DehumidifierId(device.name);
             var power = new Watt(device.power);

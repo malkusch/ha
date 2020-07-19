@@ -2,7 +2,6 @@ package de.malkusch.ha.automation.model.dehumidifier;
 
 import static de.malkusch.ha.automation.model.Electricity.Aggregation.MINIMUM;
 import static de.malkusch.ha.automation.model.State.ON;
-import static de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.FanSpeed.LOW;
 
 import java.time.Duration;
 
@@ -33,7 +32,7 @@ public final class TurnOnDehumidifierRule implements Rule {
         var excess = electricity.excess(MINIMUM, window);
         if (excess.isGreaterThan(threshold)) {
             log.info("Turning on {} at excess electricity of {}", dehumidifier, excess);
-            dehumidifier.turnOn(LOW);
+            dehumidifier.turnOn();
         }
     }
 

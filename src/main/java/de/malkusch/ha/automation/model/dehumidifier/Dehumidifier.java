@@ -41,13 +41,9 @@ public final class Dehumidifier {
     public static interface Api {
         State state() throws ApiException, InterruptedException;
 
-        void turnOn(DehumidifierId id, FanSpeed fanSpeed) throws ApiException, InterruptedException;
+        void turnOn(DehumidifierId id) throws ApiException, InterruptedException;
 
         void turnOff(DehumidifierId id) throws ApiException, InterruptedException;
-    }
-
-    public static enum FanSpeed {
-        LOW, MID, MAX
     }
 
     public final DehumidifierId id;
@@ -55,9 +51,9 @@ public final class Dehumidifier {
     private final Api api;
     private final Debouncer debouncer = new Debouncer(ofMinutes(5));
 
-    public void turnOn(FanSpeed fanSpeed) throws ApiException, InterruptedException, DebounceException {
+    public void turnOn() throws ApiException, InterruptedException, DebounceException {
         debouncer.debounce();
-        api.turnOn(id, fanSpeed);
+        api.turnOn(id);
         if (state() != ON) {
             throw new ApiException(id + " is not on");
         }

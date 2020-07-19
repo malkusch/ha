@@ -5,7 +5,6 @@ import de.malkusch.ha.automation.model.ApiException;
 import de.malkusch.ha.automation.model.State;
 import de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.Api;
 import de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.DehumidifierId;
-import de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.FanSpeed;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -19,7 +18,7 @@ final class TasmotaDehumidiferApi implements Api {
     }
 
     @Override
-    public void turnOn(DehumidifierId id, FanSpeed fanSpeed) throws ApiException, InterruptedException {
+    public void turnOn(DehumidifierId id) throws ApiException, InterruptedException {
         tasmota.turnOn();
     }
 
