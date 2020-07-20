@@ -1,19 +1,19 @@
 package de.malkusch.ha.automation.infrastructure.rule;
 
-import static de.malkusch.ha.shared.model.event.EventPublisher.publish;
+import static de.malkusch.ha.shared.infrastructure.event.EventPublisher.publish;
 import static java.time.Duration.ZERO;
+import static java.util.UUID.randomUUID;
 import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.time.Duration;
-import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import de.malkusch.ha.automation.model.Rule;
-import de.malkusch.ha.shared.model.event.Event;
+import de.malkusch.ha.shared.infrastructure.event.Event;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,7 +39,9 @@ public final class RuleScheduler implements AutoCloseable {
 
     @RequiredArgsConstructor
     public static final class RuleEvaluationFailed implements Event {
-        public final String message;
+        public final String rule;
+        public final String cause;
+        public final String reference;
     }
 
     private void evaluate(Rule rule) {
@@ -48,10 +50,9 @@ public final class RuleScheduler implements AutoCloseable {
             rule.evaluate();
 
         } catch (Exception e) {
-            var reference = UUID.randomUUID().toString();
-            var message = String.format("Failed to evaluate %s [%s]", rule, reference);
-            log.error(message, e);
-            publish(new RuleEvaluationFailed(message));
+            var reference = randomUUID();
+            log.error("{} failed [{}]", rule, reference, e);
+            publish(new RuleEvaluationFailed(rule.toString(), e.getMessage(), reference.toString()));
         }
     }
 

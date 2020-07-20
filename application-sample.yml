@@ -6,3 +6,7 @@ dehumidifier:
    -  name: keller
       power: 250
       url: http://tasmota-1
+notification:
+   telegram:
+      token: aToken
+      chatId: 1234
