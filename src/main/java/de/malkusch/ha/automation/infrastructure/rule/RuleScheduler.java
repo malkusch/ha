@@ -1,6 +1,6 @@
 package de.malkusch.ha.automation.infrastructure.rule;
 
-import static de.malkusch.ha.shared.infrastructure.event.EventPublisher.publish;
+import static de.malkusch.ha.shared.infrastructure.event.EventPublisher.publishSafely;
 import static java.time.Duration.ZERO;
 import static java.util.UUID.randomUUID;
 import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
@@ -52,7 +52,7 @@ public final class RuleScheduler implements AutoCloseable {
         } catch (Exception e) {
             var reference = randomUUID();
             log.error("{} failed [{}]", rule, reference, e);
-            publish(new RuleEvaluationFailed(rule.toString(), e.getMessage(), reference.toString()));
+            publishSafely(new RuleEvaluationFailed(rule.toString(), e.getMessage(), reference.toString()));
         }
     }
 
