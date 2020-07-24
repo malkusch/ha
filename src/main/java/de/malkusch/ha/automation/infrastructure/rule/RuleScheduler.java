@@ -1,6 +1,7 @@
 package de.malkusch.ha.automation.infrastructure.rule;
 
 import static de.malkusch.ha.shared.infrastructure.event.EventPublisher.publishSafely;
+import static java.lang.System.exit;
 import static java.time.Duration.ZERO;
 import static java.util.UUID.randomUUID;
 import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
@@ -21,7 +22,15 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class RuleScheduler implements AutoCloseable {
 
-    private final ScheduledExecutorService scheduler = newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService scheduler = newSingleThreadScheduledExecutor(r -> {
+        var thread = new Thread(r, "RuleScheduler");
+        thread.setUncaughtExceptionHandler((t, e) -> {
+            log.error("Shutting down due to an error in RuleScheduler", e);
+            exit(-1);
+        });
+        thread.setDaemon(true);
+        return thread;
+    });
 
     RuleScheduler(@Value("${scheduler.delay}") Duration delay) {
         this.delay = delay;
