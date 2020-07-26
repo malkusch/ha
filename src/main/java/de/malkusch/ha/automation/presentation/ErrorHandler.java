@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import de.malkusch.ha.automation.infrastructure.Debouncer.DebounceException;
-import de.malkusch.ha.automation.model.ApiException;
 import de.malkusch.ha.automation.model.NotFoundException;
+import de.malkusch.ha.shared.model.ApiException;
 import lombok.extern.slf4j.Slf4j;
 
 @ControllerAdvice

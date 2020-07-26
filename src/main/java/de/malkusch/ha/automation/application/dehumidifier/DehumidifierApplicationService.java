@@ -3,10 +3,10 @@ package de.malkusch.ha.automation.application.dehumidifier;
 import org.springframework.stereotype.Service;
 
 import de.malkusch.ha.automation.infrastructure.Debouncer.DebounceException;
-import de.malkusch.ha.automation.model.ApiException;
 import de.malkusch.ha.automation.model.NotFoundException;
 import de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.DehumidifierId;
 import de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.DehumidifierRepository;
+import de.malkusch.ha.shared.model.ApiException;
 import lombok.RequiredArgsConstructor;
 
 @Service

@@ -10,9 +10,9 @@ import java.io.IOException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import de.malkusch.ha.automation.model.ApiException;
 import de.malkusch.ha.automation.model.State;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
+import de.malkusch.ha.shared.model.ApiException;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor

@@ -6,6 +6,10 @@ dehumidifier:
    -  name: keller
       power: 250
       url: http://tasmota-1
+buderus:
+   gatewayPassword: 1234-1234-1234-1234
+   privatePassword: 1234
+   host: heizung
 notification:
    telegram:
       token: aToken

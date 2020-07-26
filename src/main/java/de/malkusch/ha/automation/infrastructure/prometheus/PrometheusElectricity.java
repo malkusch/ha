@@ -15,10 +15,10 @@ import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import de.malkusch.ha.automation.model.ApiException;
 import de.malkusch.ha.automation.model.Electricity;
 import de.malkusch.ha.automation.model.Watt;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
+import de.malkusch.ha.shared.model.ApiException;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor

@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import de.malkusch.ha.automation.model.Rule;
 import de.malkusch.ha.shared.infrastructure.event.Event;
+import de.malkusch.ha.shared.infrastructure.scheduler.Schedulers;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -67,14 +68,6 @@ public final class RuleScheduler implements AutoCloseable {
 
     @Override
     public void close() throws InterruptedException {
-        scheduler.shutdown();
-        if (scheduler.awaitTermination(10, SECONDS)) {
-            return;
-        }
-        log.warn("Failed shutting down scheduler. Forcing shutdown now!");
-        scheduler.shutdownNow();
-        if (!scheduler.awaitTermination(10, SECONDS)) {
-            log.error("Forced shutdown failed");
-        }
+        Schedulers.close(scheduler);
     }
 }

@@ -1,10 +1,10 @@
 package de.malkusch.ha.automation.infrastructure.dehumidifier;
 
 import de.malkusch.ha.automation.infrastructure.TasmotaApi;
-import de.malkusch.ha.automation.model.ApiException;
 import de.malkusch.ha.automation.model.State;
 import de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.Api;
 import de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.DehumidifierId;
+import de.malkusch.ha.shared.model.ApiException;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor

@@ -6,9 +6,9 @@ import static de.malkusch.ha.automation.model.State.OFF;
 import java.time.Duration;
 
 import de.malkusch.ha.automation.infrastructure.Debouncer.DebounceException;
-import de.malkusch.ha.automation.model.ApiException;
 import de.malkusch.ha.automation.model.Electricity;
 import de.malkusch.ha.automation.model.Rule;
+import de.malkusch.ha.shared.model.ApiException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
