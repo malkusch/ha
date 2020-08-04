@@ -15,6 +15,7 @@ package de.malkusch.ha.shared.infrastructure.buderus;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -32,7 +33,9 @@ import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -134,6 +137,43 @@ final class KM200Comm {
     }
 
     /**
+     * This function does the SEND http communication to the device
+     *
+     */
+    public Integer sendDataToService(KM200Device device, String service, byte[] data) {
+        // Create an instance of HttpClient.
+        Integer rCode = null;
+        if (client == null) {
+            client = new HttpClient();
+        }
+        synchronized (client) {
+
+            // Create a method instance.
+            PostMethod method = new PostMethod("http://" + device.getIP4Address() + service);
+
+            // Provide custom retry handler is necessary
+            method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER,
+                    new DefaultHttpMethodRetryHandler(3, false));
+            // Set the right header
+            method.setRequestHeader("Accept", "application/json");
+            method.addRequestHeader("User-Agent", "TeleHeater/2.2.3");
+            method.setRequestEntity(new ByteArrayRequestEntity(data));
+
+            try {
+                rCode = client.executeMethod(method);
+
+            } catch (Exception e) {
+                logger.error("Failed to send data {}", e);
+
+            } finally {
+                // Release the connection.
+                method.releaseConnection();
+            }
+            return rCode;
+        }
+    }
+
+    /**
      * This function does the decoding for a new message from the device
      */
     public String decodeMessage(KM200Device device, byte[] encoded) {
@@ -162,6 +202,32 @@ final class KM200Comm {
             return retString;
         } catch (BadPaddingException | IllegalBlockSizeException | UnsupportedEncodingException
                 | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException e) {
+            // failure to authenticate
+            logger.error("Exception on encoding: {}", e);
+            return null;
+        }
+    }
+
+    public byte[] encodeMessage(KM200Device device, String data) {
+        byte[] encryptedDataB64 = null;
+
+        try {
+            // --- create cipher
+            byte[] bdata = data.getBytes(device.getCharSet());
+            final Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
+            cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(device.getCryptKeyPriv(), "AES"));
+            logger.debug("Create padding..");
+            int bsize = cipher.getBlockSize();
+            logger.debug("Add Padding and Encrypt AES..");
+            final byte[] encryptedData = cipher.doFinal(addZeroPadding(bdata, bsize, device.getCharSet()));
+            logger.debug("Encrypt B64..");
+            try {
+                encryptedDataB64 = Base64.encodeBase64(encryptedData);
+            } catch (Exception e) {
+                logger.error("Base64encoding not possible: {}", e.getMessage());
+            }
+            return encryptedDataB64;
+        } catch (UnsupportedEncodingException | GeneralSecurityException e) {
             // failure to authenticate
             logger.error("Exception on encoding: {}", e);
             return null;
