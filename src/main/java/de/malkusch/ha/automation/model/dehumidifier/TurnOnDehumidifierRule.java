@@ -31,7 +31,7 @@ public final class TurnOnDehumidifierRule implements Rule {
         var threshold = dehumidifier.power.plus(buffer);
         var excess = electricity.excess(MINIMUM, window);
         if (excess.isGreaterThan(threshold)) {
-            log.info("Turning on {} at excess electricity of {}", dehumidifier, excess);
+            log.info("Turning on {} when min excess electricity was {}", dehumidifier, excess);
             dehumidifier.turnOn();
         }
     }

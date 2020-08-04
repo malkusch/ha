@@ -37,12 +37,14 @@ public final class SchedulDehumidiferRulesApplicationService {
     SchedulDehumidiferRulesApplicationService(DehumidifierRepository dehumidifiers, RuleScheduler scheduler,
             Electricity electricity, TurnOnProperties turnOnProperties, TurnOffProperties turnOffProperties) {
 
+        var buffer = new Watt(turnOnProperties.buffer);
+
         for (var dehumidifier : dehumidifiers.findAll()) {
-            var turnOn = new TurnOnDehumidifierRule(dehumidifier, electricity, new Watt(turnOnProperties.buffer),
-                    turnOnProperties.window, turnOnProperties.evaluationRate);
+            var turnOn = new TurnOnDehumidifierRule(dehumidifier, electricity, buffer, turnOnProperties.window,
+                    turnOnProperties.evaluationRate);
             scheduler.schedule(turnOn);
 
-            var turnOff = new TurnOffDehumidifierRule(dehumidifier, electricity, turnOffProperties.window,
+            var turnOff = new TurnOffDehumidifierRule(dehumidifier, electricity, buffer, turnOffProperties.window,
                     turnOffProperties.evaluationRate);
             scheduler.schedule(turnOff);
         }

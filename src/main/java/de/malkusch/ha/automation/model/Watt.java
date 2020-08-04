@@ -25,6 +25,10 @@ public final class Watt {
     public boolean isGreaterThan(Watt other) {
         return value > other.value;
     }
+    
+    public boolean isLessThan(Watt other) {
+        return value < other.value;
+    }
 
     public Watt plus(Watt buffer) {
         return new Watt(value + buffer.value);
