@@ -17,35 +17,27 @@ import lombok.Data;
 @Service
 public final class SchedulDehumidiferRulesApplicationService {
 
-    @ConfigurationProperties("dehumidifier.rules.turn-on")
+    @ConfigurationProperties("dehumidifier.rules")
     @Component
     @Data
-    public static class TurnOnProperties {
+    public static class DehumidifierProperties {
         private int buffer;
         private Duration window;
         private Duration evaluationRate;
     }
 
-    @ConfigurationProperties("dehumidifier.rules.turn-off")
-    @Component
-    @Data
-    public static class TurnOffProperties {
-        private Duration window;
-        private Duration evaluationRate;
-    }
-
     SchedulDehumidiferRulesApplicationService(DehumidifierRepository dehumidifiers, RuleScheduler scheduler,
-            Electricity electricity, TurnOnProperties turnOnProperties, TurnOffProperties turnOffProperties) {
+            Electricity electricity, DehumidifierProperties properties) {
 
-        var buffer = new Watt(turnOnProperties.buffer);
+        var buffer = new Watt(properties.buffer);
 
         for (var dehumidifier : dehumidifiers.findAll()) {
-            var turnOn = new TurnOnDehumidifierRule(dehumidifier, electricity, buffer, turnOnProperties.window,
-                    turnOnProperties.evaluationRate);
+            var turnOn = new TurnOnDehumidifierRule(dehumidifier, electricity, buffer, properties.window,
+                    properties.evaluationRate);
             scheduler.schedule(turnOn);
 
-            var turnOff = new TurnOffDehumidifierRule(dehumidifier, electricity, buffer, turnOffProperties.window,
-                    turnOffProperties.evaluationRate);
+            var turnOff = new TurnOffDehumidifierRule(dehumidifier, electricity, buffer, properties.window,
+                    properties.evaluationRate);
             scheduler.schedule(turnOff);
         }
     }
