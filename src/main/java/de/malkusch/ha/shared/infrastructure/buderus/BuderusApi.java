@@ -1,6 +1,10 @@
 package de.malkusch.ha.shared.infrastructure.buderus;
 
 import java.math.BigDecimal;
+import java.time.Duration;
+
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.params.HttpClientParams;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -17,7 +21,9 @@ public final class BuderusApi {
     private final KM200Comm comm;
     private final ObjectMapper mapper;
 
-    BuderusApi(String host, String gatewayPassword, String privatePassword, String salt, ObjectMapper mapper) {
+    BuderusApi(String host, Duration timeout, String gatewayPassword, String privatePassword, String salt,
+            ObjectMapper mapper) {
+
         var device = new KM200Device();
         // device.setCharSet("UTF-8");
         device.setGatewayPassword(gatewayPassword.replace("-", ""));
@@ -27,7 +33,11 @@ public final class BuderusApi {
         device.setInited(true);
         this.device = device;
 
-        var comm = new KM200Comm();
+        var httpParams = new HttpClientParams();
+        httpParams.setConnectionManagerTimeout(timeout.toMillis());
+        httpParams.setConnectionManagerTimeout(timeout.toMillis());
+        var http = new HttpClient(httpParams);
+        var comm = new KM200Comm(http);
         comm.getDataFromService(device, "/system");
         this.comm = comm;
 

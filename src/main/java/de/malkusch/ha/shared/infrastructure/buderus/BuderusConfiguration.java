@@ -1,5 +1,7 @@
 package de.malkusch.ha.shared.infrastructure.buderus;
 
+import java.time.Duration;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,11 +22,12 @@ class BuderusConfiguration {
         private String gatewayPassword;
         private String privatePassword;
         private String host;
+        private Duration timeout;
     }
 
     @Bean
     public BuderusApi buderusApi(BuderusProperties properties, ObjectMapper mapper) {
-        return new BuderusApi(properties.host, properties.gatewayPassword, properties.privatePassword, properties.salt,
-                mapper);
+        return new BuderusApi(properties.host, properties.timeout, properties.gatewayPassword,
+                properties.privatePassword, properties.salt, mapper);
     }
 }

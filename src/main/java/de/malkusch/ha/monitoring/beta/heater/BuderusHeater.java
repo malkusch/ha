@@ -66,7 +66,9 @@ public class BuderusHeater {
         var gauge = Gauge.build().name(name).help(help).create();
         gauge.register();
         Callable<Void> update = () -> {
-            gauge.set(api.query(path).findValue("value").doubleValue());
+            var value = api.query(path).findValue("value").doubleValue();
+            gauge.set(value);
+            log.debug("Update {} = {}", path, value);
             return null;
         };
         update.call();

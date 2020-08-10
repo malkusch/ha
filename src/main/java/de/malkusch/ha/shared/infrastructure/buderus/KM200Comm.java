@@ -45,6 +45,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.io.ByteStreams;
 
+import lombok.RequiredArgsConstructor;
+
 /**
  * This class was taken from the OpenHAB 1.x Buderus / KM200 binding, and
  * modified to run without the OpenHAB infrastructure. Not needed code was
@@ -57,14 +59,11 @@ import com.google.common.io.ByteStreams;
  * @since 1.9.0
  */
 
+@RequiredArgsConstructor
 final class KM200Comm {
 
     private static final Logger logger = LoggerFactory.getLogger(KM200Comm.class);
-    private HttpClient client = null;
-
-    public KM200Comm() {
-
-    }
+    private final HttpClient client;
 
     /**
      * This function removes zero padding from a byte array.
@@ -94,10 +93,6 @@ final class KM200Comm {
      */
     public byte[] getDataFromService(KM200Device device, String service) {
         byte[] responseBodyB64 = null;
-        // Create an instance of HttpClient.
-        if (client == null) {
-            client = new HttpClient();
-        }
 
         // Create a method instance.
         GetMethod method = new GetMethod("http://" + device.getIP4Address() + service);
@@ -143,9 +138,6 @@ final class KM200Comm {
     public Integer sendDataToService(KM200Device device, String service, byte[] data) {
         // Create an instance of HttpClient.
         Integer rCode = null;
-        if (client == null) {
-            client = new HttpClient();
-        }
         synchronized (client) {
 
             // Create a method instance.
