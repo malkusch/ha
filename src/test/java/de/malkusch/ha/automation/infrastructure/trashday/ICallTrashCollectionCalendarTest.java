@@ -1,8 +1,7 @@
 package de.malkusch.ha.automation.infrastructure.trashday;
 
-import static de.malkusch.ha.automation.model.trashday.TrashCan.ORGANIC;
-import static de.malkusch.ha.automation.model.trashday.TrashCan.RESIDUAL;
-import static java.util.Arrays.asList;
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.toSet;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -12,7 +11,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import de.malkusch.ha.automation.model.trashday.TrashCan;
 import de.malkusch.ha.automation.model.trashday.TrashCollectionCalendar;
@@ -32,16 +32,18 @@ public class ICallTrashCollectionCalendarTest {
         calendar = new ICallTrashCollectionCalendar(http, url, new DefaultMapper());
     }
 
-    @Test
-    public void shouldFindTrashCollection() {
-        var date = LocalDate.parse("2017-05-26");
+    @ParameterizedTest
+    @CsvSource({ "2017-05-26, RESIDUAL|ORGANIC", "2017-06-01, PAPER|PLASTIC","2017-06-09, RESIDUAL|ORGANIC", "2017-07-05, PAPER|PLASTIC",
+            "2017-07-06, RESIDUAL|ORGANIC", "2017-07-20, RESIDUAL|ORGANIC" })
+    public void shouldFindTrashCollection(String dateString, String expectedCans) {
+        var date = LocalDate.parse(dateString);
 
         var trashCans = calendar.findTrashCollection(date);
 
-        assertEquals(set(RESIDUAL, ORGANIC), new HashSet<>(trashCans));
+        assertEquals(set(expectedCans), new HashSet<>(trashCans));
     }
 
-    private static Set<TrashCan> set(TrashCan... cans) {
-        return new HashSet<>(asList(cans));
+    private static Set<TrashCan> set(String cans) {
+        return stream(cans.split("\\|")).map(TrashCan::valueOf).collect(toSet());
     }
 }
