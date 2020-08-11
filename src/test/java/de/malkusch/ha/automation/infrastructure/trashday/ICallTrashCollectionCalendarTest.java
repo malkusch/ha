@@ -7,7 +7,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -33,14 +32,14 @@ public class ICallTrashCollectionCalendarTest {
     }
 
     @ParameterizedTest
-    @CsvSource({ "2017-05-26, RESIDUAL|ORGANIC", "2017-06-01, PAPER|PLASTIC","2017-06-09, RESIDUAL|ORGANIC", "2017-07-05, PAPER|PLASTIC",
-            "2017-07-06, RESIDUAL|ORGANIC", "2017-07-20, RESIDUAL|ORGANIC" })
+    @CsvSource({ "2017-05-26, RESIDUAL|ORGANIC", "2017-06-01, PAPER|PLASTIC", "2017-06-09, RESIDUAL|ORGANIC",
+            "2017-07-05, PAPER|PLASTIC", "2017-07-06, RESIDUAL|ORGANIC", "2017-07-20, RESIDUAL|ORGANIC" })
     public void shouldFindTrashCollection(String dateString, String expectedCans) {
         var date = LocalDate.parse(dateString);
 
         var trashCans = calendar.findTrashCollection(date);
 
-        assertEquals(set(expectedCans), new HashSet<>(trashCans));
+        assertEquals(set(expectedCans), trashCans);
     }
 
     private static Set<TrashCan> set(String cans) {
