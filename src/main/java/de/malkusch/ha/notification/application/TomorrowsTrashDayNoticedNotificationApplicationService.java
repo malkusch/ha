@@ -16,7 +16,7 @@ public final class TomorrowsTrashDayNoticedNotificationApplicationService {
 
     @EventListener
     public void onTrashDay(TomorrowsTrashDayNoticed event) {
-        var message = String.format("Morgen kommt die Müllabfuhr: %s", event);
+        var message = String.format("Morgen kommt die Müllabfuhr: %s", event.trashCans);
         var notification = new Notification(message);
         notificationService.send(notification);
     }
