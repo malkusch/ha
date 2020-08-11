@@ -1,10 +1,10 @@
 package de.malkusch.ha.automation.model.trashday;
 
 import java.time.LocalDate;
-import java.util.Collection;
+import java.util.Set;
 
 public interface TrashCollectionCalendar {
 
-    Collection<TrashCan> findTrashCollection(LocalDate tomorrow);
+    Set<TrashCan> findTrashCollection(LocalDate date);
 
 }

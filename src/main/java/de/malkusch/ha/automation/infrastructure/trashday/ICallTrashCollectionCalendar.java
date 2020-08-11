@@ -1,13 +1,12 @@
 package de.malkusch.ha.automation.infrastructure.trashday;
 
-import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static net.fortuna.ical4j.model.Component.VEVENT;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.time.LocalDate;
-import java.util.Collection;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -43,14 +42,14 @@ final class ICallTrashCollectionCalendar implements TrashCollectionCalendar {
     }
 
     @Override
-    public Collection<TrashCan> findTrashCollection(LocalDate tomorrow) {
+    public Set<TrashCan> findTrashCollection(LocalDate date) {
         update();
 
-        var period = new Period<>(tomorrow, Duration.ofDays(1));
+        var period = new Period<>(date, date);
         var filter = new Filter<CalendarComponent>(new PeriodRule<>(period));
         var events = filter.filter(calendar.getComponents().get(VEVENT));
 
-        return events.stream().map(mapper::toTrashCan).flatMap(Optional::stream).collect(toList());
+        return events.stream().map(mapper::toTrashCan).flatMap(Optional::stream).collect(toSet());
     }
 
     private void update() {
