@@ -20,8 +20,10 @@ import de.malkusch.ha.automation.model.Watt;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
 import de.malkusch.ha.shared.model.ApiException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RequiredArgsConstructor
+@Slf4j
 final class PrometheusElectricity implements Electricity {
 
     private final HttpClient http;
@@ -40,7 +42,9 @@ final class PrometheusElectricity implements Electricity {
         var query = String.format(
                 "%s(((batterie_production - batterie_consumption + (batterie_battery_consumption < 0)) > 0)[%s:])",
                 AGGREGATIONS.get(aggregation), promDuration);
-        return new Watt(query(query));
+        var result = query(query);
+        log.debug("{} = {}", query, result);
+        return new Watt(result);
     }
 
     private int query(String query) throws ApiException, InterruptedException {
