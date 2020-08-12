@@ -40,7 +40,7 @@ final class PrometheusElectricity implements Electricity {
     public Watt excess(Aggregation aggregation, Duration duration) throws ApiException, InterruptedException {
         var promDuration = duration.toSeconds() + "s";
         var query = String.format(
-                "%s(((batterie_production - batterie_consumption + (batterie_battery_consumption < 0)) > 0)[%s:])",
+                "%s(clamp_min((batterie_production - batterie_consumption + clamp_max(batterie_battery_consumption, 0)), 0)[%s:])",
                 AGGREGATIONS.get(aggregation), promDuration);
         var result = query(query);
         log.debug("{} = {}", query, result);
