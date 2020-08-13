@@ -7,7 +7,7 @@ import de.malkusch.ha.shared.model.ApiException;
 public interface Electricity {
 
     public static enum Aggregation {
-        MINIMUM, MAXIMUM
+        MINIMUM, P5, MAXIMUM, P95
     }
 
     Watt excess(Aggregation aggregation, Duration duration) throws ApiException, InterruptedException;

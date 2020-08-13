@@ -1,6 +1,6 @@
 package de.malkusch.ha.automation.model.dehumidifier;
 
-import static de.malkusch.ha.automation.model.Electricity.Aggregation.MAXIMUM;
+import static de.malkusch.ha.automation.model.Electricity.Aggregation.P95;
 import static de.malkusch.ha.automation.model.State.OFF;
 
 import java.time.Duration;
@@ -28,9 +28,9 @@ public final class TurnOffDehumidifierRule implements Rule {
         if (dehumidifier.state() == OFF) {
             return;
         }
-        var excess = electricity.excess(MAXIMUM, window);
+        var excess = electricity.excess(P95, window);
         if (excess.isLessThan(buffer)) {
-            log.info("Turning off {} when max excess electricity was {}", dehumidifier, excess);
+            log.info("Turning off {} when p95 excess electricity was {}", dehumidifier, excess);
             dehumidifier.turnOff();
         }
     }

@@ -5,16 +5,16 @@ import lombok.Value;
 @Value
 public final class Watt {
 
-    private final int value;
+    private final double value;
 
-    public Watt(int value) {
+    public Watt(double value) {
         if (value < 0) {
             throw new IllegalArgumentException("Watt must not be negative");
         }
         this.value = value;
     }
 
-    public static Watt kilowatt(int kilowatt) {
+    public static Watt kilowatt(double kilowatt) {
         return new Watt(kilowatt * 1000);
     }
 

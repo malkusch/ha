@@ -2,12 +2,16 @@ package de.malkusch.ha.automation.infrastructure.prometheus;
 
 import static de.malkusch.ha.automation.model.Electricity.Aggregation.MAXIMUM;
 import static de.malkusch.ha.automation.model.Electricity.Aggregation.MINIMUM;
+import static de.malkusch.ha.automation.model.Electricity.Aggregation.P5;
+import static de.malkusch.ha.automation.model.Electricity.Aggregation.P95;
+import static java.math.BigDecimal.ZERO;
 import static java.net.URLEncoder.encode;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Instant.now;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -32,29 +36,32 @@ final class PrometheusElectricity implements Electricity {
     private final Duration delay;
 
     private static Map<Aggregation, String> AGGREGATIONS = Map.of(//
-            MINIMUM, "min_over_time", //
-            MAXIMUM, "max_over_time" //
+            MINIMUM, "min_over_time(%s)", //
+            P5, "quantile_over_time(0.05, %s)", //
+            P95, "quantile_over_time(0.95, %s)", //
+            MAXIMUM, "max_over_time(%s)" //
     );
 
     @Override
     public Watt excess(Aggregation aggregation, Duration duration) throws ApiException, InterruptedException {
         var promDuration = duration.toSeconds() + "s";
-        var query = String.format(
-                "%s(clamp_min((batterie_production - batterie_consumption + clamp_max(batterie_battery_consumption, 0)), 0)[%s:])",
-                AGGREGATIONS.get(aggregation), promDuration);
+        var timeSeries = String.format(
+                "clamp_min((batterie_production - batterie_consumption + clamp_max(batterie_battery_consumption, 0)), 0)[%s:]",
+                promDuration);
+        var query = String.format(AGGREGATIONS.get(aggregation), timeSeries);
         var result = query(query);
         log.debug("{} = {}", query, result);
-        return new Watt(result);
+        return new Watt(result.doubleValue());
     }
 
-    private int query(String query) throws ApiException, InterruptedException {
+    private BigDecimal query(String query) throws ApiException, InterruptedException {
         delay();
         var url = baseUrl + "/api/v1/query?query=" + encode(query, UTF_8);
         try (var response = http.get(url)) {
             var json = mapper.readValue(response.body, Response.class);
 
             if (json.data.result.isEmpty()) {
-                return 0;
+                return ZERO;
             }
             return json.data.result.get(0).value.get(1);
 
@@ -70,7 +77,7 @@ final class PrometheusElectricity implements Electricity {
             public List<Result> result;
 
             public static class Result {
-                public List<Integer> value;
+                public List<BigDecimal> value;
             }
         }
     }
