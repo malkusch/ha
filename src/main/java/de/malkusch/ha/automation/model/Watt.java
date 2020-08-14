@@ -25,7 +25,7 @@ public final class Watt {
     public boolean isGreaterThan(Watt other) {
         return value > other.value;
     }
-    
+
     public boolean isLessThan(Watt other) {
         return value < other.value;
     }
@@ -36,6 +36,6 @@ public final class Watt {
 
     @Override
     public String toString() {
-        return String.format("%d Watt", value);
+        return String.format("%.2f W", value);
     }
 }
