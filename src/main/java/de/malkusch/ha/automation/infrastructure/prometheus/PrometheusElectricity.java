@@ -2,8 +2,8 @@ package de.malkusch.ha.automation.infrastructure.prometheus;
 
 import static de.malkusch.ha.automation.model.Electricity.Aggregation.MAXIMUM;
 import static de.malkusch.ha.automation.model.Electricity.Aggregation.MINIMUM;
-import static de.malkusch.ha.automation.model.Electricity.Aggregation.P5;
-import static de.malkusch.ha.automation.model.Electricity.Aggregation.P95;
+import static de.malkusch.ha.automation.model.Electricity.Aggregation.P25;
+import static de.malkusch.ha.automation.model.Electricity.Aggregation.P75;
 import static java.math.BigDecimal.ZERO;
 import static java.net.URLEncoder.encode;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -37,8 +37,8 @@ final class PrometheusElectricity implements Electricity {
 
     private static Map<Aggregation, String> AGGREGATIONS = Map.of(//
             MINIMUM, "min_over_time(%s)", //
-            P5, "quantile_over_time(0.05, %s)", //
-            P95, "quantile_over_time(0.95, %s)", //
+            P25, "quantile_over_time(0.25, %s)", //
+            P75, "quantile_over_time(0.75, %s)", //
             MAXIMUM, "max_over_time(%s)" //
     );
 
