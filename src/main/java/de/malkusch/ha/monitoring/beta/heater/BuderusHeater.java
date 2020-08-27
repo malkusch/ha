@@ -51,7 +51,7 @@ public class BuderusHeater {
         scheduleUpdate("/heatSources/nominalCHPower", rate);
         scheduleUpdate("/heatSources/nominalDHWPower", rate);
         scheduleUpdate("/heatSources/returnTemperature", rate);
-        scheduleUpdate("/heatSources/systemPressure", rate);
+        // scheduleUpdate("/heatSources/systemPressure", rate);
 
         scheduleUpdate("/system/appliance/actualSupplyTemperature", rate);
         scheduleUpdate("/system/sensors/temperatures/outdoor_t1", rate);
