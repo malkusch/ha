@@ -15,7 +15,7 @@ import de.malkusch.ha.automation.model.dehumidifier.TurnOnDehumidifierRule;
 import lombok.Data;
 
 @Service
-public final class SchedulDehumidiferRulesApplicationService {
+public final class ScheduleDehumidiferRulesApplicationService {
 
     @ConfigurationProperties("dehumidifier.rules")
     @Component
@@ -26,7 +26,7 @@ public final class SchedulDehumidiferRulesApplicationService {
         private Duration evaluationRate;
     }
 
-    SchedulDehumidiferRulesApplicationService(DehumidifierRepository dehumidifiers, RuleScheduler scheduler,
+    ScheduleDehumidiferRulesApplicationService(DehumidifierRepository dehumidifiers, RuleScheduler scheduler,
             Electricity electricity, DehumidifierProperties properties) {
 
         var buffer = new Watt(properties.buffer);
