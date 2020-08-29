@@ -10,8 +10,8 @@ import de.malkusch.ha.automation.infrastructure.rule.RuleScheduler;
 import de.malkusch.ha.automation.model.Electricity;
 import de.malkusch.ha.automation.model.Watt;
 import de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.DehumidifierRepository;
-import de.malkusch.ha.automation.model.dehumidifier.TurnOffDehumidifierRule;
-import de.malkusch.ha.automation.model.dehumidifier.TurnOnDehumidifierRule;
+import de.malkusch.ha.automation.model.dehumidifier.TurnOffDehumidifiersRule;
+import de.malkusch.ha.automation.model.dehumidifier.TurnOnDehumidifiersRule;
 import lombok.Data;
 
 @Service
@@ -31,14 +31,12 @@ public final class ScheduleDehumidiferRulesApplicationService {
 
         var buffer = new Watt(properties.buffer);
 
-        for (var dehumidifier : dehumidifiers.findAll()) {
-            var turnOn = new TurnOnDehumidifierRule(dehumidifier, electricity, buffer, properties.window,
-                    properties.evaluationRate);
-            scheduler.schedule(turnOn);
+        var turnOn = new TurnOnDehumidifiersRule(dehumidifiers, electricity, buffer, properties.window,
+                properties.evaluationRate);
+        scheduler.schedule(turnOn);
 
-            var turnOff = new TurnOffDehumidifierRule(dehumidifier, electricity, buffer, properties.window,
-                    properties.evaluationRate);
-            scheduler.schedule(turnOff);
-        }
+        var turnOff = new TurnOffDehumidifiersRule(dehumidifiers, electricity, buffer, properties.window,
+                properties.evaluationRate);
+        scheduler.schedule(turnOff);
     }
 }
