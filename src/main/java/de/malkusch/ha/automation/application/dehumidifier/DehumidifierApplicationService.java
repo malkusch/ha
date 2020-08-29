@@ -1,5 +1,9 @@
 package de.malkusch.ha.automation.application.dehumidifier;
 
+import static java.util.stream.Collectors.toList;
+
+import java.util.Collection;
+
 import org.springframework.stereotype.Service;
 
 import de.malkusch.ha.automation.infrastructure.Debouncer.DebounceException;
@@ -39,5 +43,9 @@ public final class DehumidifierApplicationService {
         var dehumidifier = dehumidifiers.find(id);
 
         dehumidifier.turnOff();
+    }
+
+    public Collection<String> list() {
+        return dehumidifiers.findAll().stream().map(it -> it.id.getId()).collect(toList());
     }
 }

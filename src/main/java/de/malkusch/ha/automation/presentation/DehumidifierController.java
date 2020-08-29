@@ -1,5 +1,8 @@
 package de.malkusch.ha.automation.presentation;
 
+import java.util.Collection;
+
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,5 +33,10 @@ public final class DehumidifierController {
 
         var command = new DehumidifierApplicationService.TurnOff(id);
         api.turnOff(command);
+    }
+
+    @GetMapping("/dehumidifier")
+    public Collection<String> list() {
+        return api.list();
     }
 }
