@@ -24,6 +24,8 @@ climate:
       url: http://xxx/
    -  name: klima3
       url: http://klima3/
+   -  name: co2
+      url: http://co2/
 notification:
    telegram:
       token: aToken

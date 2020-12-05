@@ -67,7 +67,8 @@ class PrometheusProxyConfiguration {
         return properties.sensors.stream().map(it -> {
             var mappings = asList( //
                     mapping("/temperature", it.name + "_temperature"), //
-                    mapping("/humidity", it.name + "_humidity") //
+                    mapping("/humidity", it.name + "_humidity"), //
+                    mapping("/co2", it.name + "_co2") //
             );
 
             return proxy(it.url, mappings);
