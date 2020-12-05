@@ -1,5 +1,7 @@
 package de.malkusch.ha.shared.infrastructure.scheduler;
 
+import static java.lang.System.exit;
+import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.util.concurrent.ScheduledExecutorService;
@@ -19,5 +21,17 @@ public final class Schedulers {
         if (!scheduler.awaitTermination(10, SECONDS)) {
             log.error("Forced shutdown failed");
         }
+    }
+    
+    public static ScheduledExecutorService singleThreadScheduler(String name) {
+        return newSingleThreadScheduledExecutor(r -> {
+            var thread = new Thread(r, name);
+            thread.setUncaughtExceptionHandler((t, e) -> {
+                log.error("Shutting down due to an error in " + name, e);
+                exit(-1);
+            });
+            thread.setDaemon(true);
+            return thread;
+        });
     }
 }

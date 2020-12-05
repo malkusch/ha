@@ -1,4 +1,4 @@
-package de.malkusch.ha.monitoring.beta.heater;
+package de.malkusch.ha.monitoring.infrastructure;
 
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.context.annotation.Bean;

@@ -1,7 +1,6 @@
 package de.malkusch.ha.monitoring.beta.heater;
 
-import static java.lang.System.exit;
-import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
+import static de.malkusch.ha.shared.infrastructure.scheduler.Schedulers.singleThreadScheduler;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.time.Duration;
@@ -12,24 +11,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import de.malkusch.ha.shared.infrastructure.buderus.BuderusApi;
+import de.malkusch.ha.shared.infrastructure.scheduler.Schedulers;
 import io.prometheus.client.Gauge;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
-public class BuderusHeater {
+public class BuderusHeater implements AutoCloseable {
 
     private final BuderusApi api;
-
-    private final ScheduledExecutorService scheduler = newSingleThreadScheduledExecutor(r -> {
-        var thread = new Thread(r, "BuderusHeater");
-        thread.setUncaughtExceptionHandler((t, e) -> {
-            log.error("Shutting down due to an error in BuderusHeater", e);
-            exit(-1);
-        });
-        thread.setDaemon(true);
-        return thread;
-    });
+    private final ScheduledExecutorService scheduler = singleThreadScheduler("BuderusHeater");
 
     BuderusHeater(BuderusApi api, @Value("${buderus.queryRate}") Duration rate) throws Exception {
         this.api = api;
@@ -79,5 +70,10 @@ public class BuderusHeater {
                 log.error("Failed to update heater's metric {}", gauge, e);
             }
         }, rate.toSeconds(), rate.toSeconds(), SECONDS);
+    }
+
+    @Override
+    public void close() throws InterruptedException {
+        Schedulers.close(scheduler);
     }
 }
