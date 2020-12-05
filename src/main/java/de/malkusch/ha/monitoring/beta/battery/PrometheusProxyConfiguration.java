@@ -2,15 +2,25 @@ package de.malkusch.ha.monitoring.beta.battery;
 
 import static de.malkusch.ha.monitoring.infrastructure.PrometheusProxy.mapping;
 import static java.util.Arrays.asList;
+import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.malkusch.ha.monitoring.infrastructure.PrometheusProxy;
+import de.malkusch.ha.monitoring.infrastructure.PrometheusProxy.Mapping;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -22,7 +32,8 @@ class PrometheusProxyConfiguration {
 
     @Bean
     public PrometheusProxy sonnenPrometheusProxy(@Value("${sonnen.url}") String url) {
-        var mappings = asList(mapping("/Consumption_W", "batterie_consumption"), //
+        var mappings = asList( //
+                mapping("/Consumption_W", "batterie_consumption"), //
                 mapping("/Production_W", "batterie_production"), //
                 mapping("/USOC", "batterie_charge"), //
                 mapping("/GridFeedIn_W", "batterie_feed_in"), //
@@ -38,19 +49,34 @@ class PrometheusProxyConfiguration {
         return new PrometheusProxy(url, http, mapper, mappings);
     }
 
-    @Bean
-    public PrometheusProxy badPrometheusProxy(@Value("${klima.bad}") String url) {
-        var mappings = asList(mapping("/temperature", "bad_temperature"), //
-                mapping("/humidity", "bad_humidity") //
-        );
-        return new PrometheusProxy(url, http, mapper, mappings);
+    @Component
+    @ConfigurationProperties("climate")
+    @Data
+    static class ClimateProperies {
+        private List<Sensor> sensors;
+
+        @Data
+        static class Sensor {
+            private String name;
+            private String url;
+        }
     }
 
     @Bean
-    public PrometheusProxy keller2PrometheusProxy(@Value("${klima.keller2}") String url) {
-        var mappings = asList(mapping("/temperature", "keller2_temperature"), //
-                mapping("/humidity", "keller2_humidity") //
-        );
+    public List<PrometheusProxy> climatePrometheusProxies(ClimateProperies properties) {
+        return properties.sensors.stream().map(it -> {
+            var mappings = asList( //
+                    mapping("/temperature", it.name + "_temperature"), //
+                    mapping("/humidity", it.name + "_humidity") //
+            );
+
+            return proxy(it.url, mappings);
+        }).collect(Collectors.toList());
+    }
+
+    @Bean
+    @Scope(value = SCOPE_PROTOTYPE)
+    PrometheusProxy proxy(String url, Collection<Mapping> mappings) {
         return new PrometheusProxy(url, http, mapper, mappings);
     }
 }
