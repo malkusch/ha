@@ -14,7 +14,7 @@ import io.prometheus.client.Gauge;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public final class PrometheusGaugeProxy {
+public final class PrometheusProxy {
 
     private final String url;
     private final HttpClient http;
