@@ -1,4 +1,4 @@
-package de.malkusch.ha.monitoring.beta.heater;
+package de.malkusch.ha.monitoring.infrastructure;
 
 import static de.malkusch.ha.shared.infrastructure.scheduler.Schedulers.singleThreadScheduler;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -17,12 +17,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
-public class BuderusHeater implements AutoCloseable {
+public class BuderusPoller implements AutoCloseable {
 
     private final BuderusApi api;
     private final ScheduledExecutorService scheduler = singleThreadScheduler("BuderusHeater");
 
-    BuderusHeater(BuderusApi api, @Value("${buderus.queryRate}") Duration rate) throws Exception {
+    BuderusPoller(BuderusApi api, @Value("${buderus.queryRate}") Duration rate) throws Exception {
         this.api = api;
 
         scheduleUpdate("/dhwCircuits/dhw1/actualTemp", rate);
