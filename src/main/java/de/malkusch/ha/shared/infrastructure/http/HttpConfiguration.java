@@ -5,6 +5,7 @@ import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import lombok.Data;
@@ -29,6 +30,7 @@ class HttpConfiguration {
     }
 
     @Bean
+    @Primary
     public HttpClient httpClient(HttpProperties properties) {
         var jdkClient = new JdkHttpClient(properties.timeout, properties.userAgent);
         var retrying = new RetryingHttpClient(jdkClient, properties.retry.delay, properties.retry.retries);

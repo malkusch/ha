@@ -12,6 +12,7 @@ buderus:
    timeout: PT10s
 monitoring:
    updateRate: PT15s
+   timeout: PT3S
 prometheus:
    delay: PT21s
 http:

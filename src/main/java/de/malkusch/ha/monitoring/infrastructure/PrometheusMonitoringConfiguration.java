@@ -4,6 +4,7 @@ import static de.malkusch.ha.monitoring.infrastructure.PrometheusProxy.mapping;
 import static java.util.Arrays.asList;
 import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
+import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.malkusch.ha.monitoring.infrastructure.PrometheusProxy.Mapping;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
+import de.malkusch.ha.shared.infrastructure.http.JdkHttpClient;
 import io.prometheus.client.exporter.MetricsServlet;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +30,21 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 class PrometheusMonitoringConfiguration {
 
-    private final HttpClient http;
+    @Component
+    @ConfigurationProperties("monitoring")
+    @Data
+    static class MonitoringProperties {
+        private Duration timeout;
+        private List<Sensor> sensors;
+
+        @Data
+        static class Sensor {
+            private String name;
+            private String url;
+        }
+    }
+
+    private final MonitoringProperties properties;
     private final ObjectMapper mapper;
 
     @Bean
@@ -52,24 +68,11 @@ class PrometheusMonitoringConfiguration {
                 mapping("/Sac2", "batterie_Sac2"), //
                 mapping("/Sac3", "batterie_Sac3") //
         );
-        return new PrometheusProxy(url, http, mapper, mappings);
-    }
-
-    @Component
-    @ConfigurationProperties("climate")
-    @Data
-    static class ClimateProperies {
-        private List<Sensor> sensors;
-
-        @Data
-        static class Sensor {
-            private String name;
-            private String url;
-        }
+        return new PrometheusProxy(url, monitoringHttp(), mapper, mappings);
     }
 
     @Bean
-    public List<PrometheusProxy> climatePrometheusProxies(ClimateProperies properties) {
+    public List<PrometheusProxy> climatePrometheusProxies() {
         return properties.sensors.stream().map(it -> {
             var mappings = asList( //
                     mapping("/temperature", it.name + "_temperature"), //
@@ -84,6 +87,11 @@ class PrometheusMonitoringConfiguration {
     @Bean
     @Scope(value = SCOPE_PROTOTYPE)
     PrometheusProxy proxy(String url, Collection<Mapping> mappings) {
-        return new PrometheusProxy(url, http, mapper, mappings);
+        return new PrometheusProxy(url, monitoringHttp(), mapper, mappings);
+    }
+
+    @Bean
+    HttpClient monitoringHttp() {
+        return new JdkHttpClient(properties.timeout, "");
     }
 }

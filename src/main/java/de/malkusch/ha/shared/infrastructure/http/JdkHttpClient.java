@@ -15,11 +15,11 @@ import java.time.Duration;
 
 import org.slf4j.Logger;
 
-final class JdkHttpClient implements HttpClient {
+public final class JdkHttpClient implements HttpClient {
 
 	private static final Logger LOGGER = getLogger(JdkHttpClient.class);
 
-	JdkHttpClient(Duration timeout, String userAgent) {
+	public JdkHttpClient(Duration timeout, String userAgent) {
 		this.timeout = timeout;
 		this.userAgent = userAgent;
 		client = newBuilder().connectTimeout(timeout).cookieHandler(new CookieManager()).followRedirects(ALWAYS)
