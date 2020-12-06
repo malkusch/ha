@@ -3,10 +3,6 @@ package de.malkusch.ha.monitoring.infrastructure;
 import java.io.IOException;
 import java.util.Collection;
 
-import javax.annotation.PostConstruct;
-
-import org.springframework.scheduling.annotation.Scheduled;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
@@ -14,7 +10,7 @@ import io.prometheus.client.Gauge;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class PrometheusProxy {
+final class PrometheusProxyPoller implements Poller {
 
     private final String url;
     private final HttpClient http;
@@ -33,8 +29,7 @@ public class PrometheusProxy {
         return new Mapping(jsonPath, gauge);
     }
 
-    @PostConstruct
-    @Scheduled(fixedRateString = "${monitoring.updateRate}")
+    @Override
     public void update() throws IOException, InterruptedException {
         try (var response = http.get(url)) {
             var json = mapper.readTree(response.body);
@@ -43,5 +38,10 @@ public class PrometheusProxy {
                 mapping.gauge.set(value);
             }
         }
+    }
+
+    @Override
+    public String toString() {
+        return url;
     }
 }

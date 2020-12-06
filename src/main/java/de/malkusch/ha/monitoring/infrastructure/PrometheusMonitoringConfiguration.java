@@ -1,6 +1,6 @@
 package de.malkusch.ha.monitoring.infrastructure;
 
-import static de.malkusch.ha.monitoring.infrastructure.PrometheusProxy.mapping;
+import static de.malkusch.ha.monitoring.infrastructure.PrometheusProxyPoller.mapping;
 import static java.util.Arrays.asList;
 import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import de.malkusch.ha.monitoring.infrastructure.PrometheusProxy.Mapping;
+import de.malkusch.ha.monitoring.infrastructure.PrometheusProxyPoller.Mapping;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
 import de.malkusch.ha.shared.infrastructure.http.JdkHttpClient;
 import io.prometheus.client.exporter.MetricsServlet;
@@ -35,6 +35,7 @@ class PrometheusMonitoringConfiguration {
     @Data
     static class MonitoringProperties {
         private Duration timeout;
+        private String inverter;
         private List<Sensor> sensors;
 
         @Data
@@ -53,7 +54,7 @@ class PrometheusMonitoringConfiguration {
     }
 
     @Bean
-    public PrometheusProxy sonnenPrometheusProxy(@Value("${sonnen.url}") String url) {
+    public ScheduledPoller sonnenPrometheusProxy(@Value("${sonnen.url}") String url) {
         var mappings = asList( //
                 mapping("/Consumption_W", "batterie_consumption"), //
                 mapping("/Production_W", "batterie_production"), //
@@ -68,11 +69,11 @@ class PrometheusMonitoringConfiguration {
                 mapping("/Sac2", "batterie_Sac2"), //
                 mapping("/Sac3", "batterie_Sac3") //
         );
-        return new PrometheusProxy(url, monitoringHttp(), mapper, mappings);
+        return new ScheduledPoller(new PrometheusProxyPoller(url, monitoringHttp(), mapper, mappings));
     }
 
     @Bean
-    public List<PrometheusProxy> climatePrometheusProxies() {
+    public List<ScheduledPoller> climatePrometheusProxies() {
         return properties.sensors.stream().map(it -> {
             var mappings = asList( //
                     mapping("/temperature", it.name + "_temperature"), //
@@ -86,8 +87,17 @@ class PrometheusMonitoringConfiguration {
 
     @Bean
     @Scope(value = SCOPE_PROTOTYPE)
-    PrometheusProxy proxy(String url, Collection<Mapping> mappings) {
-        return new PrometheusProxy(url, monitoringHttp(), mapper, mappings);
+    ScheduledPoller proxy(String url, Collection<Mapping> mappings) {
+        return new ScheduledPoller(new PrometheusProxyPoller(url, monitoringHttp(), mapper, mappings));
+    }
+
+    @Bean
+    ScheduledPoller inverter() {
+        var mappings = asList( //
+                mapping("/Body/Data/Site/P_PV", "inverter_production") //
+        );
+        return new ScheduledPoller(
+                new OfflinePoller(new PrometheusProxyPoller(properties.inverter, monitoringHttp(), mapper, mappings)));
     }
 
     @Bean
