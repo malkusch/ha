@@ -37,6 +37,9 @@ final class PrometheusProxyPoller implements Poller {
                 var value = json.at(mapping.jsonPath).asDouble();
                 mapping.gauge.set(value);
             }
+
+        } catch (IOException e) {
+            throw new IOException("Failed polling " + url, e);
         }
     }
 
