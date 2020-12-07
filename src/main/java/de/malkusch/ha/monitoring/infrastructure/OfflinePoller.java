@@ -3,10 +3,8 @@ package de.malkusch.ha.monitoring.infrastructure;
 import java.io.IOException;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @RequiredArgsConstructor
-@Slf4j
 final class OfflinePoller implements Poller {
 
     private final Poller poller;
@@ -16,7 +14,6 @@ final class OfflinePoller implements Poller {
         try {
             poller.update();
         } catch (IOException e) {
-            log.warn("Failed polling {}", poller);
         }
     }
 }
