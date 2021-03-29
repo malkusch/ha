@@ -1,6 +1,4 @@
 logging.level.de.malkusch: DEBUG
-trashday:
-   url: https://apps.c-trace.de/web.roth/abfallkalender/cal?Ort=Hilpoltstein&Ortsteil=Weinsfeld&Strasse=Weinsfeld&Hausnr=K%2034
 prometheus:
    url: http://localhost:9090
 dehumidifier:
