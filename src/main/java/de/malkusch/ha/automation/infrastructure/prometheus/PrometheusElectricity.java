@@ -45,9 +45,7 @@ final class PrometheusElectricity implements Electricity {
     @Override
     public Watt excess(Aggregation aggregation, Duration duration) throws ApiException, InterruptedException {
         var promDuration = duration.toSeconds() + "s";
-        var timeSeries = String.format(
-                "clamp_min((batterie_production - batterie_consumption + clamp_max(batterie_battery_consumption, 0)), 0)[%s:]",
-                promDuration);
+        var timeSeries = String.format("clamp_min(batterie_feed_in, 0)[%s:]", promDuration);
         var query = String.format(AGGREGATIONS.get(aggregation), timeSeries);
         var result = query(query);
         log.debug("{} = {}", query, result);
