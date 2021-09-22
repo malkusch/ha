@@ -26,14 +26,17 @@ public class BuderusPoller implements AutoCloseable {
         this.km200 = km200;
 
         scheduleUpdate("/dhwCircuits/dhw1/actualTemp", rate);
+        scheduleUpdate("/dhwCircuits/dhw1/currentSetpoint", rate);
         scheduleUpdate("/dhwCircuits/dhw1/waterFlow", rate);
 
         scheduleUpdate("/heatingCircuits/hc1/actualSupplyTemperature", rate);
         scheduleUpdate("/heatingCircuits/hc1/currentRoomSetpoint", rate);
+        scheduleUpdate("/heatingCircuits/hc1/supplyTemperatureSetpoint", rate);
         scheduleUpdate("/heatingCircuits/hc1/pumpModulation", rate);
 
         scheduleUpdate("/heatSources/actualModulation", rate);
         scheduleUpdate("/heatSources/actualSupplyTemperature", rate);
+        scheduleUpdate("/heatSources/supplyTemperatureSetpoint", rate);
         scheduleUpdate("/heatSources/applianceSupplyTemperature", rate);
         scheduleUpdate("/heatSources/CHpumpModulation", rate);
         scheduleUpdate("/heatSources/energyMonitoring/consumption", rate);
@@ -41,12 +44,14 @@ public class BuderusPoller implements AutoCloseable {
         scheduleUpdate("/heatSources/hs1/actualModulation", rate);
         scheduleUpdate("/heatSources/nominalCHPower", rate);
         scheduleUpdate("/heatSources/nominalDHWPower", rate);
-        // scheduleUpdate("/heatSources/returnTemperature", rate);
+        scheduleUpdate("/heatSources/returnTemperature", rate);
+        scheduleUpdate("/heatSources/workingTime/totalSystem", rate);
+        scheduleUpdate("/heatSources/numberOfStarts", rate);
         // scheduleUpdate("/heatSources/systemPressure", rate);
 
         scheduleUpdate("/system/appliance/actualSupplyTemperature", rate);
         scheduleUpdate("/system/sensors/temperatures/outdoor_t1", rate);
-        // scheduleUpdate("/system/sensors/temperatures/return", rate);
+        scheduleUpdate("/system/sensors/temperatures/return", rate);
         scheduleUpdate("/system/sensors/temperatures/supply_t1", rate);
         scheduleUpdate("/system/sensors/temperatures/switch", rate);
     }
