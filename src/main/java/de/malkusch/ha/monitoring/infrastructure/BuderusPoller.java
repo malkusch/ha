@@ -10,8 +10,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import de.malkusch.ha.shared.infrastructure.buderus.BuderusApi;
 import de.malkusch.ha.shared.infrastructure.scheduler.Schedulers;
+import de.malkusch.km200.KM200;
 import io.prometheus.client.Gauge;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,11 +19,11 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class BuderusPoller implements AutoCloseable {
 
-    private final BuderusApi api;
+    private final KM200 km200;
     private final ScheduledExecutorService scheduler = singleThreadScheduler("BuderusHeater");
 
-    BuderusPoller(BuderusApi api, @Value("${buderus.queryRate}") Duration rate) throws Exception {
-        this.api = api;
+    BuderusPoller(KM200 km200, @Value("${buderus.queryRate}") Duration rate) throws Exception {
+        this.km200 = km200;
 
         scheduleUpdate("/dhwCircuits/dhw1/actualTemp", rate);
         scheduleUpdate("/dhwCircuits/dhw1/waterFlow", rate);
@@ -57,7 +57,7 @@ public class BuderusPoller implements AutoCloseable {
         var gauge = Gauge.build().name(name).help(help).create();
         gauge.register();
         Callable<Void> update = () -> {
-            var value = api.query(path).findValue("value").doubleValue();
+            var value = km200.queryDouble(path);
             gauge.set(value);
             log.debug("Update {} = {}", path, value);
             return null;
