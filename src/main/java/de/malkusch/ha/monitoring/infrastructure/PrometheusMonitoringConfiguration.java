@@ -36,6 +36,7 @@ class PrometheusMonitoringConfiguration {
     static class MonitoringProperties {
         private Duration timeout;
         private String inverter;
+        private String dust;
         private List<Sensor> sensors;
 
         @Data
@@ -98,6 +99,16 @@ class PrometheusMonitoringConfiguration {
         );
         return new ScheduledPoller(
                 new OfflinePoller(new PrometheusProxyPoller(properties.inverter, monitoringHttp(), mapper, mappings)));
+    }
+    
+    @Bean
+    ScheduledPoller dust() {
+        var mappings = asList( //
+                mapping("/p10", "dust_p10"), //
+                mapping("/p2.5", "dust_p25") //
+        );
+        return new ScheduledPoller(
+                new OfflinePoller(new PrometheusProxyPoller(properties.dust, monitoringHttp(), mapper, mappings)));
     }
 
     @Bean
