@@ -100,12 +100,15 @@ class PrometheusMonitoringConfiguration {
         return new ScheduledPoller(
                 new OfflinePoller(new PrometheusProxyPoller(properties.inverter, monitoringHttp(), mapper, mappings)));
     }
-    
+
     @Bean
     ScheduledPoller dust() {
         var mappings = asList( //
-                mapping("/p10", "dust_p10"), //
-                mapping("/p2.5", "dust_p25") //
+                mapping("/temperature", "dust_temperature"), //
+                mapping("/humidity", "dust_humidity"), //
+                mapping("/pressure", "dust_pressure"), //
+                mapping("/pm10", "dust_pm10"), //
+                mapping("/pm2.5", "dust_pm25") //
         );
         return new ScheduledPoller(
                 new OfflinePoller(new PrometheusProxyPoller(properties.dust, monitoringHttp(), mapper, mappings)));
