@@ -3,6 +3,7 @@ package de.malkusch.ha.automation.infrastructure;
 import static de.malkusch.ha.automation.model.heater.Heater.HotWaterMode.ECO;
 import static de.malkusch.ha.automation.model.heater.Heater.HotWaterMode.HIGH;
 import static de.malkusch.ha.automation.model.heater.Heater.HotWaterMode.LOW;
+import static de.malkusch.ha.automation.model.heater.Heater.HotWaterMode.OFF;
 import static de.malkusch.ha.automation.model.heater.Heater.HotWaterMode.OWNPROGRAM;
 import static java.time.DayOfWeek.FRIDAY;
 import static java.time.DayOfWeek.MONDAY;
@@ -73,6 +74,8 @@ class KM200Heater implements Heater {
             return HIGH;
         case "ownprogram":
             return OWNPROGRAM;
+        case "Off":
+            return OFF;
         default:
             throw new IllegalStateException("Invalid mode " + mode);
         }
@@ -88,6 +91,8 @@ class KM200Heater implements Heater {
             return "high";
         case OWNPROGRAM:
             return "ownprogram";
+        case OFF:
+            return "Off";
         default:
             throw new IllegalStateException("Invalid mode " + mode);
         }

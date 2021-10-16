@@ -5,7 +5,7 @@ import java.io.IOException;
 public interface Heater {
 
     public static enum HotWaterMode {
-        ECO, LOW, HIGH, OWNPROGRAM;
+        ECO, LOW, HIGH, OWNPROGRAM, OFF;
     }
 
     public void switchHotWaterMode(HotWaterMode mode) throws IOException, InterruptedException;
