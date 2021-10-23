@@ -36,7 +36,7 @@ class PrometheusMonitoringConfiguration {
     static class MonitoringProperties {
         private Duration timeout;
         private String inverter;
-        private String dust;
+        private List<Sensor> dust;
         private List<Sensor> sensors;
 
         @Data
@@ -102,16 +102,18 @@ class PrometheusMonitoringConfiguration {
     }
 
     @Bean
-    ScheduledPoller dust() {
-        var mappings = asList( //
-                mapping("/temperature", "dust_temperature"), //
-                mapping("/humidity", "dust_humidity"), //
-                mapping("/pressure", "dust_pressure"), //
-                mapping("/pm10", "dust_pm10"), //
-                mapping("/pm2.5", "dust_pm25") //
-        );
-        return new ScheduledPoller(
-                new OfflinePoller(new PrometheusProxyPoller(properties.dust, monitoringHttp(), mapper, mappings)));
+    List<ScheduledPoller> dust() {
+        return properties.dust.stream().map(it -> {
+            var mappings = asList( //
+                    mapping("/temperature", it.name + "_temperature"), //
+                    mapping("/humidity", it.name + "_humidity"), //
+                    mapping("/pressure", it.name + "_pressure"), //
+                    mapping("/pm10", it.name + "_pm10"), //
+                    mapping("/pm2.5", it.name + "_pm25") //
+            );
+
+            return proxy(it.url, mappings);
+        }).collect(Collectors.toList());
     }
 
     @Bean
