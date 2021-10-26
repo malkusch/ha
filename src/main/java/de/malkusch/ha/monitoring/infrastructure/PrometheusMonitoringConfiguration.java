@@ -1,6 +1,7 @@
 package de.malkusch.ha.monitoring.infrastructure;
 
 import static de.malkusch.ha.monitoring.infrastructure.PrometheusProxyPoller.mapping;
+import static java.time.Duration.ZERO;
 import static java.util.Arrays.asList;
 import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
@@ -22,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.malkusch.ha.monitoring.infrastructure.PrometheusProxyPoller.Mapping;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
 import de.malkusch.ha.shared.infrastructure.http.JdkHttpClient;
+import de.malkusch.ha.shared.infrastructure.http.RetryingHttpClient;
 import io.prometheus.client.exporter.MetricsServlet;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +37,7 @@ class PrometheusMonitoringConfiguration {
     @Data
     static class MonitoringProperties {
         private Duration timeout;
+        private int retries;
         private String inverter;
         private List<Sensor> dust;
         private List<Sensor> sensors;
@@ -98,7 +101,7 @@ class PrometheusMonitoringConfiguration {
                 mapping("/Body/Data/Site/P_PV", "inverter_production") //
         );
         return new ScheduledPoller(
-                new OfflinePoller(new PrometheusProxyPoller(properties.inverter, monitoringHttp(), mapper, mappings)));
+                new OfflinePoller(new PrometheusProxyPoller(properties.inverter, offlineHttp(), mapper, mappings)));
     }
 
     @Bean
@@ -117,7 +120,13 @@ class PrometheusMonitoringConfiguration {
     }
 
     @Bean
-    HttpClient monitoringHttp() {
+    HttpClient offlineHttp() {
         return new JdkHttpClient(properties.timeout, "");
+    }
+
+    @Bean
+    HttpClient monitoringHttp() {
+        var http = new JdkHttpClient(properties.timeout, "");
+        return new RetryingHttpClient(http, ZERO, properties.retries);
     }
 }

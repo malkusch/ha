@@ -12,19 +12,21 @@ import net.jodah.failsafe.FailsafeException;
 import net.jodah.failsafe.FailsafeExecutor;
 import net.jodah.failsafe.RetryPolicy;
 
-final class RetryingHttpClient extends HttpClientProxy {
+public final class RetryingHttpClient extends HttpClientProxy {
 
 	private final FailsafeExecutor<HttpResponse> retry;
 	private static final Logger LOGGER = getLogger(RetryingHttpClient.class);
 
-	RetryingHttpClient(HttpClient client, Duration delay, int retries) {
+	public RetryingHttpClient(HttpClient client, Duration delay, int retries) {
 		super(client);
 
 		var policy = new RetryPolicy<HttpResponse>();
 		policy.handle(IOException.class);
-		policy.withDelay(delay);
+		if (!delay.isZero()) {
+		    policy.withDelay(delay);
+		}
 		policy.withMaxRetries(retries);
-		policy.onRetry(it -> LOGGER.warn("Retrying", it.getLastFailure()));
+		policy.onRetry(it -> LOGGER.warn("Retrying"));
 		retry = Failsafe.with(policy);
 	}
 
