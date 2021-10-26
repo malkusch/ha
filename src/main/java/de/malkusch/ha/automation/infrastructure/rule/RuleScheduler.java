@@ -41,10 +41,10 @@ public final class RuleScheduler implements AutoCloseable {
     private Duration nextDelay = ZERO;
 
     public void schedule(Rule rule) {
+        nextDelay = nextDelay.plus(delay);
         log.info("Scheduling {} in {}", rule, nextDelay);
         var rateInSeconds = rule.evaluationRate().toSeconds();
         scheduler.scheduleAtFixedRate(() -> evaluate(rule), nextDelay.toSeconds(), rateInSeconds, SECONDS);
-        nextDelay = nextDelay.plus(delay);
     }
 
     @RequiredArgsConstructor

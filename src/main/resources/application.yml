@@ -1,6 +1,6 @@
 logging.level.de.malkusch.ha.shared.infrastructure.buderus: INFO
 scheduler:
-   delay: PT20s
+   delay: PT60s
 dehumidifier:
    rules:
       buffer: 50
