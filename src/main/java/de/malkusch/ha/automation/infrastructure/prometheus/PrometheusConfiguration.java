@@ -1,7 +1,5 @@
 package de.malkusch.ha.automation.infrastructure.prometheus;
 
-import java.time.Duration;
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,11 +19,10 @@ class PrometheusConfiguration {
     @Data
     public static class PrometheusProperties {
         private String url;
-        private Duration delay;
     }
 
     @Bean
     public Electricity electricity(HttpClient http, ObjectMapper mapper, PrometheusProperties properties) {
-        return new PrometheusElectricity(http, mapper, properties.url, properties.delay);
+        return new PrometheusElectricity(http, mapper, properties.url);
     }
 }

@@ -7,18 +7,16 @@ import static de.malkusch.ha.automation.model.Electricity.Aggregation.P75;
 import static java.math.BigDecimal.ZERO;
 import static java.net.URLEncoder.encode;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.time.Instant.now;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import de.malkusch.ha.automation.model.Capacity;
 import de.malkusch.ha.automation.model.Electricity;
 import de.malkusch.ha.automation.model.Watt;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
@@ -33,7 +31,6 @@ final class PrometheusElectricity implements Electricity {
     private final HttpClient http;
     private final ObjectMapper mapper;
     private final String baseUrl;
-    private final Duration delay;
 
     private static Map<Aggregation, String> AGGREGATIONS = Map.of(//
             MINIMUM, "min_over_time(%s)", //
@@ -52,8 +49,25 @@ final class PrometheusElectricity implements Electricity {
         return new Watt(result.doubleValue());
     }
 
+    @Override
+    public Watt batteryConsumption(Aggregation aggregation, Duration duration)
+            throws ApiException, InterruptedException {
+        
+        var promDuration = duration.toSeconds() + "s";
+        var timeSeries = String.format("clamp_min(batterie_battery_consumption, 0)[%s:]", promDuration);
+        var query = String.format(AGGREGATIONS.get(aggregation), timeSeries);
+        var result = query(query);
+        log.debug("{} = {}", query, result);
+        return new Watt(result.doubleValue());
+    }
+
+    @Override
+    public Capacity capacity() throws ApiException, InterruptedException {
+        var result = query("batterie_charge");
+        return new Capacity(result.doubleValue() / 100);
+    }
+
     private BigDecimal query(String query) throws ApiException, InterruptedException {
-        delay();
         var url = baseUrl + "/api/v1/query?query=" + encode(query, UTF_8);
         try (var response = http.get(url)) {
             var json = mapper.readValue(response.body, Response.class);
@@ -78,14 +92,5 @@ final class PrometheusElectricity implements Electricity {
                 public List<BigDecimal> value;
             }
         }
-    }
-
-    private Instant delayUntil = now();
-
-    private void delay() throws InterruptedException {
-        for (var now = now(); now.isBefore(delayUntil); now = now()) {
-            MILLISECONDS.sleep(Duration.between(now, delayUntil).toMillis());
-        }
-        delayUntil = now().plus(delay);
     }
 }

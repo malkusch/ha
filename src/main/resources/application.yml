@@ -13,11 +13,17 @@ buderus:
    hotWater:
       rules:
         evaluationRate: PT30m 
+   heater:
+      temporary-day-temperature:
+         steps: 2
+         step: 0.5
+      avoid-grid-rule:
+         min-capacity: 0.10
+         excess-threshold: 500
+         evaluationRate: PT30m
 monitoring:
    updateRate: PT15s
    timeout: PT3S
-prometheus:
-   delay: PT21s
 http:
    timeout: PT10S
    userAgent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36

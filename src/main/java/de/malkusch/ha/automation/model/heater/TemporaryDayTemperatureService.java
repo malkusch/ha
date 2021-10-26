@@ -1,0 +1,67 @@
+package de.malkusch.ha.automation.model.heater;
+
+import java.io.IOException;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@RequiredArgsConstructor
+@Slf4j
+public final class TemporaryDayTemperatureService implements AutoCloseable {
+
+    private final Heater heater;
+    private final int steps;
+    private final Temperature step;
+
+    private int offset = 0;
+    private final Object lock = new Object();
+
+    public void reset() throws IOException, InterruptedException {
+        synchronized (lock) {
+            offset = 0;
+            heater.resetTemporaryHeaterTemperatur();
+        }
+    }
+
+    public void stepDown() throws IOException, InterruptedException {
+        synchronized (lock) {
+            if (offset <= -steps) {
+                return;
+            }
+            offset--;
+            log.info("Stepping heater down to {} steps ", offset);
+            heater.changeTemporaryHeaterTemperatur(offsetTemperature());
+        }
+    }
+
+    public void stepUp() throws IOException, InterruptedException {
+        synchronized (lock) {
+            if (offset >= steps) {
+                return;
+            }
+            offset++;
+            log.info("Stepping heater up to {} steps ", offset);
+            heater.changeTemporaryHeaterTemperatur(offsetTemperature());
+        }
+    }
+
+    public void stepMin() throws IOException, InterruptedException {
+        synchronized (lock) {
+            if (offset <= -steps) {
+                return;
+            }
+            offset = -steps;
+            log.info("Stepping heater to minimum");
+            heater.changeTemporaryHeaterTemperatur(offsetTemperature());
+        }
+    }
+
+    private Temperature offsetTemperature() throws IOException, InterruptedException {
+        return heater.dayTemperature().plus(step.multiply(offset));
+    }
+
+    @Override
+    public void close() throws Exception {
+        reset();
+    }
+}

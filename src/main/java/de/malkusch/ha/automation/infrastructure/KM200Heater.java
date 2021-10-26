@@ -29,6 +29,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.malkusch.ha.automation.model.heater.Heater;
+import de.malkusch.ha.automation.model.heater.Temperature;
 import de.malkusch.km200.KM200;
 import de.malkusch.km200.KM200Exception.NotFound;
 import lombok.extern.slf4j.Slf4j;
@@ -40,14 +41,53 @@ class KM200Heater implements Heater {
     private final KM200 km200;
     private final ObjectMapper mapper;
 
-    private static final String HOT_WATER_OPERATION_MODE = "/dhwCircuits/dhw1/operationMode";
-
     public KM200Heater(KM200 km200, ObjectMapper mapper) throws IOException, InterruptedException {
         this.km200 = km200;
         this.mapper = mapper;
 
-        cacheSwitchProgram();
+        cacheHotWaterSwitchProgram();
     }
+
+    @Override
+    public HeaterProgram currentHeaterProgram() throws IOException, InterruptedException {
+        var active = km200.queryString("/heatingCircuits/hc1/activeSwitchProgram");
+        var program = switchProgram("/heatingCircuits/hc1/switchPrograms/" + active);
+        var setPoint = program.setPointAt(now());
+        switch (setPoint) {
+        case "eco":
+            return HeaterProgram.NIGHT;
+        case "comfort2":
+            return HeaterProgram.DAY;
+        default:
+            throw new IllegalStateException("Invalid Heater program " + setPoint + " for active program " + active);
+        }
+    }
+
+    private static final String TEMPORAY_ROOM_SET_POINT = "/heatingCircuits/hc1/temporaryRoomSetpoint";
+
+    @Override
+    public void changeTemporaryHeaterTemperatur(Temperature temperature) throws IOException, InterruptedException {
+        km200.update(TEMPORAY_ROOM_SET_POINT, temperature.getValue());
+        var current = new Temperature(km200.queryBigDecimal(TEMPORAY_ROOM_SET_POINT));
+        if (!current.equals(temperature)) {
+            throw new IOException(
+                    String.format("changeTemporaryHeaterTemperatur() to %s resulted in %s", temperature, current));
+        }
+    }
+
+    private static final Temperature RESET_TEMPERATURE = new Temperature(-1);
+
+    @Override
+    public void resetTemporaryHeaterTemperatur() throws IOException, InterruptedException {
+        changeTemporaryHeaterTemperatur(RESET_TEMPERATURE);
+    }
+
+    @Override
+    public Temperature dayTemperature() throws IOException, InterruptedException {
+        return new Temperature(km200.queryBigDecimal("/heatingCircuits/hc1/temperatureLevels/comfort2"));
+    }
+
+    private static final String HOT_WATER_OPERATION_MODE = "/dhwCircuits/dhw1/operationMode";
 
     @Override
     public void switchHotWaterMode(HotWaterMode mode) throws IOException, InterruptedException {
@@ -100,20 +140,12 @@ class KM200Heater implements Heater {
 
     @Override
     public HotWaterMode ownProgramHotWaterMode() throws IOException, InterruptedException {
-        var now = now();
-        var nowIndexed = SwitchProgram.SwitchPoint.index(now.getDayOfWeek(), now.toLocalTime());
-
-        var program = switchProgram().switchPoints();
-        var last = program.stream().max(comparingInt(SwitchProgram.SwitchPoint::index)).get();
-        return program.stream() //
-                .filter(it -> it.index() <= nowIndexed) //
-                .min(comparingInt(it -> nowIndexed - it.index())) //
-                .orElse(last).mode();
+        return hotWaterMode(hotWaterSwitchProgram().setPointAt(now()));
     }
 
-    private void cacheSwitchProgram() throws IOException, InterruptedException {
+    private void cacheHotWaterSwitchProgram() throws IOException, InterruptedException {
         try {
-            switchProgram();
+            hotWaterSwitchProgram();
         } catch (NotFound e) {
             var mode = currentHotWaterMode();
             if (mode == OWNPROGRAM) {
@@ -123,7 +155,7 @@ class KM200Heater implements Heater {
             try {
                 switchHotWaterMode(OWNPROGRAM);
                 SECONDS.sleep(1);
-                switchProgram();
+                hotWaterSwitchProgram();
 
             } finally {
                 log.debug("Switching back to {}", mode);
@@ -132,29 +164,29 @@ class KM200Heater implements Heater {
         }
     }
 
-    private volatile SwitchProgram switchProgram;
+    private volatile SwitchProgram hotWaterSwitchProgram;
 
-    private SwitchProgram switchProgram() throws IOException, InterruptedException {
+    private SwitchProgram hotWaterSwitchProgram() throws IOException, InterruptedException {
         try {
-            switchProgram = mapper.readValue(km200.query("/dhwCircuits/dhw1/switchPrograms/A"), SwitchProgram.class);
+            hotWaterSwitchProgram = switchProgram("/dhwCircuits/dhw1/switchPrograms/A");
             log.debug("Updated fallback switchProgram");
 
         } catch (NotFound e) {
-            if (switchProgram == null) {
+            if (hotWaterSwitchProgram == null) {
                 throw e;
             }
             log.debug("Returning fallback switchProgram");
         }
-        return switchProgram;
+        return hotWaterSwitchProgram;
+    }
+
+    private SwitchProgram switchProgram(String path) throws IOException, InterruptedException {
+        return mapper.readValue(km200.query(path), SwitchProgram.class);
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     private static record SwitchProgram(List<SwitchPoint> switchPoints) {
         private static record SwitchPoint(String dayOfWeek, String setpoint, int time) {
-
-            HotWaterMode mode() {
-                return hotWaterMode(setpoint);
-            }
 
             LocalTime localTime() {
                 return MIDNIGHT.plusMinutes(time);
@@ -174,6 +206,15 @@ class KM200Heater implements Heater {
             private static int index(DayOfWeek day, LocalTime time) {
                 return day.getValue() * 100000 + time.toSecondOfDay();
             }
+        }
+
+        private String setPointAt(LocalDateTime date) {
+            var dateIndexed = SwitchProgram.SwitchPoint.index(date.getDayOfWeek(), date.toLocalTime());
+            var last = switchPoints.stream().max(comparingInt(SwitchProgram.SwitchPoint::index)).get();
+            return switchPoints.stream() //
+                    .filter(it -> it.index() <= dateIndexed) //
+                    .min(comparingInt(it -> dateIndexed - it.index())) //
+                    .orElse(last).setpoint();
         }
     }
 
