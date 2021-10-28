@@ -31,18 +31,27 @@ public final class AvoidGridHeaterRule implements Rule {
             return;
         }
         try {
+            var evaluationPeriod = evaluationRate.dividedBy(2);
+
             if (electricity.capacity().isLessThan(minCapacity)) {
                 temperatureService.stepMin();
                 return;
             }
-            if (!electricity.batteryConsumption(P75, evaluationRate).isZero()) {
+
+            if (!electricity.batteryConsumption(P75, evaluationPeriod).isZero()) {
                 temperatureService.stepDown();
                 return;
             }
-            if (electricity.excess(P75, evaluationRate).isGreaterThan(excessThreshold)) {
-                log.info("Stepping up heater");
-                temperatureService.stepUp();
-                return;
+
+            var production = electricity.production(P75, evaluationPeriod);
+            var consumption = electricity.consumption(P75, evaluationPeriod);
+            if (production.isGreaterThan(consumption)) {
+                var excess = production.minus(consumption);
+                if (excess.isGreaterThan(excessThreshold)) {
+                    log.info("Stepping up heater");
+                    temperatureService.stepUp();
+                    return;
+                }
             }
 
         } finally {

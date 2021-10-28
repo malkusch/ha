@@ -12,6 +12,10 @@ public interface Electricity {
 
     Watt excess(Aggregation aggregation, Duration duration) throws ApiException, InterruptedException;
 
+    Watt consumption(Aggregation aggregation, Duration duration) throws ApiException, InterruptedException;
+
+    Watt production(Aggregation aggregation, Duration duration) throws ApiException, InterruptedException;
+
     Watt batteryConsumption(Aggregation aggregation, Duration duration) throws ApiException, InterruptedException;
 
     Capacity capacity() throws ApiException, InterruptedException;
