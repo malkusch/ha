@@ -10,6 +10,7 @@ import de.malkusch.ha.automation.model.Electricity;
 import de.malkusch.ha.automation.model.Rule;
 import de.malkusch.ha.automation.model.Watt;
 import de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.DehumidifierRepository;
+import de.malkusch.ha.automation.model.heater.Heater;
 import de.malkusch.ha.shared.model.ApiException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,12 +21,18 @@ public final class TurnOffDehumidifiersRule implements Rule {
 
     private final DehumidifierRepository dehumidifiers;
     private final Electricity electricity;
+    private final Heater heater;
     private final Watt buffer;
     private final Duration window;
     private final Duration evaluationRate;
 
     @Override
     public void evaluate() throws ApiException, InterruptedException, DebounceException {
+        if (heater.isHeating()) {
+            turnAllOff();
+            return;
+        }
+
         var dehumidifier = findNext();
         if (dehumidifier == null) {
             return;
@@ -45,6 +52,14 @@ public final class TurnOffDehumidifiersRule implements Rule {
             }
         }
         return null;
+    }
+
+    private void turnAllOff() throws ApiException, InterruptedException, DebounceException {
+        for (var dehumidifier : dehumidifiers.findAll()) {
+            if (dehumidifier.state() == ON) {
+                dehumidifier.turnOff();
+            }
+        }
     }
 
     @Override

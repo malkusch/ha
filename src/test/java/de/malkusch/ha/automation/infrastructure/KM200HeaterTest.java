@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import de.malkusch.ha.automation.infrastructure.prometheus.Prometheus;
 import de.malkusch.ha.automation.model.heater.Heater;
 import de.malkusch.km200.KM200;
 
@@ -61,7 +62,7 @@ public class KM200HeaterTest {
                             {"dayOfWeek":"Su","setpoint":"low","time":1200},
                             {"dayOfWeek":"Su","setpoint":"eco","time":1260}]}""");
 
-        heater = new KM200Heater(km200, new ObjectMapper());
+        heater = new KM200Heater(km200, mock(Prometheus.class), new ObjectMapper());
     }
 
     @ParameterizedTest

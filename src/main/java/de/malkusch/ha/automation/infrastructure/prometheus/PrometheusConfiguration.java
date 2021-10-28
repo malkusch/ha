@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import de.malkusch.ha.automation.model.Electricity;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
 import lombok.Data;
 
@@ -22,7 +21,7 @@ class PrometheusConfiguration {
     }
 
     @Bean
-    public Electricity electricity(HttpClient http, ObjectMapper mapper, PrometheusProperties properties) {
-        return new PrometheusElectricity(http, mapper, properties.url);
+    public Prometheus prometheus(HttpClient http, ObjectMapper mapper, PrometheusProperties properties) {
+        return new Prometheus(http, mapper, properties.url);
     }
 }

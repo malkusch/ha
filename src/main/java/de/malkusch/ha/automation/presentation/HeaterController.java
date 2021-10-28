@@ -1,11 +1,10 @@
 package de.malkusch.ha.automation.presentation;
 
-import java.io.IOException;
-
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import de.malkusch.ha.automation.application.heater.HotWaterApplicationService;
+import de.malkusch.ha.shared.model.ApiException;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -15,12 +14,12 @@ public final class HeaterController {
     private final HotWaterApplicationService api;
 
     @PutMapping("/heater/hotWater/heatUp")
-    public void heatUpHotWater() throws IOException, InterruptedException {
+    public void heatUpHotWater() throws ApiException, InterruptedException {
         api.heatUp();
     }
 
     @PutMapping("/heater/hotWater/turnOff")
-    public void turnOffHotWater() throws IOException, InterruptedException {
+    public void turnOffHotWater() throws ApiException, InterruptedException {
         api.turnOff();
     }
 }

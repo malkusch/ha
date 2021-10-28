@@ -17,6 +17,7 @@ import static java.util.Comparator.comparingInt;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -28,8 +29,10 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import de.malkusch.ha.automation.infrastructure.prometheus.Prometheus;
 import de.malkusch.ha.automation.model.heater.Heater;
 import de.malkusch.ha.automation.model.heater.Temperature;
+import de.malkusch.ha.shared.model.ApiException;
 import de.malkusch.km200.KM200;
 import de.malkusch.km200.KM200Exception.NotFound;
 import lombok.extern.slf4j.Slf4j;
@@ -39,19 +42,29 @@ import lombok.extern.slf4j.Slf4j;
 class KM200Heater implements Heater {
 
     private final KM200 km200;
+    private final Prometheus prometheus;
     private final ObjectMapper mapper;
 
-    public KM200Heater(KM200 km200, ObjectMapper mapper) throws IOException, InterruptedException {
+    public KM200Heater(KM200 km200, Prometheus prometheus, ObjectMapper mapper)
+            throws InterruptedException, ApiException {
+
         this.km200 = km200;
+        this.prometheus = prometheus;
         this.mapper = mapper;
 
         cacheHotWaterSwitchProgram();
     }
 
     @Override
-    public HeaterProgram currentHeaterProgram() throws IOException, InterruptedException {
-        var active = km200.queryString("/heatingCircuits/hc1/activeSwitchProgram");
-        var program = switchProgram("/heatingCircuits/hc1/switchPrograms/" + active);
+    public boolean isHeating() throws ApiException, InterruptedException {
+        var delta = prometheus.query("delta(heater_heatSources_workingTime_totalSystem[5m:])");
+        return delta.compareTo(BigDecimal.ZERO) > 0;
+    }
+
+    @Override
+    public HeaterProgram currentHeaterProgram() throws ApiException, InterruptedException {
+        var active = withApiException(() -> km200.queryString("/heatingCircuits/hc1/activeSwitchProgram"));
+        var program = withApiException(() -> switchProgram("/heatingCircuits/hc1/switchPrograms/" + active));
         var setPoint = program.setPointAt(now());
         switch (setPoint) {
         case "eco":
@@ -66,11 +79,11 @@ class KM200Heater implements Heater {
     private static final String TEMPORAY_ROOM_SET_POINT = "/heatingCircuits/hc1/temporaryRoomSetpoint";
 
     @Override
-    public void changeTemporaryHeaterTemperatur(Temperature temperature) throws IOException, InterruptedException {
-        km200.update(TEMPORAY_ROOM_SET_POINT, temperature.getValue());
-        var current = new Temperature(km200.queryBigDecimal(TEMPORAY_ROOM_SET_POINT));
+    public void changeTemporaryHeaterTemperatur(Temperature temperature) throws ApiException, InterruptedException {
+        withApiException(() -> km200.update(TEMPORAY_ROOM_SET_POINT, temperature.getValue()));
+        var current = new Temperature(withApiException(() -> km200.queryBigDecimal(TEMPORAY_ROOM_SET_POINT)));
         if (!current.equals(temperature)) {
-            throw new IOException(
+            throw new ApiException(
                     String.format("changeTemporaryHeaterTemperatur() to %s resulted in %s", temperature, current));
         }
     }
@@ -78,30 +91,31 @@ class KM200Heater implements Heater {
     private static final Temperature RESET_TEMPERATURE = new Temperature(-1);
 
     @Override
-    public void resetTemporaryHeaterTemperatur() throws IOException, InterruptedException {
+    public void resetTemporaryHeaterTemperatur() throws ApiException, InterruptedException {
         changeTemporaryHeaterTemperatur(RESET_TEMPERATURE);
     }
 
     @Override
-    public Temperature dayTemperature() throws IOException, InterruptedException {
-        return new Temperature(km200.queryBigDecimal("/heatingCircuits/hc1/temperatureLevels/comfort2"));
+    public Temperature dayTemperature() throws ApiException, InterruptedException {
+        return new Temperature(
+                withApiException(() -> km200.queryBigDecimal("/heatingCircuits/hc1/temperatureLevels/comfort2")));
     }
 
     private static final String HOT_WATER_OPERATION_MODE = "/dhwCircuits/dhw1/operationMode";
 
     @Override
-    public void switchHotWaterMode(HotWaterMode mode) throws IOException, InterruptedException {
-        km200.update(HOT_WATER_OPERATION_MODE, km200Mode(mode));
+    public void switchHotWaterMode(HotWaterMode mode) throws ApiException, InterruptedException {
+        withApiException(() -> km200.update(HOT_WATER_OPERATION_MODE, km200Mode(mode)));
         SECONDS.sleep(1);
         var current = currentHotWaterMode();
         if (current != mode) {
-            throw new IOException(String.format("Switching to %s resulted in %s", mode, current));
+            throw new ApiException(String.format("Switching to %s resulted in %s", mode, current));
         }
     }
 
     @Override
-    public HotWaterMode currentHotWaterMode() throws IOException, InterruptedException {
-        return hotWaterMode(km200.queryString(HOT_WATER_OPERATION_MODE));
+    public HotWaterMode currentHotWaterMode() throws ApiException, InterruptedException {
+        return hotWaterMode(withApiException(() -> km200.queryString(HOT_WATER_OPERATION_MODE)));
     }
 
     private static HotWaterMode hotWaterMode(String mode) {
@@ -139,11 +153,12 @@ class KM200Heater implements Heater {
     }
 
     @Override
-    public HotWaterMode ownProgramHotWaterMode() throws IOException, InterruptedException {
-        return hotWaterMode(hotWaterSwitchProgram().setPointAt(now()));
+    public HotWaterMode ownProgramHotWaterMode() throws ApiException, InterruptedException {
+        var now = now();
+        return hotWaterMode(hotWaterSwitchProgram().setPointAt(now));
     }
 
-    private void cacheHotWaterSwitchProgram() throws IOException, InterruptedException {
+    private void cacheHotWaterSwitchProgram() throws ApiException, InterruptedException {
         try {
             hotWaterSwitchProgram();
         } catch (NotFound e) {
@@ -166,18 +181,20 @@ class KM200Heater implements Heater {
 
     private volatile SwitchProgram hotWaterSwitchProgram;
 
-    private SwitchProgram hotWaterSwitchProgram() throws IOException, InterruptedException {
-        try {
-            hotWaterSwitchProgram = switchProgram("/dhwCircuits/dhw1/switchPrograms/A");
-            log.debug("Updated fallback switchProgram");
+    private SwitchProgram hotWaterSwitchProgram() throws ApiException, InterruptedException {
+        return withApiException(() -> {
+            try {
+                hotWaterSwitchProgram = switchProgram("/dhwCircuits/dhw1/switchPrograms/A");
+                log.debug("Updated fallback switchProgram");
 
-        } catch (NotFound e) {
-            if (hotWaterSwitchProgram == null) {
-                throw e;
+            } catch (NotFound e) {
+                if (hotWaterSwitchProgram == null) {
+                    throw e;
+                }
+                log.debug("Returning fallbackwithApiException switchProgram");
             }
-            log.debug("Returning fallback switchProgram");
-        }
-        return hotWaterSwitchProgram;
+            return hotWaterSwitchProgram;
+        });
     }
 
     private SwitchProgram switchProgram(String path) throws IOException, InterruptedException {
@@ -218,7 +235,33 @@ class KM200Heater implements Heater {
         }
     }
 
-    LocalDateTime now() throws IOException, InterruptedException {
-        return LocalDateTime.parse(km200.queryString("/gateway/DateTime"));
+    LocalDateTime now() throws ApiException, InterruptedException {
+        return LocalDateTime.parse(withApiException(() -> km200.queryString("/gateway/DateTime")));
+    }
+
+    @FunctionalInterface
+    private static interface Query<T> {
+        T query() throws IOException, InterruptedException;
+    }
+
+    private <T> T withApiException(Query<T> query) throws ApiException, InterruptedException {
+        try {
+            return query.query();
+        } catch (IOException e) {
+            throw new ApiException(e);
+        }
+    }
+
+    @FunctionalInterface
+    private static interface Update {
+        void update() throws IOException, InterruptedException;
+    }
+
+    private void withApiException(Update update) throws ApiException, InterruptedException {
+        try {
+            update.update();
+        } catch (IOException e) {
+            throw new ApiException(e);
+        }
     }
 }

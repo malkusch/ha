@@ -1,7 +1,6 @@
 package de.malkusch.ha.automation.model.heater;
 
-import java.io.IOException;
-
+import de.malkusch.ha.shared.model.ApiException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,14 +15,14 @@ public final class TemporaryDayTemperatureService implements AutoCloseable {
     private int offset = 0;
     private final Object lock = new Object();
 
-    public void reset() throws IOException, InterruptedException {
+    public void reset() throws ApiException, InterruptedException {
         synchronized (lock) {
             offset = 0;
             heater.resetTemporaryHeaterTemperatur();
         }
     }
 
-    public void stepDown() throws IOException, InterruptedException {
+    public void stepDown() throws ApiException, InterruptedException {
         synchronized (lock) {
             if (offset <= -steps) {
                 return;
@@ -34,7 +33,7 @@ public final class TemporaryDayTemperatureService implements AutoCloseable {
         }
     }
 
-    public void stepUp() throws IOException, InterruptedException {
+    public void stepUp() throws ApiException, InterruptedException {
         synchronized (lock) {
             if (offset >= steps) {
                 return;
@@ -45,7 +44,7 @@ public final class TemporaryDayTemperatureService implements AutoCloseable {
         }
     }
 
-    public void stepMin() throws IOException, InterruptedException {
+    public void stepMin() throws ApiException, InterruptedException {
         synchronized (lock) {
             if (offset <= -steps) {
                 return;
@@ -56,7 +55,7 @@ public final class TemporaryDayTemperatureService implements AutoCloseable {
         }
     }
 
-    private Temperature offsetTemperature() throws IOException, InterruptedException {
+    private Temperature offsetTemperature() throws ApiException, InterruptedException {
         return heater.dayTemperature().plus(step.multiply(offset));
     }
 
