@@ -19,6 +19,6 @@ public record Cloudiness(double cloudiness) {
 
     @Override
     public String toString() {
-        return String.format("%.2f%%", cloudiness);
+        return String.format("%.2f%%", cloudiness * 100);
     }
 }

@@ -19,6 +19,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
@@ -99,6 +100,23 @@ class KM200Heater implements Heater {
     public Temperature dayTemperature() throws ApiException, InterruptedException {
         return new Temperature(
                 withApiException(() -> km200.queryBigDecimal("/heatingCircuits/hc1/temperatureLevels/comfort2")));
+    }
+
+    private static final String HOT_WATER_HIGH_TEMPERATURE = "/dhwCircuits/dhw1/temperatureLevels/high";
+
+    @Override
+    public Temperature hotwaterHighTemperature() throws ApiException, InterruptedException {
+        return new Temperature(withApiException(() -> km200.queryBigDecimal(HOT_WATER_HIGH_TEMPERATURE)));
+    }
+
+    @Override
+    public void changeHotwaterHighTemperature(Temperature temperature) throws ApiException, InterruptedException {
+        withApiException(() -> km200.update(HOT_WATER_HIGH_TEMPERATURE, temperature.getValue()));
+        var changed = hotwaterHighTemperature();
+        if (!changed.equals(temperature)) {
+            throw new ApiException(
+                    String.format("Failed setting hot water HIGH temperature to %s, was %s", temperature, changed));
+        }
     }
 
     private static final String HOT_WATER_OPERATION_MODE = "/dhwCircuits/dhw1/operationMode";
@@ -263,5 +281,12 @@ class KM200Heater implements Heater {
         } catch (IOException e) {
             throw new ApiException(e);
         }
+    }
+
+    @Override
+    public boolean isWinter() {
+        // TODO check in summer /heatingCircuits/hc1/currentSuWiMode, was in winter "forced"
+        var month = LocalDate.now().getMonthValue();
+        return month >= 10 || month <= 3;
     }
 }

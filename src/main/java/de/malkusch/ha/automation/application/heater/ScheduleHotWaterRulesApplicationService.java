@@ -14,7 +14,7 @@ import lombok.Data;
 @Service
 public final class ScheduleHotWaterRulesApplicationService {
 
-    @ConfigurationProperties("buderus.hot-water.rules")
+    @ConfigurationProperties("buderus.hot-water.rules.reset-program")
     @Component
     @Data
     public static class HotWaterRulesProperties {

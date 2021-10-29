@@ -14,6 +14,10 @@ public interface Heater {
 
     public HotWaterMode ownProgramHotWaterMode() throws ApiException, InterruptedException;
 
+    public Temperature hotwaterHighTemperature() throws ApiException, InterruptedException;
+
+    public void changeHotwaterHighTemperature(Temperature temperature) throws ApiException, InterruptedException;
+
     public static enum HeaterProgram {
         NIGHT, DAY
     }
@@ -28,4 +32,5 @@ public interface Heater {
 
     public boolean isHeating() throws ApiException, InterruptedException;
 
+    public boolean isWinter();
 }

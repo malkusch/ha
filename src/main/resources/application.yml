@@ -10,9 +10,14 @@ buderus:
    salt: 867845e97c4e29dce522b9a7d3a3e07b152bffadddbed7f5ffd842e9895ad1e4
    queryRate: PT1m
    timeout: PT10s
-   hotWater:
+   hot-water:
       rules:
-        evaluationRate: PT30m 
+         reset-program:
+            evaluation-rate: PT30m 
+         reduce-in-winter:
+            evaluation-rate: PT6h 
+            cloudiness-threshold: 0.75
+            delta: 3
    heater:
       temporary-day-temperature:
          steps: 2
