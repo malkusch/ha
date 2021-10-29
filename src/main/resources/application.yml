@@ -19,8 +19,15 @@ buderus:
          step: 0.5
       avoid-grid-rule:
          min-capacity: 0.10
+         max-cloudiness: 0.75
          excess-threshold: 500
          evaluationRate: PT30m
+open-weather:
+   base-url: https://api.openweathermap.org/data/2.5/onecall
+   latitude: 123
+   longitude: 123
+   api-key: 123abc
+   refresh-cron: 59 */10 * * * * # Every ten minutes
 monitoring:
    updateRate: PT15s
    timeout: PT3S

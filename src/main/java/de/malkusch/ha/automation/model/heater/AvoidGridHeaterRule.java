@@ -5,11 +5,14 @@ import static de.malkusch.ha.automation.model.heater.Heater.HeaterProgram.DAY;
 import static de.malkusch.ha.automation.model.heater.Heater.HeaterProgram.NIGHT;
 
 import java.time.Duration;
+import java.time.LocalDate;
 
 import de.malkusch.ha.automation.model.Capacity;
 import de.malkusch.ha.automation.model.Electricity;
 import de.malkusch.ha.automation.model.Rule;
 import de.malkusch.ha.automation.model.Watt;
+import de.malkusch.ha.automation.model.weather.Cloudiness;
+import de.malkusch.ha.automation.model.weather.Weather;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,10 +21,12 @@ import lombok.extern.slf4j.Slf4j;
 public final class AvoidGridHeaterRule implements Rule {
 
     private final Capacity minCapacity;
+    private final Cloudiness maxCloudiness;
     private final Watt excessThreshold;
     private final Duration evaluationRate;
     private final Electricity electricity;
     private final Heater heater;
+    private final Weather weather;
     private final TemporaryDayTemperatureService temperatureService;
 
     @Override
@@ -34,6 +39,13 @@ public final class AvoidGridHeaterRule implements Rule {
             var evaluationPeriod = evaluationRate.dividedBy(2);
 
             if (electricity.capacity().isLessThan(minCapacity)) {
+                log.info("Stepping to minimum, because of low battery");
+                temperatureService.stepMin();
+                return;
+            }
+
+            if (weather.cloudiness(LocalDate.now()).isGreaterThan(maxCloudiness)) {
+                log.info("Stepping to minimum, because of too cloudy");
                 temperatureService.stepMin();
                 return;
             }
