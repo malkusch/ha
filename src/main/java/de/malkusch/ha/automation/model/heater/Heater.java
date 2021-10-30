@@ -33,4 +33,6 @@ public interface Heater {
     public boolean isHeating() throws ApiException, InterruptedException;
 
     public boolean isWinter();
+
+    public boolean isHoliday() throws ApiException, InterruptedException;
 }

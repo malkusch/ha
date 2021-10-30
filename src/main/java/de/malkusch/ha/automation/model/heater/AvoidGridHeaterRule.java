@@ -1,7 +1,6 @@
 package de.malkusch.ha.automation.model.heater;
 
 import static de.malkusch.ha.automation.model.Electricity.Aggregation.P75;
-import static de.malkusch.ha.automation.model.heater.Heater.HeaterProgram.DAY;
 import static de.malkusch.ha.automation.model.heater.Heater.HeaterProgram.NIGHT;
 
 import java.time.Duration;
@@ -31,7 +30,7 @@ public final class AvoidGridHeaterRule implements Rule {
 
     @Override
     public void evaluate() throws Exception {
-        if (heater.currentHeaterProgram() != DAY) {
+        if (heater.currentHeaterProgram() == NIGHT || heater.isHoliday()) {
             temperatureService.reset();
             return;
         }
@@ -69,7 +68,7 @@ public final class AvoidGridHeaterRule implements Rule {
         } finally {
             // In case the rule was just evaluated right before the night switch
             // happened
-            if (heater.currentHeaterProgram() == NIGHT) {
+            if (heater.currentHeaterProgram() == NIGHT || heater.isHoliday()) {
                 temperatureService.reset();
             }
         }

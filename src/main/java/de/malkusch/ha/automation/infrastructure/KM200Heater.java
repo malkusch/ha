@@ -35,6 +35,7 @@ import de.malkusch.ha.automation.model.heater.Heater;
 import de.malkusch.ha.automation.model.heater.Temperature;
 import de.malkusch.ha.shared.model.ApiException;
 import de.malkusch.km200.KM200;
+import de.malkusch.km200.KM200Exception;
 import de.malkusch.km200.KM200Exception.NotFound;
 import lombok.extern.slf4j.Slf4j;
 
@@ -285,8 +286,31 @@ class KM200Heater implements Heater {
 
     @Override
     public boolean isWinter() {
-        // TODO check in summer /heatingCircuits/hc1/currentSuWiMode, was in winter "forced"
+        // TODO check in summer /heatingCircuits/hc1/currentSuWiMode, was in
+        // winter "forced"
         var month = LocalDate.now().getMonthValue();
         return month >= 10 || month <= 3;
+    }
+
+    @Override
+    public boolean isHoliday() throws ApiException, InterruptedException {
+        var now = now().toLocalDate();
+        try {
+            for (var i = 1; i <= 100; i++) {
+                var path = "/system/holidayModes/hm" + i + "/startStop";
+                var startstop = km200.queryString(path).split("/");
+                var start = LocalDate.parse(startstop[0]);
+                var stop = LocalDate.parse(startstop[1]);
+                if (start.compareTo(now) <= 0 && stop.compareTo(now) >= 0) {
+                    return true;
+                }
+            }
+            throw new IllegalStateException("Iterated too many holiday modes");
+
+        } catch (NotFound e) {
+            return false;
+        } catch (KM200Exception | IOException e) {
+            throw new ApiException(e);
+        }
     }
 }

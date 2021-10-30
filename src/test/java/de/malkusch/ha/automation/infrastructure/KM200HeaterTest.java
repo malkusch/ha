@@ -4,10 +4,13 @@ import static de.malkusch.ha.automation.model.heater.Heater.HotWaterMode.ECO;
 import static de.malkusch.ha.automation.model.heater.Heater.HotWaterMode.HIGH;
 import static de.malkusch.ha.automation.model.heater.Heater.HotWaterMode.LOW;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -19,6 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.malkusch.ha.automation.infrastructure.prometheus.Prometheus;
 import de.malkusch.ha.automation.model.heater.Heater;
 import de.malkusch.km200.KM200;
+import de.malkusch.km200.KM200Exception;
 
 @ExtendWith(MockitoExtension.class)
 public class KM200HeaterTest {
@@ -104,6 +108,34 @@ public class KM200HeaterTest {
         var mode = heater.ownProgramHotWaterMode();
 
         assertEquals(HIGH, mode);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "2021-10-31T00:00:00", "2021-11-02T23:59:59", })
+    public void isHolidayShouldReturnTrueForHm1(String time) throws Exception {
+        givenDateTime(time);
+        when(km200.queryString("/system/holidayModes/hm1/startStop")).thenReturn("2021-10-31/2021-11-02");
+
+        assertTrue(heater.isHoliday());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "2021-10-30T23:59:59", "2021-11-03T00:00:00", })
+    public void isHolidayShouldReturnFalse(String time) throws Exception {
+        givenDateTime(time);
+        when(km200.queryString("/system/holidayModes/hm1/startStop")).thenReturn("2021-10-31/2021-11-02");
+        when(km200.queryString("/system/holidayModes/hm2/startStop")).thenThrow(new KM200Exception.NotFound("Test"));
+
+        assertFalse(heater.isHoliday());
+    }
+
+    @Test
+    public void isHolidayShouldReturnTrueForHm2() throws Exception {
+        givenDateTime("2021-11-05T00:00:00");
+        when(km200.queryString("/system/holidayModes/hm1/startStop")).thenReturn("2021-10-31/2021-11-02");
+        when(km200.queryString("/system/holidayModes/hm2/startStop")).thenReturn("2021-11-05/2021-11-05");
+
+        assertTrue(heater.isHoliday());
     }
 
     private void givenDateTime(String time) throws Exception {
