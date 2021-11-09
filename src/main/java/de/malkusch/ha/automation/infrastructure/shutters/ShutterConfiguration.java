@@ -2,11 +2,11 @@ package de.malkusch.ha.automation.infrastructure.shutters;
 
 import static de.malkusch.ha.automation.model.shutters.ShutterId.KUECHENTUER;
 import static de.malkusch.ha.automation.model.shutters.ShutterId.TERRASSE;
-import static de.malkusch.ha.automation.model.shutters.ShutterId.UTES_BUERO;
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toUnmodifiableMap;
+import static java.util.stream.Collectors.toList;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -55,24 +55,21 @@ class ShutterConfiguration {
     }
 
     @Bean
-    public Api loggingApi() {
-        return new LoggingApi();
-    }
-
-    @Bean
-    public Api shellyApi() {
-        var deviceIds = properties.shelly.shutters.stream().collect(toUnmodifiableMap(it -> it.id, it -> it.deviceId));
-        return new ShellyCloudApi(properties.shelly.url, properties.shelly.key, http, mapper, deviceIds);
-    }
-
-    @Bean
     public ShutterRepository shutters() {
-        return new InMemoryShutterRepository(
-                asList(shutter(KUECHENTUER), shutter(UTES_BUERO, shellyApi()), shutter(TERRASSE)));
+        var shutters = new ArrayList<Shutter>();
+        shutters.addAll(
+                properties.shelly.shutters.stream().map(it -> shellyShutter(it.id, it.deviceId)).collect(toList()));
+        shutters.addAll(asList(shutter(KUECHENTUER), shutter(TERRASSE)));
+
+        return new InMemoryShutterRepository(shutters);
+    }
+
+    private Shutter shellyShutter(ShutterId id, String deviceId) {
+        return shutter(id, new ShellyCloudApi(properties.shelly.url, properties.shelly.key, http, mapper, deviceId));
     }
 
     private Shutter shutter(ShutterId id) {
-        return shutter(id, loggingApi());
+        return shutter(id, new LoggingApi(id));
     }
 
     private Shutter shutter(ShutterId id, Api api) {

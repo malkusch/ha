@@ -20,9 +20,9 @@ public class Shutter {
     private final Duration delay;
 
     public static interface Api {
-        void setState(ShutterId id, State state) throws ApiException, InterruptedException;
+        void setState(State state) throws ApiException, InterruptedException;
 
-        State state(ShutterId id) throws ApiException, InterruptedException;
+        State state() throws ApiException, InterruptedException;
 
         static record State(int percent) {
 
@@ -52,11 +52,11 @@ public class Shutter {
     }
 
     private void setState(State state) throws InterruptedException, ApiException {
-        if (api.state(id).equals(state)) {
+        if (api.state().equals(state)) {
             return;
         }
         log.info("Closing shutter {} to {}", this, state);
-        api.setState(id, state);
+        api.setState(state);
         MILLISECONDS.sleep(delay.toMillis());
     }
 

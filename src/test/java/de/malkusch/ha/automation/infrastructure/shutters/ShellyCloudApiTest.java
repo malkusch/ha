@@ -2,7 +2,6 @@ package de.malkusch.ha.automation.infrastructure.shutters;
 
 import static de.malkusch.ha.automation.model.shutters.Shutter.Api.State.CLOSED;
 import static de.malkusch.ha.automation.model.shutters.Shutter.Api.State.OPEN;
-import static de.malkusch.ha.automation.model.shutters.ShutterId.TERRASSE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -38,7 +37,7 @@ public class ShellyCloudApiTest {
 
     @BeforeEach
     public void setup() {
-        api = new ShellyCloudApi(ANY_HOST, "any", http, new ObjectMapper(), Map.of(TERRASSE, "terasse"));
+        api = new ShellyCloudApi(ANY_HOST, "any", http, new ObjectMapper(), "terasse");
     }
 
     @ParameterizedTest
@@ -46,7 +45,7 @@ public class ShellyCloudApiTest {
     public void stateShouldReturnOpen(String state, int current_pos) throws Exception {
         when(http.post(eq(ANY_HOST + "/device/status"), any())).thenReturn(statusResponse(state, current_pos));
 
-        var result = api.state(TERRASSE);
+        var result = api.state();
 
         assertEquals(OPEN, result);
     }
@@ -56,7 +55,7 @@ public class ShellyCloudApiTest {
     public void stateShouldReturnClosed(String state, int current_pos) throws Exception {
         when(http.post(eq(ANY_HOST + "/device/status"), any())).thenReturn(statusResponse(state, current_pos));
 
-        var result = api.state(TERRASSE);
+        var result = api.state();
 
         assertEquals(CLOSED, result);
     }
@@ -66,7 +65,7 @@ public class ShellyCloudApiTest {
     public void stateShouldReturnHalfClosed(String state, int current_pos) throws Exception {
         when(http.post(eq(ANY_HOST + "/device/status"), any())).thenReturn(statusResponse(state, current_pos));
 
-        var result = api.state(TERRASSE);
+        var result = api.state();
 
         assertEquals(new Api.State(100 - current_pos), result);
     }
@@ -77,7 +76,7 @@ public class ShellyCloudApiTest {
                 {"isok":true,"data":{"device_id":"e8db84aaccd6"}}
                                 """));
 
-        api.setState(TERRASSE, OPEN);
+        api.setState(OPEN);
 
         verify(http).post(eq(ANY_HOST + "/device/relay/roller/control"), any());
     }
@@ -88,7 +87,7 @@ public class ShellyCloudApiTest {
                 {"isok":true,"data":{"device_id":"e8db84aaccd6"}}
                 """));
 
-        api.setState(TERRASSE, CLOSED);
+        api.setState(CLOSED);
 
         verify(http).post(eq(ANY_HOST + "/device/relay/roller/control"), any());
     }
@@ -99,7 +98,7 @@ public class ShellyCloudApiTest {
                 {"isok":true,"data":{"device_id":"e8db84aaccd6"}}
                                 """));
 
-        api.setState(TERRASSE, new Api.State(50));
+        api.setState(new Api.State(50));
 
         verify(http).post(eq(ANY_HOST + "/device/relay/roller/settings/topos"), any());
     }

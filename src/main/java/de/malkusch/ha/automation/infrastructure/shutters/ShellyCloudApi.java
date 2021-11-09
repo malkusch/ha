@@ -4,7 +4,6 @@ import static de.malkusch.ha.automation.model.shutters.Shutter.Api.State.CLOSED;
 import static de.malkusch.ha.automation.model.shutters.Shutter.Api.State.OPEN;
 
 import java.io.IOException;
-import java.util.Map;
 
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -12,7 +11,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.malkusch.ha.automation.model.shutters.Shutter.Api;
-import de.malkusch.ha.automation.model.shutters.ShutterId;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient.Field;
 import de.malkusch.ha.shared.model.ApiException;
@@ -25,16 +23,16 @@ final class ShellyCloudApi implements Api {
     private final String key;
     private final HttpClient http;
     private final ObjectMapper mapper;
-    private final Map<ShutterId, String> deviceIds;
+    private final String deviceId;
 
     @Override
-    public void setState(ShutterId id, State state) throws ApiException, InterruptedException {
+    public void setState(State state) throws ApiException, InterruptedException {
         if (state.equals(OPEN)) {
-            post("/device/relay/roller/control", id, direction("open"));
+            post("/device/relay/roller/control", direction("open"));
         } else if (state.equals(CLOSED)) {
-            post("/device/relay/roller/control", id, direction("close"));
+            post("/device/relay/roller/control", direction("close"));
         } else {
-            post("/device/relay/roller/settings/topos", id, new Field("pos", 100 - state.percent()));
+            post("/device/relay/roller/settings/topos", new Field("pos", 100 - state.percent()));
         }
     }
 
@@ -57,15 +55,15 @@ final class ShellyCloudApi implements Api {
     }
 
     @Override
-    public State state(ShutterId id) throws ApiException, InterruptedException {
-        var status = post("/device/status", id, StatusResponse.class);
+    public State state() throws ApiException, InterruptedException {
+        var status = post("/device/status", StatusResponse.class);
         var roller = status.data.device_status.rollers[0];
 
         return switch (roller.state) {
         case "open" -> OPEN;
         case "close" -> CLOSED;
         case "stop" -> new State(100 - roller.current_pos);
-        default -> throw new IllegalStateException(String.format("Shutter %s is in state %s", id, roller.state));
+        default -> throw new IllegalStateException(String.format("Shutter %s is in state %s", deviceId, roller.state));
         };
     }
 
@@ -73,8 +71,8 @@ final class ShellyCloudApi implements Api {
         return new Field("direction", direction);
     }
 
-    private void post(String path, ShutterId id, Field... fields) throws ApiException, InterruptedException {
-        post(path, id, Response.class, fields);
+    private void post(String path, Field... fields) throws ApiException, InterruptedException {
+        post(path, Response.class, fields);
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -83,25 +81,24 @@ final class ShellyCloudApi implements Api {
         public String errors;
     }
 
-    private <T extends Response> T post(String path, ShutterId id, Class<T> responseType, Field... fields)
+    private <T extends Response> T post(String path, Class<T> responseType, Field... fields)
             throws ApiException, InterruptedException {
 
-        var deviceId = deviceIds.get(id);
         var withAuthentication = ArrayUtils
                 .addAll(new Field[] { new Field("id", deviceId), new Field("auth_key", key) }, fields);
 
         try (var httpResponse = http.post(baseUri + path, withAuthentication)) {
             if (httpResponse.statusCode != 200) {
-                throw new ApiException("Failed opening " + id + " with status " + httpResponse.statusCode);
+                throw new ApiException("Failed opening " + deviceId + " with status " + httpResponse.statusCode);
             }
             var response = mapper.readValue(httpResponse.body, responseType);
             if (!response.isok) {
-                throw new ApiException(String.format("Failed %s for id %s: %s", path, id, response.errors));
+                throw new ApiException(String.format("Failed %s for id %s: %s", path, deviceId, response.errors));
             }
             return response;
 
         } catch (IOException e) {
-            throw new ApiException("Failed " + path + " for " + id, e);
+            throw new ApiException("Failed " + path + " for " + deviceId, e);
         }
     }
 }
