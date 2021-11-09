@@ -7,9 +7,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import de.malkusch.ha.automation.infrastructure.rule.RuleScheduler;
+import de.malkusch.ha.automation.model.Temperature;
 import de.malkusch.ha.automation.model.heater.Heater;
 import de.malkusch.ha.automation.model.heater.ReduceHotWaterInWinterRule;
-import de.malkusch.ha.automation.model.heater.Temperature;
 import de.malkusch.ha.automation.model.heater.TemporayHotWaterTemperatureService;
 import de.malkusch.ha.automation.model.weather.Cloudiness;
 import de.malkusch.ha.automation.model.weather.Weather;

@@ -2,6 +2,7 @@ package de.malkusch.ha.automation.model.heater;
 
 import org.springframework.stereotype.Service;
 
+import de.malkusch.ha.automation.model.Temperature;
 import de.malkusch.ha.shared.model.ApiException;
 
 @Service

@@ -1,4 +1,4 @@
-package de.malkusch.ha.automation.model.heater;
+package de.malkusch.ha.automation.model;
 
 import java.math.BigDecimal;
 
@@ -27,6 +27,10 @@ public final class Temperature {
 
     public Temperature multiply(int factor) {
         return new Temperature(value.multiply(BigDecimal.valueOf(factor)));
+    }
+
+    public boolean isLessThan(Temperature other) {
+        return value.compareTo(other.value) < 0;
     }
 
     @Override

@@ -15,8 +15,11 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import de.malkusch.ha.automation.infrastructure.prometheus.Prometheus;
+import de.malkusch.ha.automation.model.Temperature;
 import de.malkusch.ha.automation.model.weather.Cloudiness;
 import de.malkusch.ha.automation.model.weather.Weather;
+import de.malkusch.ha.automation.model.weather.WindSpeed;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
 import de.malkusch.ha.shared.model.ApiException;
 import lombok.Data;
@@ -28,6 +31,7 @@ class OpenWeather implements Weather {
 
     private final String oneCallUrl;
     private final HttpClient http;
+    private final Prometheus prometheus;
     private final ObjectMapper mapper;
 
     @ConfigurationProperties("open-weather")
@@ -35,15 +39,17 @@ class OpenWeather implements Weather {
     @Data
     public static class Properties {
         private String baseUrl;
-        private String latitude;
-        private String longitude;
         private String apiKey;
     }
 
-    OpenWeather(Properties properties, HttpClient http, ObjectMapper mapper) throws IOException, InterruptedException {
-        oneCallUrl = String.format(properties.baseUrl + "?lat=%s&lon=%s&appid=%s&exclude=current,minutely,alerts",
-                properties.latitude, properties.longitude, properties.apiKey);
+    OpenWeather(Properties properties, HttpClient http, Prometheus prometheus, ObjectMapper mapper,
+            LocationProperties locationProperties) throws IOException, InterruptedException {
+
+        oneCallUrl = String.format(properties.baseUrl + "?lat=%s&lon=%s&appid=%s&exclude=minutely,alerts",
+                locationProperties.latitude, locationProperties.longitude, properties.apiKey);
+
         this.http = http;
+        this.prometheus = prometheus;
         this.mapper = mapper;
 
         refreshResponse();
@@ -68,8 +74,8 @@ class OpenWeather implements Weather {
         }
     }
 
-    private static record Response(List<Forecast> daily, List<Forecast> hourly) {
-        private static record Forecast(int clouds, int dt) {
+    private static record Response(Forecast current, List<Forecast> daily, List<Forecast> hourly) {
+        private static record Forecast(int clouds, int dt, double wind_speed) {
             Instant instant() {
                 return ofEpochSecond(dt);
             }
@@ -81,6 +87,20 @@ class OpenWeather implements Weather {
             LocalDate localDate() {
                 return instant().atZone(ZoneId.systemDefault()).toLocalDate();
             }
+
+            WindSpeed windSpeed() {
+                return WindSpeed.fromMps(wind_speed);
+            }
         }
+    }
+
+    @Override
+    public Temperature temperature() throws ApiException, InterruptedException {
+        return new Temperature(prometheus.query("heater_system_sensors_temperatures_outdoor_t1"));
+    }
+
+    @Override
+    public WindSpeed windspeed() throws ApiException, InterruptedException {
+        return lastResponse.current.windSpeed();
     }
 }

@@ -31,8 +31,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.malkusch.ha.automation.infrastructure.prometheus.Prometheus;
+import de.malkusch.ha.automation.model.Temperature;
 import de.malkusch.ha.automation.model.heater.Heater;
-import de.malkusch.ha.automation.model.heater.Temperature;
 import de.malkusch.ha.shared.model.ApiException;
 import de.malkusch.km200.KM200;
 import de.malkusch.km200.KM200Exception;

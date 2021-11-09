@@ -5,6 +5,7 @@ import static java.time.LocalDate.now;
 import java.time.Duration;
 
 import de.malkusch.ha.automation.model.Rule;
+import de.malkusch.ha.automation.model.Temperature;
 import de.malkusch.ha.automation.model.weather.Cloudiness;
 import de.malkusch.ha.automation.model.weather.Weather;
 import de.malkusch.ha.shared.model.ApiException;

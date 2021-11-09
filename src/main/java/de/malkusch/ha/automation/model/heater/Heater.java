@@ -1,5 +1,6 @@
 package de.malkusch.ha.automation.model.heater;
 
+import de.malkusch.ha.automation.model.Temperature;
 import de.malkusch.ha.shared.model.ApiException;
 
 public interface Heater {

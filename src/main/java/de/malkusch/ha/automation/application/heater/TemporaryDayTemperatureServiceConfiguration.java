@@ -5,8 +5,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
+import de.malkusch.ha.automation.model.Temperature;
 import de.malkusch.ha.automation.model.heater.Heater;
-import de.malkusch.ha.automation.model.heater.Temperature;
 import de.malkusch.ha.automation.model.heater.TemporaryDayTemperatureService;
 import lombok.Data;
 
