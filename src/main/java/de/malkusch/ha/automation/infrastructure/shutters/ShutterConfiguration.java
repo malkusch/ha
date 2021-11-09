@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.util.concurrent.RateLimiter;
 
 import de.malkusch.ha.automation.model.shutters.Shutter;
 import de.malkusch.ha.automation.model.shutters.Shutter.Api;
@@ -75,10 +76,15 @@ class ShutterConfiguration {
         return new InMemoryShutterRepository(shutters);
     }
 
+    @Bean
+    public RateLimiter shellyRateLimiter() {
+        return RateLimiter.create(0.25);
+    }
+
     private Shutter shellyShutter(ShutterId id, String deviceId) {
         try {
-            return shutter(id,
-                    new ShellyCloudApi(properties.shelly.url, properties.shelly.key, http, mapper, deviceId));
+            return shutter(id, new ShellyCloudApi(properties.shelly.url, properties.shelly.key, http, mapper, deviceId,
+                    shellyRateLimiter()));
         } catch (ApiException | InterruptedException e) {
             throw new IllegalStateException(e);
         }

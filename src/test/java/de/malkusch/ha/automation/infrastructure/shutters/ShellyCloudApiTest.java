@@ -21,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.util.concurrent.RateLimiter;
 
 import de.malkusch.ha.automation.model.shutters.Shutter.Api;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
@@ -37,7 +38,7 @@ public class ShellyCloudApiTest {
 
     @BeforeEach
     public void setup() {
-        api = new ShellyCloudApi(ANY_HOST, "any", http, new ObjectMapper(), "terasse");
+        api = new ShellyCloudApi(ANY_HOST, "any", http, new ObjectMapper(), "terasse", RateLimiter.create(100));
     }
 
     @ParameterizedTest

@@ -9,6 +9,7 @@ import org.apache.commons.lang3.ArrayUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.util.concurrent.RateLimiter;
 
 import de.malkusch.ha.automation.model.shutters.Shutter.Api;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
@@ -24,6 +25,7 @@ final class ShellyCloudApi implements Api {
     private final HttpClient http;
     private final ObjectMapper mapper;
     private final String deviceId;
+    private final RateLimiter rateLimiter;
 
     @Override
     public void setState(State state) throws ApiException, InterruptedException {
@@ -87,9 +89,11 @@ final class ShellyCloudApi implements Api {
         var withAuthentication = ArrayUtils
                 .addAll(new Field[] { new Field("id", deviceId), new Field("auth_key", key) }, fields);
 
+        rateLimiter.acquire();
         try (var httpResponse = http.post(baseUri + path, withAuthentication)) {
             if (httpResponse.statusCode != 200) {
-                throw new ApiException("Failed opening " + deviceId + " with status " + httpResponse.statusCode);
+                throw new ApiException(String.format("%s failed for %s [%s]:%s", path, deviceId,
+                        httpResponse.statusCode, httpResponse.bodyAsString()));
             }
             var response = mapper.readValue(httpResponse.body, responseType);
             if (!response.isok) {
