@@ -20,6 +20,10 @@ public interface HttpClient {
             this.value = value;
         }
 
+        public Field(String name, int value) {
+            this(name, Integer.toString(value));
+        }
+
         String urlencoded() {
             try {
                 return encode(name, "UTF-8") + "=" + encode(value, "UTF-8");

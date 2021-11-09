@@ -6,6 +6,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import java.time.Duration;
 
+import de.malkusch.ha.automation.model.shutters.Shutter.Api.State;
 import de.malkusch.ha.shared.model.ApiException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,36 +20,43 @@ public class Shutter {
     private final Duration delay;
 
     public static interface Api {
-        void open(ShutterId id) throws ApiException, InterruptedException;
-
-        void close(ShutterId id) throws ApiException, InterruptedException;
+        void setState(ShutterId id, State state) throws ApiException, InterruptedException;
 
         State state(ShutterId id) throws ApiException, InterruptedException;
 
-        static enum State {
-            OPEN, HALF_CLOSED, CLOSED
+        static record State(int percent) {
+
+            public static final State OPEN = new State(0);
+            public static final State CLOSED = new State(100);
+
+            public State(int percent) {
+                if (percent < 0 || percent > 100) {
+                    throw new IllegalArgumentException("percent must be between 0 and 100");
+                }
+                this.percent = percent;
+            }
+
+            @Override
+            public String toString() {
+                return String.format("%d%%", percent);
+            }
         }
     }
 
     public final void open() throws ApiException, InterruptedException {
-        if (api.state(id) == OPEN) {
-            return;
-        }
-        log.info("Opening shutter {}", this);
-        api.open(id);
-        delay();
+        setState(OPEN);
     }
 
     public final void close() throws ApiException, InterruptedException {
-        if (api.state(id) == CLOSED) {
-            return;
-        }
-        log.info("Closing shutter {}", this);
-        api.close(id);
-        delay();
+        setState(CLOSED);
     }
 
-    private void delay() throws InterruptedException {
+    private void setState(State state) throws InterruptedException, ApiException {
+        if (api.state(id).equals(state)) {
+            return;
+        }
+        log.info("Closing shutter {} to {}", this, state);
+        api.setState(id, state);
         MILLISECONDS.sleep(delay.toMillis());
     }
 

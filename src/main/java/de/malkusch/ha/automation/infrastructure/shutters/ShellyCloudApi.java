@@ -1,7 +1,6 @@
 package de.malkusch.ha.automation.infrastructure.shutters;
 
 import static de.malkusch.ha.automation.model.shutters.Shutter.Api.State.CLOSED;
-import static de.malkusch.ha.automation.model.shutters.Shutter.Api.State.HALF_CLOSED;
 import static de.malkusch.ha.automation.model.shutters.Shutter.Api.State.OPEN;
 
 import java.io.IOException;
@@ -29,13 +28,14 @@ final class ShellyCloudApi implements Api {
     private final Map<ShutterId, String> deviceIds;
 
     @Override
-    public void open(ShutterId id) throws ApiException, InterruptedException {
-        post("/device/relay/roller/control", id, direction("open"));
-    }
-
-    @Override
-    public void close(ShutterId id) throws ApiException, InterruptedException {
-        post("/device/relay/roller/control", id, direction("close"));
+    public void setState(ShutterId id, State state) throws ApiException, InterruptedException {
+        if (state.equals(OPEN)) {
+            post("/device/relay/roller/control", id, direction("open"));
+        } else if (state.equals(CLOSED)) {
+            post("/device/relay/roller/control", id, direction("close"));
+        } else {
+            post("/device/relay/roller/settings/topos", id, new Field("pos", 100 - state.percent()));
+        }
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -64,11 +64,7 @@ final class ShellyCloudApi implements Api {
         return switch (roller.state) {
         case "open" -> OPEN;
         case "close" -> CLOSED;
-        case "stop" -> switch (roller.current_pos) {
-            case 100 -> OPEN;
-            case 0 -> CLOSED;
-            default -> HALF_CLOSED;
-            };
+        case "stop" -> new State(100 - roller.current_pos);
         default -> throw new IllegalStateException(String.format("Shutter %s is in state %s", id, roller.state));
         };
     }

@@ -1,7 +1,6 @@
 package de.malkusch.ha.automation.infrastructure.shutters;
 
 import static de.malkusch.ha.automation.model.shutters.Shutter.Api.State.CLOSED;
-import static de.malkusch.ha.automation.model.shutters.Shutter.Api.State.HALF_CLOSED;
 import static de.malkusch.ha.automation.model.shutters.Shutter.Api.State.OPEN;
 import static de.malkusch.ha.automation.model.shutters.ShutterId.TERRASSE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -69,7 +68,7 @@ public class ShellyCloudApiTest {
 
         var result = api.state(TERRASSE);
 
-        assertEquals(HALF_CLOSED, result);
+        assertEquals(new Api.State(100 - current_pos), result);
     }
 
     @Test
@@ -78,7 +77,7 @@ public class ShellyCloudApiTest {
                 {"isok":true,"data":{"device_id":"e8db84aaccd6"}}
                                 """));
 
-        api.open(TERRASSE);
+        api.setState(TERRASSE, OPEN);
 
         verify(http).post(eq(ANY_HOST + "/device/relay/roller/control"), any());
     }
@@ -89,9 +88,20 @@ public class ShellyCloudApiTest {
                 {"isok":true,"data":{"device_id":"e8db84aaccd6"}}
                 """));
 
-        api.close(TERRASSE);
+        api.setState(TERRASSE, CLOSED);
 
         verify(http).post(eq(ANY_HOST + "/device/relay/roller/control"), any());
+    }
+
+    @Test
+    public void shouldHalfOpen() throws Exception {
+        when(http.post(eq(ANY_HOST + "/device/relay/roller/settings/topos"), any())).thenReturn(response("""
+                {"isok":true,"data":{"device_id":"e8db84aaccd6"}}
+                                """));
+
+        api.setState(TERRASSE, new Api.State(50));
+
+        verify(http).post(eq(ANY_HOST + "/device/relay/roller/settings/topos"), any());
     }
 
     private static final String STATUS_TEMPLATE = """
