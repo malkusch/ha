@@ -8,6 +8,10 @@ dehumidifier:
       evaluationRate: PT10m
 shutters:
    delay: PT0.2s
+   wind-protection:
+      release-wind-speed: 20
+      protect-wind-speed: 30
+      protection-state: 100
    shelly:
       url: https://shelly-31-eu.shelly.cloud
       key: 123abc

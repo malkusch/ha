@@ -6,7 +6,9 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import java.time.Duration;
 
+import de.malkusch.ha.automation.infrastructure.shutters.WindProtectedApi;
 import de.malkusch.ha.automation.model.shutters.Shutter.Api.State;
+import de.malkusch.ha.automation.model.weather.WindSpeedChanged;
 import de.malkusch.ha.shared.model.ApiException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 public class Shutter {
 
     public final ShutterId id;
-    private final Api api;
+    private final WindProtectedApi api;
     private final Duration delay;
 
     public static interface Api {
@@ -49,6 +51,10 @@ public class Shutter {
 
     public final void close() throws ApiException, InterruptedException {
         setState(CLOSED);
+    }
+
+    public void onWindSpeedChanged(WindSpeedChanged event) throws ApiException, InterruptedException {
+        api.onWindSpeedChanged(event);
     }
 
     private void setState(State state) throws InterruptedException, ApiException {

@@ -1,5 +1,6 @@
 package de.malkusch.ha.automation.infrastructure;
 
+import static de.malkusch.ha.shared.infrastructure.event.EventPublisher.publishSafely;
 import static java.time.Instant.ofEpochSecond;
 
 import java.io.IOException;
@@ -20,6 +21,7 @@ import de.malkusch.ha.automation.model.Temperature;
 import de.malkusch.ha.automation.model.weather.Cloudiness;
 import de.malkusch.ha.automation.model.weather.Weather;
 import de.malkusch.ha.automation.model.weather.WindSpeed;
+import de.malkusch.ha.automation.model.weather.WindSpeedChanged;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
 import de.malkusch.ha.shared.model.ApiException;
 import lombok.Data;
@@ -51,8 +53,7 @@ class OpenWeather implements Weather {
         this.http = http;
         this.prometheus = prometheus;
         this.mapper = mapper;
-
-        refreshResponse();
+        lastResponse = downloadResponse();
     }
 
     @Override
@@ -67,10 +68,20 @@ class OpenWeather implements Weather {
     private volatile Response lastResponse;
 
     @Scheduled(cron = "${open-weather.refresh-cron}")
-    void refreshResponse() throws IOException, InterruptedException {
+    void refreshResponseAndPublishWeatherEvents() throws IOException, InterruptedException {
+        var lastWind = windspeed();
+        lastResponse = downloadResponse();
+
+        var currentWind = windspeed();
+        if (!lastWind.equals(currentWind)) {
+            publishSafely(new WindSpeedChanged(currentWind));
+        }
+    }
+
+    private Response downloadResponse() throws IOException, InterruptedException {
         try (var response = http.get(oneCallUrl)) {
             log.debug("Refreshing weather forecast");
-            lastResponse = mapper.readValue(response.body, Response.class);
+            return mapper.readValue(response.body, Response.class);
         }
     }
 
@@ -100,7 +111,7 @@ class OpenWeather implements Weather {
     }
 
     @Override
-    public WindSpeed windspeed() throws ApiException, InterruptedException {
+    public WindSpeed windspeed() {
         return lastResponse.current.windSpeed();
     }
 }

@@ -20,7 +20,9 @@ import de.malkusch.ha.automation.model.shutters.Shutter;
 import de.malkusch.ha.automation.model.shutters.Shutter.Api;
 import de.malkusch.ha.automation.model.shutters.ShutterId;
 import de.malkusch.ha.automation.model.shutters.ShutterRepository;
+import de.malkusch.ha.automation.model.weather.WindSpeed;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
+import de.malkusch.ha.shared.model.ApiException;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
@@ -38,6 +40,15 @@ class ShutterConfiguration {
     public static class Properties {
 
         private Duration delay;
+        private WindProtectionProperties windProtection;
+
+        @Data
+        public static class WindProtectionProperties {
+            private int releaseWindSpeed;
+            private int protectWindSpeed;
+            private int protectionState;
+        }
+
         private ShellyProperties shelly;
 
         @Data
@@ -55,7 +66,7 @@ class ShutterConfiguration {
     }
 
     @Bean
-    public ShutterRepository shutters() {
+    public ShutterRepository shutters() throws ApiException, InterruptedException {
         var shutters = new ArrayList<Shutter>();
         shutters.addAll(
                 properties.shelly.shutters.stream().map(it -> shellyShutter(it.id, it.deviceId)).collect(toList()));
@@ -65,14 +76,23 @@ class ShutterConfiguration {
     }
 
     private Shutter shellyShutter(ShutterId id, String deviceId) {
-        return shutter(id, new ShellyCloudApi(properties.shelly.url, properties.shelly.key, http, mapper, deviceId));
+        try {
+            return shutter(id,
+                    new ShellyCloudApi(properties.shelly.url, properties.shelly.key, http, mapper, deviceId));
+        } catch (ApiException | InterruptedException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
-    private Shutter shutter(ShutterId id) {
+    private Shutter shutter(ShutterId id) throws ApiException, InterruptedException {
         return shutter(id, new LoggingApi(id));
     }
 
-    private Shutter shutter(ShutterId id, Api api) {
-        return new Shutter(id, api, properties.delay);
+    private Shutter shutter(ShutterId id, Api api) throws ApiException, InterruptedException {
+        var releaseThreshold = new WindSpeed(properties.windProtection.releaseWindSpeed);
+        var protectThreshold = new WindSpeed(properties.windProtection.protectWindSpeed);
+        var protectionState = new Api.State(properties.windProtection.protectionState);
+        var windApi = new WindProtectedApi(releaseThreshold, protectThreshold, protectionState, api);
+        return new Shutter(id, windApi, properties.delay);
     }
 }
