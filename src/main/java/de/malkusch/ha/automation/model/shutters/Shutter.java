@@ -2,24 +2,19 @@ package de.malkusch.ha.automation.model.shutters;
 
 import static de.malkusch.ha.automation.model.shutters.Shutter.Api.State.CLOSED;
 import static de.malkusch.ha.automation.model.shutters.Shutter.Api.State.OPEN;
+import static java.time.Instant.now;
+import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import java.time.Duration;
+import java.time.Instant;
 
-import de.malkusch.ha.automation.infrastructure.shutters.WindProtectedApi;
 import de.malkusch.ha.automation.model.shutters.Shutter.Api.State;
-import de.malkusch.ha.automation.model.weather.WindSpeedChanged;
 import de.malkusch.ha.shared.model.ApiException;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-@RequiredArgsConstructor
 @Slf4j
 public class Shutter {
-
-    public final ShutterId id;
-    private final WindProtectedApi api;
-    private final Duration delay;
 
     public static interface Api {
         void setState(State state) throws ApiException, InterruptedException;
@@ -45,6 +40,19 @@ public class Shutter {
         }
     }
 
+    public final ShutterId id;
+    private final Api api;
+    private final Duration delay;
+
+    private State desired;
+
+    public Shutter(ShutterId id, Api api, Duration delay) throws ApiException, InterruptedException {
+        this.id = requireNonNull(id);
+        this.api = requireNonNull(api);
+        this.delay = requireNonNull(delay);
+        desired = api.state();
+    }
+
     public final void open() throws ApiException, InterruptedException {
         setState(OPEN);
     }
@@ -53,17 +61,62 @@ public class Shutter {
         setState(CLOSED);
     }
 
-    public void onWindSpeedChanged(WindSpeedChanged event) throws ApiException, InterruptedException {
-        api.onWindSpeedChanged(event);
-    }
-
     private void setState(State state) throws InterruptedException, ApiException {
+        synchronized (lock) {
+            desired = state;
+            if (isLocked()) {
+                log.info("Shutter {} is locked", this);
+                return;
+            }
+        }
         if (api.state().equals(state)) {
             return;
         }
+
         log.info("Closing shutter {} to {}", this, state);
         api.setState(state);
         MILLISECONDS.sleep(delay.toMillis());
+    }
+
+    private static final Instant UNLOCKED = Instant.MIN;
+    private Instant lockedUntil = UNLOCKED;
+    private final Object lock = new Object();
+
+    public void lock(State state, Duration lockDuration) throws ApiException, InterruptedException, LockedException {
+        synchronized (lock) {
+            if (isLocked()) {
+                throw new LockedException(this + " is already locked");
+            }
+            log.info("Locking shutter {} to {}", this, state);
+            desired = api.state();
+            api.setState(state);
+            lockedUntil = now().plus(lockDuration);
+        }
+        MILLISECONDS.sleep(delay.toMillis());
+    }
+
+    public static class LockedException extends Exception {
+        private static final long serialVersionUID = -1327223206692643421L;
+
+        public LockedException(String message) {
+            super(message);
+        }
+    }
+
+    public void unlock() throws ApiException, InterruptedException {
+        synchronized (lock) {
+            if (isLocked()) {
+                log.info("Unlocking shutter {} to {}", this, desired);
+            }
+            lockedUntil = UNLOCKED;
+            setState(desired);
+        }
+    }
+
+    private boolean isLocked() {
+        synchronized (lock) {
+            return lockedUntil.isAfter(now());
+        }
     }
 
     @Override

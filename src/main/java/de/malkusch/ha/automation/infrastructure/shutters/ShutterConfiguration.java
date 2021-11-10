@@ -21,8 +21,10 @@ import de.malkusch.ha.automation.model.shutters.Shutter;
 import de.malkusch.ha.automation.model.shutters.Shutter.Api;
 import de.malkusch.ha.automation.model.shutters.ShutterId;
 import de.malkusch.ha.automation.model.shutters.ShutterRepository;
+import de.malkusch.ha.automation.model.shutters.WindProtectionService;
 import de.malkusch.ha.automation.model.weather.WindSpeed;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
+import de.malkusch.ha.shared.infrastructure.http.RateLimitingHttpClient;
 import de.malkusch.ha.shared.model.ApiException;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +33,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 class ShutterConfiguration {
 
-    private final HttpClient http;
     private final ObjectMapper mapper;
     private final Properties properties;
 
@@ -48,6 +49,7 @@ class ShutterConfiguration {
             private int releaseWindSpeed;
             private int protectWindSpeed;
             private int protectionState;
+            private Duration lockDuration;
         }
 
         private ShellyProperties shelly;
@@ -67,6 +69,15 @@ class ShutterConfiguration {
     }
 
     @Bean
+    public WindProtectionService windProtectionService() {
+        var releaseThreshold = new WindSpeed(properties.windProtection.releaseWindSpeed);
+        var protectThreshold = new WindSpeed(properties.windProtection.protectWindSpeed);
+        var protectionState = new Api.State(properties.windProtection.protectionState);
+        return new WindProtectionService(releaseThreshold, protectThreshold, protectionState,
+                properties.windProtection.lockDuration);
+    }
+
+    @Bean
     public ShutterRepository shutters() throws ApiException, InterruptedException {
         var shutters = new ArrayList<Shutter>();
         shutters.addAll(
@@ -76,15 +87,18 @@ class ShutterConfiguration {
         return new InMemoryShutterRepository(shutters);
     }
 
+    private final HttpClient http;
+
     @Bean
-    public RateLimiter shellyRateLimiter() {
-        return RateLimiter.create(0.25);
+    public HttpClient shellyHttpClient() {
+        var limiter = RateLimiter.create(0.25);
+        return new RateLimitingHttpClient(http, limiter);
     }
 
     private Shutter shellyShutter(ShutterId id, String deviceId) {
         try {
-            return shutter(id, new ShellyCloudApi(properties.shelly.url, properties.shelly.key, http, mapper, deviceId,
-                    shellyRateLimiter()));
+            return shutter(id, new ShellyCloudApi(properties.shelly.url, properties.shelly.key, shellyHttpClient(),
+                    mapper, deviceId));
         } catch (ApiException | InterruptedException e) {
             throw new IllegalStateException(e);
         }
@@ -95,10 +109,6 @@ class ShutterConfiguration {
     }
 
     private Shutter shutter(ShutterId id, Api api) throws ApiException, InterruptedException {
-        var releaseThreshold = new WindSpeed(properties.windProtection.releaseWindSpeed);
-        var protectThreshold = new WindSpeed(properties.windProtection.protectWindSpeed);
-        var protectionState = new Api.State(properties.windProtection.protectionState);
-        var windApi = new WindProtectedApi(releaseThreshold, protectThreshold, protectionState, api);
-        return new Shutter(id, windApi, properties.delay);
+        return new Shutter(id, api, properties.delay);
     }
 }

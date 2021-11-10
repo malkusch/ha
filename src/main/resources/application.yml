@@ -12,6 +12,7 @@ shutters:
       release-wind-speed: 20
       protect-wind-speed: 30
       protection-state: 100
+      lock-duration: PT12h
    shelly:
       url: https://shelly-31-eu.shelly.cloud
       key: 123abc
