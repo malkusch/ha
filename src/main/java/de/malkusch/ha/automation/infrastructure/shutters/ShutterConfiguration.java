@@ -1,6 +1,5 @@
 package de.malkusch.ha.automation.infrastructure.shutters;
 
-import static de.malkusch.ha.automation.model.shutters.ShutterId.KUECHENTUER;
 import static de.malkusch.ha.automation.model.shutters.ShutterId.TERRASSE;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -82,7 +81,7 @@ class ShutterConfiguration {
         var shutters = new ArrayList<Shutter>();
         shutters.addAll(
                 properties.shelly.shutters.stream().map(it -> shellyShutter(it.id, it.deviceId)).collect(toList()));
-        shutters.addAll(asList(shutter(KUECHENTUER), shutter(TERRASSE)));
+        shutters.addAll(asList(shutter(TERRASSE)));
 
         return new InMemoryShutterRepository(shutters);
     }
