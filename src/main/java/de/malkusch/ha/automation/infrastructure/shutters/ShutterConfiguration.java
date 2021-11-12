@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.RateLimiter;
 
+import de.malkusch.ha.automation.model.shutters.Blind;
 import de.malkusch.ha.automation.model.shutters.Shutter;
 import de.malkusch.ha.automation.model.shutters.Shutter.Api;
 import de.malkusch.ha.automation.model.shutters.ShutterId;
@@ -58,6 +59,7 @@ class ShutterConfiguration {
             private String url;
             private String key;
             private List<ShutterProperty> shutters;
+            private List<ShutterProperty> blinds;
 
             @Data
             public static class ShutterProperty {
@@ -65,15 +67,33 @@ class ShutterConfiguration {
                 private String deviceId;
             }
         }
+
+        private BlindsProperties blinds;
+
+        @Data
+        public static class BlindsProperties {
+            private WindProtectionProperties windProtection;
+        }
     }
 
     @Bean
-    public WindProtectionService windProtectionService() {
-        var releaseThreshold = new WindSpeed(properties.windProtection.releaseWindSpeed);
-        var protectThreshold = new WindSpeed(properties.windProtection.protectWindSpeed);
-        var protectionState = new Api.State(properties.windProtection.protectionState);
-        return new WindProtectionService(releaseThreshold, protectThreshold, protectionState,
-                properties.windProtection.lockDuration);
+    public WindProtectionService<Shutter> shutterWindProtectionService() {
+        var properties = this.properties.windProtection;
+        var releaseThreshold = new WindSpeed(properties.releaseWindSpeed);
+        var protectThreshold = new WindSpeed(properties.protectWindSpeed);
+        var protectionState = new Api.State(properties.protectionState);
+        return new WindProtectionService<>(releaseThreshold, protectThreshold, protectionState,
+                properties.lockDuration);
+    }
+
+    @Bean
+    public WindProtectionService<Blind> blindWindProtectionService() {
+        var properties = this.properties.blinds.windProtection;
+        var releaseThreshold = new WindSpeed(properties.releaseWindSpeed);
+        var protectThreshold = new WindSpeed(properties.protectWindSpeed);
+        var protectionState = new Api.State(properties.protectionState);
+        return new WindProtectionService<>(releaseThreshold, protectThreshold, protectionState,
+                properties.lockDuration);
     }
 
     @Bean
@@ -81,6 +101,7 @@ class ShutterConfiguration {
         var shutters = new ArrayList<Shutter>();
         shutters.addAll(
                 properties.shelly.shutters.stream().map(it -> shellyShutter(it.id, it.deviceId)).collect(toList()));
+        shutters.addAll(properties.shelly.blinds.stream().map(it -> shellyBlind(it.id, it.deviceId)).collect(toList()));
         shutters.addAll(asList(shutter(TERRASSE)));
 
         return new InMemoryShutterRepository(shutters);
@@ -92,6 +113,15 @@ class ShutterConfiguration {
     public HttpClient shellyHttpClient() {
         var limiter = RateLimiter.create(0.25);
         return new RateLimitingHttpClient(http, limiter);
+    }
+
+    private Shutter shellyBlind(ShutterId id, String deviceId) {
+        try {
+            return blind(id, new ShellyCloudApi(properties.shelly.url, properties.shelly.key, shellyHttpClient(),
+                    mapper, deviceId));
+        } catch (ApiException | InterruptedException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private Shutter shellyShutter(ShutterId id, String deviceId) {
@@ -109,5 +139,9 @@ class ShutterConfiguration {
 
     private Shutter shutter(ShutterId id, Api api) throws ApiException, InterruptedException {
         return new Shutter(id, api, properties.delay);
+    }
+
+    private Blind blind(ShutterId id, Api api) throws ApiException, InterruptedException {
+        return new Blind(id, api, properties.delay);
     }
 }

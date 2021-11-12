@@ -11,7 +11,7 @@ import de.malkusch.ha.shared.model.ApiException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public final class WindProtectionService {
+public final class WindProtectionService<T extends Shutter> {
 
     private final WindSpeed releaseThreshold;
     private final WindSpeed protectThreshold;
@@ -30,7 +30,7 @@ public final class WindProtectionService {
         }
     }
 
-    public void checkProtection(Shutter shutter, WindSpeed windSpeed) throws ApiException, InterruptedException {
+    public void checkProtection(T shutter, WindSpeed windSpeed) throws ApiException, InterruptedException {
         if (windSpeed.isGreaterThan(protectThreshold)) {
             try {
                 log.info("Protecting {} against too much wind ({})", shutter, windSpeed);

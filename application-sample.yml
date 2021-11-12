@@ -13,6 +13,9 @@ shutters:
       shutters:
        - id: KUECHENTUER
          device-id: 123abc
+      blinds:
+       - id: WOHNZIMMER_KLEIN
+         device-id: 456
 buderus:
    gatewayPassword: 1234-1234-1234-1234
    privatePassword: 1234

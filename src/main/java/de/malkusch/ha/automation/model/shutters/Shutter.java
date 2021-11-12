@@ -82,7 +82,7 @@ public class Shutter {
     private Instant lockedUntil = UNLOCKED;
     private final Object lock = new Object();
 
-    public void lock(State state, Duration lockDuration) throws ApiException, InterruptedException, LockedException {
+    public final void lock(State state, Duration lockDuration) throws ApiException, InterruptedException, LockedException {
         synchronized (lock) {
             if (isLocked()) {
                 throw new LockedException(this + " is already locked");
@@ -103,7 +103,7 @@ public class Shutter {
         }
     }
 
-    public void unlock() throws ApiException, InterruptedException {
+    public final void unlock() throws ApiException, InterruptedException {
         synchronized (lock) {
             if (!isLocked()) {
                 return;

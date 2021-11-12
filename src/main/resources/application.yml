@@ -20,6 +20,11 @@ shutters:
        - id: KUECHENTUER
          device-id: 123abc
    blinds:
+      wind-protection:
+         release-wind-speed: 10
+         protect-wind-speed: 20
+         protection-state: 0
+         lock-duration: PT12h
       terrasse:
          night-close-threshold: 20
 buderus:
