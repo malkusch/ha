@@ -105,9 +105,10 @@ public class Shutter {
 
     public void unlock() throws ApiException, InterruptedException {
         synchronized (lock) {
-            if (isLocked()) {
-                log.info("Unlocking shutter {} to {}", this, desired);
+            if (!isLocked()) {
+                return;
             }
+            log.info("Unlocking shutter {} to {}", this, desired);
             lockedUntil = UNLOCKED;
             setState(desired);
         }

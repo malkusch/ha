@@ -13,8 +13,13 @@ public record WindSpeed(double kmh) {
     public boolean isGreaterThan(WindSpeed other) {
         return kmh > other.kmh;
     }
-    
+
     public boolean isLessThan(WindSpeed other) {
         return kmh < other.kmh;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%.2f km/h", kmh);
     }
 }

@@ -33,6 +33,7 @@ public final class WindProtectionService {
     public void checkProtection(Shutter shutter, WindSpeed windSpeed) throws ApiException, InterruptedException {
         if (windSpeed.isGreaterThan(protectThreshold)) {
             try {
+                log.info("Protecting {} against too much wind ({})", shutter, windSpeed);
                 shutter.lock(protection, lockDuration);
 
             } catch (LockedException e) {
