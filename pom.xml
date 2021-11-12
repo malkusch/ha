@@ -80,9 +80,9 @@
 			<artifactId>jakarta.xml.bind-api</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.luckycatlabs</groupId>
-			<artifactId>SunriseSunsetCalculator</artifactId>
-			<version>1.2</version>
+			<groupId>org.shredzone.commons</groupId>
+			<artifactId>commons-suncalc</artifactId>
+			<version>3.5</version>
 		</dependency>
 
 		<dependency>

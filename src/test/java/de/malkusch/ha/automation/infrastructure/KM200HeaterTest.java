@@ -28,7 +28,7 @@ import de.malkusch.km200.KM200Exception;
 public class KM200HeaterTest {
 
     @Mock
-    private KM200 km200 = mock(KM200.class);
+    private KM200 km200;
 
     private Heater heater;
 
