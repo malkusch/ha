@@ -1,7 +1,5 @@
 package de.malkusch.ha.automation.infrastructure.shutters;
 
-import static de.malkusch.ha.automation.model.shutters.ShutterId.TERRASSE;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
 import java.time.Duration;
@@ -102,7 +100,6 @@ class ShutterConfiguration {
         shutters.addAll(
                 properties.shelly.shutters.stream().map(it -> shellyShutter(it.id, it.deviceId)).collect(toList()));
         shutters.addAll(properties.shelly.blinds.stream().map(it -> shellyBlind(it.id, it.deviceId)).collect(toList()));
-        shutters.addAll(asList(shutter(TERRASSE)));
 
         return new InMemoryShutterRepository(shutters);
     }
@@ -131,10 +128,6 @@ class ShutterConfiguration {
         } catch (ApiException | InterruptedException e) {
             throw new IllegalStateException(e);
         }
-    }
-
-    private Shutter shutter(ShutterId id) throws ApiException, InterruptedException {
-        return shutter(id, new LoggingApi(id));
     }
 
     private Shutter shutter(ShutterId id, Api api) throws ApiException, InterruptedException {
