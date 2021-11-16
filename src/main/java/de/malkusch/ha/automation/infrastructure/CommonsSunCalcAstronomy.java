@@ -2,7 +2,6 @@ package de.malkusch.ha.automation.infrastructure;
 
 import static org.shredzone.commons.suncalc.SunTimes.Twilight.ASTRONOMICAL;
 import static org.shredzone.commons.suncalc.SunTimes.Twilight.CIVIL;
-import static org.shredzone.commons.suncalc.SunTimes.Twilight.NAUTICAL;
 
 import java.time.Clock;
 import java.time.LocalTime;
@@ -48,7 +47,7 @@ class CommonsSunCalcAstronomy implements Astronomy {
     @Scheduled(cron = "59 59 02 * * *")
     void calculateTimesAndScheduleEvents() {
         dawn = calculate(CIVIL).getRise().toLocalTime();
-        var dusk = calculate(NAUTICAL).getSet().toLocalTime();
+        var dusk = calculate(CIVIL).getSet().toLocalTime();
         night = calculate(ASTRONOMICAL).getSet().toLocalTime();
 
         scheduleEvent(dawn, new DawnStarted());
