@@ -1,7 +1,10 @@
 package de.malkusch.ha.automation.model.astronomy;
 
+import java.time.LocalDate;
+import java.util.List;
+
 public interface Astronomy {
 
-    boolean isNight();
+    List<AstronomicalEvent> calculateEvents(LocalDate date);
 
 }

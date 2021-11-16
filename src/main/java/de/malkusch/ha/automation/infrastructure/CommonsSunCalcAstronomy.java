@@ -1,67 +1,52 @@
 package de.malkusch.ha.automation.infrastructure;
 
+import static java.util.Arrays.asList;
 import static org.shredzone.commons.suncalc.SunTimes.Twilight.ASTRONOMICAL;
 import static org.shredzone.commons.suncalc.SunTimes.Twilight.CIVIL;
+import static org.shredzone.commons.suncalc.SunTimes.Twilight.NAUTICAL;
 
-import java.time.Clock;
-import java.time.LocalTime;
+import java.time.LocalDate;
+import java.util.List;
 
 import org.shredzone.commons.suncalc.SunTimes;
 import org.shredzone.commons.suncalc.SunTimes.Twilight;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import de.malkusch.ha.automation.model.astronomy.AstronomicalEvent;
+import de.malkusch.ha.automation.model.astronomy.AstronomicalEvent.AstronomicalSunriseStarted;
+import de.malkusch.ha.automation.model.astronomy.AstronomicalEvent.AstronomicalSunsetStarted;
+import de.malkusch.ha.automation.model.astronomy.AstronomicalEvent.CivilSunriseStarted;
+import de.malkusch.ha.automation.model.astronomy.AstronomicalEvent.CivilSunsetStarted;
+import de.malkusch.ha.automation.model.astronomy.AstronomicalEvent.NauticalSunriseStarted;
+import de.malkusch.ha.automation.model.astronomy.AstronomicalEvent.NauticalSunsetStarted;
 import de.malkusch.ha.automation.model.astronomy.Astronomy;
-import de.malkusch.ha.automation.model.astronomy.DawnStarted;
-import de.malkusch.ha.automation.model.astronomy.DuskStarted;
-import de.malkusch.ha.automation.model.astronomy.NightStarted;
-import de.malkusch.ha.shared.infrastructure.event.Event;
-import de.malkusch.ha.shared.infrastructure.event.EventScheduler;
 
 @Service
 class CommonsSunCalcAstronomy implements Astronomy {
 
-    private final EventScheduler eventScheduler;
-    private final Clock clock;
     private final double latitude;
     private final double longitude;
 
-    CommonsSunCalcAstronomy(LocationProperties locationProperties, Clock clock, EventScheduler eventScheduler) {
-        this.clock = clock;
-        this.eventScheduler = eventScheduler;
+    CommonsSunCalcAstronomy(LocationProperties locationProperties) {
         this.latitude = Double.valueOf(locationProperties.latitude);
         this.longitude = Double.valueOf(locationProperties.longitude);
-
-        calculateTimesAndScheduleEvents();
     }
-
-    private volatile LocalTime dawn;
-    private volatile LocalTime night;
 
     @Override
-    public boolean isNight() {
-        var now = LocalTime.now();
-        return now.isAfter(night) && now.isBefore(dawn);
+    public List<AstronomicalEvent> calculateEvents(LocalDate date) {
+        var astronomical = calculate(ASTRONOMICAL, date);
+        var nautical = calculate(NAUTICAL, date);
+        var civil = calculate(CIVIL, date);
+
+        return asList(new AstronomicalSunriseStarted(astronomical.getRise().toLocalTime()),
+                new AstronomicalSunsetStarted(astronomical.getSet().toLocalTime()),
+                new NauticalSunriseStarted(nautical.getRise().toLocalTime()),
+                new NauticalSunsetStarted(nautical.getSet().toLocalTime()),
+                new CivilSunriseStarted(civil.getRise().toLocalTime()),
+                new CivilSunsetStarted(civil.getSet().toLocalTime()));
     }
 
-    @Scheduled(cron = "59 59 02 * * *")
-    void calculateTimesAndScheduleEvents() {
-        dawn = calculate(CIVIL).getRise().toLocalTime();
-        var dusk = calculate(CIVIL).getSet().toLocalTime();
-        night = calculate(ASTRONOMICAL).getSet().toLocalTime();
-
-        scheduleEvent(dawn, new DawnStarted());
-        scheduleEvent(dusk, new DuskStarted());
-        scheduleEvent(night, new NightStarted());
-    }
-
-    private SunTimes calculate(Twilight twilight) {
-        return SunTimes.compute().on(clock.instant()).latitude(latitude).longitude(longitude).twilight(twilight)
-                .execute();
-    }
-
-    private void scheduleEvent(LocalTime time, Event event) {
-        eventScheduler.cancel(event.getClass());
-        eventScheduler.publishAt(event, time);
+    private SunTimes calculate(Twilight twilight, LocalDate date) {
+        return SunTimes.compute().on(date).latitude(latitude).longitude(longitude).twilight(twilight).execute();
     }
 }

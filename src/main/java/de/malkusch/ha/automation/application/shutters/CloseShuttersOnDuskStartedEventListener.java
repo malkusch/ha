@@ -8,8 +8,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import de.malkusch.ha.automation.model.Temperature;
-import de.malkusch.ha.automation.model.astronomy.DuskStarted;
-import de.malkusch.ha.automation.model.astronomy.NightStarted;
+import de.malkusch.ha.automation.model.astronomy.AstronomicalEvent.AstronomicalSunsetStarted;
+import de.malkusch.ha.automation.model.astronomy.AstronomicalEvent.CivilSunsetStarted;
 import de.malkusch.ha.automation.model.shutters.ShutterRepository;
 import de.malkusch.ha.automation.model.weather.Weather;
 import de.malkusch.ha.shared.model.ApiException;
@@ -34,7 +34,7 @@ public class CloseShuttersOnDuskStartedEventListener {
     private final Weather weather;
 
     @EventListener
-    public void onDuskStarted(DuskStarted event) throws ApiException, InterruptedException {
+    public void onDuskStarted(CivilSunsetStarted event) throws ApiException, InterruptedException {
         log.info("Closing shutters at dusk");
         for (var shutter : shutters.findAll()) {
             if (shutter.id == TERRASSE) {
@@ -45,7 +45,7 @@ public class CloseShuttersOnDuskStartedEventListener {
     }
 
     @EventListener
-    public void onNightStarted(NightStarted event) throws ApiException, InterruptedException {
+    public void onNightStarted(AstronomicalSunsetStarted event) throws ApiException, InterruptedException {
         var threshold = new Temperature(properties.nightCloseThreshold);
         if (weather.temperature().isLessThan(threshold)) {
             log.info("Closing Terrasse blinds during a cold night");
