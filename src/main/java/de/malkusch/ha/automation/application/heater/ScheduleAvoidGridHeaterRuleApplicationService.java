@@ -39,6 +39,6 @@ public final class ScheduleAvoidGridHeaterRuleApplicationService {
 
         var rule = new AvoidGridHeaterRule(capacity, maxCloudiness, excessThreshold, properties.evaluationRate,
                 electricity, heater, weather, temperatureService);
-        scheduler.schedule(rule);
+        // scheduler.schedule(rule);
     }
 }
