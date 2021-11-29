@@ -35,7 +35,7 @@ public final class ScheduleReduceHotWaterInWinterRuleApplicationService {
 
         var reset = new ReduceHotWaterInWinterRule(weather, threshold, heater, hotWaterService, delta,
                 properties.evaluationRate);
-        scheduler.schedule(reset);
+        // scheduler.schedule(reset);
     }
 
 }

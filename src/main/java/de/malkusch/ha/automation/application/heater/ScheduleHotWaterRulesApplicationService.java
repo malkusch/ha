@@ -25,6 +25,6 @@ public final class ScheduleHotWaterRulesApplicationService {
             HotWaterRulesProperties properties) {
 
         var reset = new ResetHotWaterOperationModeRule(heater, properties.evaluationRate);
-        scheduler.schedule(reset);
+        // scheduler.schedule(reset);
     }
 }
