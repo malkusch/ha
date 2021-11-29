@@ -108,7 +108,7 @@ class ShutterConfiguration {
 
     @Bean
     public HttpClient shellyHttpClient() {
-        var limiter = RateLimiter.create(0.25);
+        var limiter = RateLimiter.create(0.20);
         return new RateLimitingHttpClient(http, limiter);
     }
 
