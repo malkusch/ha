@@ -1,13 +1,13 @@
 package de.malkusch.ha.automation.infrastructure;
 
-import static de.malkusch.ha.automation.model.heater.Heater.HotWaterMode.ECO;
-import static de.malkusch.ha.automation.model.heater.Heater.HotWaterMode.HIGH;
-import static de.malkusch.ha.automation.model.heater.Heater.HotWaterMode.LOW;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +20,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.malkusch.ha.automation.infrastructure.prometheus.Prometheus;
-import de.malkusch.ha.automation.model.heater.Heater;
 import de.malkusch.km200.KM200;
 import de.malkusch.km200.KM200Exception;
 
@@ -30,10 +29,14 @@ public class KM200HeaterTest {
     @Mock
     private KM200 km200;
 
-    private Heater heater;
+    private KM200Heater heater;
 
     @BeforeEach
     public void setup() throws Exception {
+        heater = new KM200Heater(km200, mock(Prometheus.class), new ObjectMapper());
+    }
+
+    private void mockSwitchProgram() throws KM200Exception, IOException, InterruptedException {
         when(km200.query("/dhwCircuits/dhw1/switchPrograms/A")).thenReturn(
                 """
                         {"id":"/dhwCircuits/dhw1/switchPrograms/A","type":"switchProgram","setpointProperty":{"id":"/dhwCircuits/dhw1/temperatureLevels","uri":"http://192.168.188.48/dhwCircuits/dhw1/temperatureLevels"},"maxNbOfSwitchPoints":42,"maxNbOfSwitchPointsPerDay":6,"switchPointTimeRaster":15,"writeable":1,
@@ -65,8 +68,6 @@ public class KM200HeaterTest {
                             {"dayOfWeek":"Su","setpoint":"high","time":1140},
                             {"dayOfWeek":"Su","setpoint":"low","time":1200},
                             {"dayOfWeek":"Su","setpoint":"eco","time":1260}]}""");
-
-        heater = new KM200Heater(km200, mock(Prometheus.class), new ObjectMapper());
     }
 
     @ParameterizedTest
@@ -74,12 +75,13 @@ public class KM200HeaterTest {
             "2021-10-13T06:59:59", "2021-10-13T09:00:00", "2021-10-14T09:59:59", "2021-10-14T12:00:00",
             "2021-10-15T12:59:59", "2021-10-15T15:00:00", "2021-10-16T15:59:59", "2021-10-16T18:00:00",
             "2021-10-17T18:59:59", "2021-10-17T21:00:00" })
-    public void ownProgramHotWaterModeShouldReturnEco(String time) throws Exception {
-        givenDateTime(time);
+    public void switchProgramShouldReturnEco(String time) throws Exception {
+        mockSwitchProgram();
+        var progam = heater.switchProgram("/dhwCircuits/dhw1/switchPrograms/A");
 
-        var mode = heater.ownProgramHotWaterMode();
+        var setPoint = progam.setPointAt(LocalDateTime.parse(time));
 
-        assertEquals(ECO, mode);
+        assertEquals("eco", setPoint);
     }
 
     @ParameterizedTest
@@ -90,11 +92,12 @@ public class KM200HeaterTest {
 
     })
     public void ownProgramHotWaterModeShouldReturnLow(String time) throws Exception {
-        givenDateTime(time);
+        mockSwitchProgram();
+        var progam = heater.switchProgram("/dhwCircuits/dhw1/switchPrograms/A");
 
-        var mode = heater.ownProgramHotWaterMode();
+        var setPoint = progam.setPointAt(LocalDateTime.parse(time));
 
-        assertEquals(LOW, mode);
+        assertEquals("low", setPoint);
     }
 
     @ParameterizedTest
@@ -103,11 +106,12 @@ public class KM200HeaterTest {
             "2021-10-15T13:00:00", "2021-10-15T13:59:59", "2021-10-16T16:00:00", "2021-10-16T16:59:59",
             "2021-10-17T19:00:00", "2021-10-17T19:59:59", })
     public void ownProgramHotWaterModeShouldReturnHigh(String time) throws Exception {
-        givenDateTime(time);
+        mockSwitchProgram();
+        var progam = heater.switchProgram("/dhwCircuits/dhw1/switchPrograms/A");
 
-        var mode = heater.ownProgramHotWaterMode();
+        var setPoint = progam.setPointAt(LocalDateTime.parse(time));
 
-        assertEquals(HIGH, mode);
+        assertEquals("high", setPoint);
     }
 
     @ParameterizedTest
