@@ -125,7 +125,7 @@ class KM200Heater implements Heater {
     @Override
     public void switchHotWaterMode(HotWaterMode mode) throws ApiException, InterruptedException {
         withApiException(() -> km200.update(HOT_WATER_OPERATION_MODE, km200Mode(mode)));
-        SECONDS.sleep(1);
+        SECONDS.sleep(2);
         var current = currentHotWaterMode();
         if (current != mode) {
             throw new ApiException(String.format("Switching to %s resulted in %s", mode, current));
