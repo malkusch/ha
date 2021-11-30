@@ -10,6 +10,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import de.malkusch.ha.automation.model.shutters.ShutterId;
 import de.malkusch.ha.automation.model.shutters.Shutter.Api;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient.Field;
@@ -17,8 +18,12 @@ import de.malkusch.ha.shared.model.ApiException;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-final class ShellyCloudApi implements Api {
+public final class ShellyCloudApi implements Api {
 
+    public static interface Factory {
+        Api build(ShutterId id, String deviceId);
+    }
+    
     private final String baseUri;
     private final String key;
     private final HttpClient http;

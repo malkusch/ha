@@ -56,6 +56,7 @@ open-weather:
    api-key: 123abc
    refresh-cron: 59 */10 * * * * # Every ten minutes
 monitoring:
+   enabled: true
    updateRate: PT15s
    timeout: PT3S
    retries: 2

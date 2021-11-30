@@ -112,10 +112,15 @@ class ShutterConfiguration {
         return new RateLimitingHttpClient(http, limiter);
     }
 
+    @Bean
+    public ShellyCloudApi.Factory shellyCloudApiFactory() {
+        return (id, deviceId) -> new ShellyCloudApi(properties.shelly.url, properties.shelly.key, shellyHttpClient(),
+                mapper, deviceId);
+    }
+
     private Shutter shellyBlind(ShutterId id, String deviceId) {
         try {
-            return blind(id, new ShellyCloudApi(properties.shelly.url, properties.shelly.key, shellyHttpClient(),
-                    mapper, deviceId));
+            return blind(id, shellyCloudApiFactory().build(id, deviceId));
         } catch (ApiException | InterruptedException e) {
             throw new IllegalStateException(e);
         }
@@ -123,8 +128,7 @@ class ShutterConfiguration {
 
     private Shutter shellyShutter(ShutterId id, String deviceId) {
         try {
-            return shutter(id, new ShellyCloudApi(properties.shelly.url, properties.shelly.key, shellyHttpClient(),
-                    mapper, deviceId));
+            return shutter(id, shellyCloudApiFactory().build(id, deviceId));
         } catch (ApiException | InterruptedException e) {
             throw new IllegalStateException(e);
         }
