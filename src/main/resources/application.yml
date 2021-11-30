@@ -9,8 +9,8 @@ dehumidifier:
 shutters:
    delay: PT0.2s
    wind-protection:
-      release-wind-speed: 20
-      protect-wind-speed: 30
+      release-wind-speed: 25
+      protect-wind-speed: 35
       protection-state: 100
       lock-duration: PT12h
    shelly:
