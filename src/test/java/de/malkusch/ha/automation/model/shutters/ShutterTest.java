@@ -1,9 +1,12 @@
-package de.malkusch.ha.automation.model;
+package de.malkusch.ha.automation.model.shutters;
 
 import static de.malkusch.ha.automation.model.shutters.Shutter.Api.State.CLOSED;
 import static de.malkusch.ha.automation.model.shutters.Shutter.Api.State.OPEN;
 import static de.malkusch.ha.automation.model.shutters.ShutterId.TERRASSE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Duration;
 
@@ -11,9 +14,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 
-import de.malkusch.ha.automation.model.shutters.Shutter;
 import de.malkusch.ha.automation.model.shutters.Shutter.Api;
+import de.malkusch.ha.automation.model.shutters.Shutter.Api.State;
+import de.malkusch.ha.automation.model.shutters.Shutter.LockedException;
 import de.malkusch.ha.shared.model.ApiException;
 
 public class ShutterTest {
@@ -44,6 +49,10 @@ public class ShutterTest {
 
     private final static Duration ANY_LOCK_DURATION = Duration.ofSeconds(1);
 
+    public static State[] ALL_STATES() {
+        return new State[] { OPEN, CLOSED };
+    }
+
     @Test
     public void openShouldNotChangeStateWhenLocked() throws Exception {
         shutter.lock(CLOSED, ANY_LOCK_DURATION);
@@ -63,9 +72,24 @@ public class ShutterTest {
     }
 
     @Test
-    public void unlockShouldRestoreOldStateWhenUnlocked() throws Exception {
+    public void lockShouldFail_whenLockedDifferently() throws Exception {
+        shutter.lock(OPEN, ANY_LOCK_DURATION);
+
+        assertThrows(LockedException.class, () -> shutter.lock(CLOSED, ANY_LOCK_DURATION));
+    }
+
+    @Test
+    public void lockShouldNotFail_whenLockedIdentically() throws Exception {
+        shutter.lock(OPEN, ANY_LOCK_DURATION);
+
+        assertThrows(LockedException.class, () -> shutter.lock(OPEN, ANY_LOCK_DURATION));
+    }
+
+    @ParameterizedTest
+    @MethodSource("ALL_STATES")
+    public void unlockShouldRestoreOldStateWhenUnlocked(State lockedState) throws Exception {
         shutter.open();
-        shutter.lock(CLOSED, ANY_LOCK_DURATION);
+        shutter.lock(lockedState, ANY_LOCK_DURATION);
 
         shutter.unlock();
 
@@ -109,9 +133,50 @@ public class ShutterTest {
         assertEquals(OPEN, api.state());
     }
 
-    @Test
-    public void lockShouldRestoreLockedStateWhenStateChangeDuringLock() {
+    @ParameterizedTest
+    @MethodSource("ALL_STATES")
+    public void WhenStateChangedDuringLock_lockShouldChangeBackIntoLockedState(State lockedState) throws Exception {
+        shutter.lock(CLOSED, ANY_LOCK_DURATION);
+        api.setState(OPEN); // e.g. using the physical switch
 
+        shutter.lock(lockedState, ANY_LOCK_DURATION);
+
+        assertEquals(lockedState, api.state());
+        assertTrue(shutter.isLocked());
+    }
+
+    @ParameterizedTest
+    @MethodSource("ALL_STATES")
+    public void WhenStateChangedDuringLock_shutterIsUnlocked(State changeUnlocked) throws Exception {
+        shutter.open();
+        shutter.lock(CLOSED, ANY_LOCK_DURATION);
+
+        api.setState(OPEN); // e.g. using the physical switch
+
+        changeState(changeUnlocked);
+        assertEquals(changeUnlocked, api.state());
+        assertFalse(shutter.isLocked());
+    }
+
+    @Test
+    public void WhenStateChangedDuringLock_unlockShouldShouldNotRestoreDesiredState() throws Exception {
+        shutter.close();
+        shutter.lock(CLOSED, ANY_LOCK_DURATION);
+        api.setState(OPEN); // e.g. using the physical switch
+
+        shutter.unlock();
+
+        assertEquals(OPEN, api.state());
+    }
+
+    @Test
+    public void WhenPhysicallyOpened_closeShouldClose() throws Exception {
+        shutter.close();
+        api.setState(OPEN); // e.g. using the physical switch
+
+        shutter.close();
+
+        assertEquals(CLOSED, api.state());
     }
 
     private static Api.State state(String state) {
@@ -128,9 +193,13 @@ public class ShutterTest {
     }
 
     private void changeState(String state) throws ApiException, InterruptedException {
-        if (state(state).equals(OPEN)) {
+        changeState(state(state));
+    }
+
+    private void changeState(State state) throws ApiException, InterruptedException {
+        if (state.equals(OPEN)) {
             shutter.open();
-        } else if (state(state).equals(CLOSED)) {
+        } else if (state.equals(CLOSED)) {
             shutter.close();
         }
     }

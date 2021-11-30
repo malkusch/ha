@@ -54,15 +54,17 @@ public class Shutter {
     }
 
     public final void open() throws ApiException, InterruptedException {
+        syncState();
         setState(OPEN);
     }
 
     public final void close() throws ApiException, InterruptedException {
+        syncState();
         setState(CLOSED);
     }
 
     private void setState(State state) throws InterruptedException, ApiException {
-        synchronized (lock) {
+        synchronized (_jvmLock) {
             desired = state;
             if (isLocked()) {
                 log.info("Shutter {} is locked", this);
@@ -78,21 +80,36 @@ public class Shutter {
         MILLISECONDS.sleep(delay.toMillis());
     }
 
-    private static final Instant UNLOCKED = Instant.MIN;
-    private Instant lockedUntil = UNLOCKED;
-    private final Object lock = new Object();
+    private static record Lock(State state, Instant until) {
+    }
 
-    public final void lock(State state, Duration lockDuration) throws ApiException, InterruptedException, LockedException {
-        synchronized (lock) {
+    private static final Lock UNLOCKED = new Lock(OPEN, Instant.MIN);
+    private Lock lock = UNLOCKED;
+    private final Object _jvmLock = new Object();
+
+    public final void lock(State state, Duration lockDuration)
+            throws ApiException, InterruptedException, LockedException {
+        synchronized (_jvmLock) {
+            syncState();
             if (isLocked()) {
                 throw new LockedException(this + " is already locked");
             }
             log.info("Locking shutter {} to {}", this, state);
             desired = api.state();
             api.setState(state);
-            lockedUntil = now().plus(lockDuration);
+            lock = new Lock(state, now().plus(lockDuration));
         }
         MILLISECONDS.sleep(delay.toMillis());
+    }
+
+    private void syncState() throws ApiException, InterruptedException {
+        synchronized (_jvmLock) {
+            var state = api.state();
+            if (isLocked() && !state.equals(lock.state)) {
+                lock = UNLOCKED;
+                desired = state;
+            }
+        }
     }
 
     public static class LockedException extends Exception {
@@ -104,19 +121,20 @@ public class Shutter {
     }
 
     public final void unlock() throws ApiException, InterruptedException {
-        synchronized (lock) {
+        synchronized (_jvmLock) {
+            syncState();
             if (!isLocked()) {
                 return;
             }
             log.info("Unlocking shutter {} to {}", this, desired);
-            lockedUntil = UNLOCKED;
+            lock = UNLOCKED;
             setState(desired);
         }
     }
 
-    private boolean isLocked() {
-        synchronized (lock) {
-            return lockedUntil.isAfter(now());
+    boolean isLocked() {
+        synchronized (_jvmLock) {
+            return lock.until.isAfter(now());
         }
     }
 
