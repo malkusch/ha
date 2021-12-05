@@ -9,7 +9,7 @@ dehumidifier:
 shutters:
    delay: PT0.2s
    wind-protection:
-      release-wind-speed: 25
+      release-wind-speed: 30
       protect-wind-speed: 35
       protection-state: 100
       lock-duration: PT12h
@@ -21,8 +21,8 @@ shutters:
          device-id: 123abc
    blinds:
       wind-protection:
-         release-wind-speed: 10
-         protect-wind-speed: 20
+         release-wind-speed: 20
+         protect-wind-speed: 25
          protection-state: 0
          lock-duration: PT12h
       terrasse:
