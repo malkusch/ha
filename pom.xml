@@ -35,12 +35,12 @@
 		<dependency>
 			<groupId>dev.failsafe</groupId>
 			<artifactId>failsafe</artifactId>
-			<version>3.0.2</version>
+			<version>3.1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.pengrad</groupId>
 			<artifactId>java-telegram-bot-api</artifactId>
-			<version>5.4.0</version>
+			<version>5.5.0</version>
 		</dependency>
 		<dependency>
 			<groupId>io.prometheus</groupId>
@@ -64,7 +64,7 @@
 		<dependency>
 			<groupId>org.json</groupId>
 			<artifactId>json</artifactId>
-			<version>20210307</version>
+			<version>20211205</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.guava</groupId>
