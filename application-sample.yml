@@ -1,4 +1,9 @@
 logging.level.de.malkusch: DEBUG
+mqtt:
+   host: example.org
+   port: 8883
+   user: user
+   password: secret
 prometheus:
    url: http://localhost:9090
 dehumidifier:

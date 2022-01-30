@@ -1,11 +1,13 @@
 package de.malkusch.ha.monitoring.infrastructure;
 
+import static de.malkusch.ha.monitoring.infrastructure.MqttMonitoring.MessageGauge.messageGauge;
 import static de.malkusch.ha.monitoring.infrastructure.PrometheusProxyPoller.mapping;
 import static java.time.Duration.ZERO;
 import static java.util.Arrays.asList;
 import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,7 +22,9 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hivemq.client.mqtt.mqtt5.Mqtt5BlockingClient;
 
+import de.malkusch.ha.monitoring.infrastructure.MqttMonitoring.MessageGauge;
 import de.malkusch.ha.monitoring.infrastructure.PrometheusProxyPoller.Mapping;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
 import de.malkusch.ha.shared.infrastructure.http.JdkHttpClient;
@@ -43,6 +47,17 @@ class PrometheusMonitoringConfiguration {
         private String inverter;
         private List<Sensor> dust;
         private List<Sensor> sensors;
+        private Mqtt mqtt;
+
+        @Data
+        static class Mqtt {
+            private MqttSensor solarTest;
+
+            @Data
+            static class MqttSensor {
+                private String topic;
+            }
+        }
 
         @Data
         static class Sensor {
@@ -119,6 +134,21 @@ class PrometheusMonitoringConfiguration {
 
             return proxy(it.url, mappings);
         }).collect(Collectors.toList());
+    }
+
+    private final MqttMonitoring.Factory mqttMonitoringFactory;
+
+    public static record SolarEspTestMessage(double voltage, double v0, int voltage_raw) {
+    }
+
+    @Bean
+    MqttMonitoring<SolarEspTestMessage> solarEspTestMonitoring(Mqtt5BlockingClient mqtt) {
+        var fieldPollers = new ArrayList<MessageGauge<SolarEspTestMessage>>();
+        fieldPollers.add(messageGauge("solartest_voltage", SolarEspTestMessage::voltage));
+        fieldPollers.add(messageGauge("solartest_v0", SolarEspTestMessage::v0));
+        fieldPollers.add(messageGauge("solartest_v0_raw", it -> (double) it.voltage_raw()));
+
+        return mqttMonitoringFactory.build(SolarEspTestMessage.class, properties.mqtt.solarTest.topic, fieldPollers);
     }
 
     @Bean
