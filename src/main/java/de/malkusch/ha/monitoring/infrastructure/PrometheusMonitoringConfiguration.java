@@ -138,7 +138,9 @@ class PrometheusMonitoringConfiguration {
 
     private final MqttMonitoring.Factory mqttMonitoringFactory;
 
-    public static record SolarEspTestMessage(double voltage, double v0, int voltage_raw) {
+    public static record SolarEspTestMessage(double voltage, double v0, int voltage_raw,
+            double temperature, double humidity, double pressure
+            ) {
     }
 
     @Bean
@@ -147,6 +149,9 @@ class PrometheusMonitoringConfiguration {
         fieldPollers.add(messageGauge("solartest_voltage", SolarEspTestMessage::voltage));
         fieldPollers.add(messageGauge("solartest_v0", SolarEspTestMessage::v0));
         fieldPollers.add(messageGauge("solartest_v0_raw", it -> (double) it.voltage_raw()));
+        fieldPollers.add(messageGauge("solartest_temperature", SolarEspTestMessage::temperature));
+        fieldPollers.add(messageGauge("solartest_humidity", SolarEspTestMessage::humidity));
+        fieldPollers.add(messageGauge("solartest_pressure", SolarEspTestMessage::pressure));
 
         return mqttMonitoringFactory.build(SolarEspTestMessage.class, properties.mqtt.solarTest.topic, fieldPollers);
     }
