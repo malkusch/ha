@@ -63,6 +63,8 @@ monitoring:
    mqtt:
       solarTest:
          topic: test-1
+      kueche:
+         topic: test
 mqtt:
    host: example.org
    port: 8883

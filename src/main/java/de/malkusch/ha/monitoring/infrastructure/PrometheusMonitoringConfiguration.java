@@ -21,6 +21,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5BlockingClient;
 
@@ -52,6 +53,7 @@ class PrometheusMonitoringConfiguration {
         @Data
         static class Mqtt {
             private MqttSensor solarTest;
+            private MqttSensor kueche;
 
             @Data
             static class MqttSensor {
@@ -138,9 +140,8 @@ class PrometheusMonitoringConfiguration {
 
     private final MqttMonitoring.Factory mqttMonitoringFactory;
 
-    public static record SolarEspTestMessage(double voltage, double v0, int voltage_raw,
-            double temperature, double humidity, double pressure
-            ) {
+    public static record SolarEspTestMessage(double voltage, double v0, int voltage_raw, double temperature,
+            double humidity, double pressure) {
     }
 
     @Bean
@@ -154,6 +155,23 @@ class PrometheusMonitoringConfiguration {
         fieldPollers.add(messageGauge("solartest_pressure", SolarEspTestMessage::pressure));
 
         return mqttMonitoringFactory.build(SolarEspTestMessage.class, properties.mqtt.solarTest.topic, fieldPollers);
+    }
+
+    public static record SensorMessage(String id, double pm10, @JsonProperty("pm2.5") double pm2_5, int co2,
+            double temperature, double humidity, double pressure) {
+    }
+
+    @Bean
+    MqttMonitoring<SensorMessage> kuecheMonitoring(Mqtt5BlockingClient mqtt) {
+        var fieldPollers = new ArrayList<MessageGauge<SensorMessage>>();
+        fieldPollers.add(messageGauge("kueche_pm10", SensorMessage::pm10));
+        fieldPollers.add(messageGauge("kueche_pm25", SensorMessage::pm2_5));
+        fieldPollers.add(messageGauge("kueche_co2", it -> (double) it.co2()));
+        fieldPollers.add(messageGauge("kueche_temperature", SensorMessage::temperature));
+        fieldPollers.add(messageGauge("kueche_humidity", SensorMessage::humidity));
+        fieldPollers.add(messageGauge("kueche_pressure", SensorMessage::pressure));
+
+        return mqttMonitoringFactory.build(SensorMessage.class, properties.mqtt.kueche.topic, fieldPollers);
     }
 
     @Bean
