@@ -144,7 +144,7 @@ class PrometheusMonitoringConfiguration {
 
     @Bean
     MqttMonitoring<JsonNode> kuecheMonitoring2() {
-        return mqttMonitoringFactory.build(properties.mqtt.kueche.topic, "/pm10", "/pm25", "/co2", "/temperature",
+        return mqttMonitoringFactory.build(properties.mqtt.kueche.topic, "/pm10", "/pm2.5", "/co2", "/temperature",
                 "/humidity", "/pressure");
     }
 

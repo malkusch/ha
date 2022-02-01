@@ -36,9 +36,14 @@ public class MqttMonitoring<MESSAGE> {
         }
 
         public MqttMonitoring<JsonNode> build(String topic, String... paths) {
-            var fieldPollers = stream(paths).map(path -> MessageGauge
-                    .<JsonNode> messageGauge(topic + "_" + path.substring(1), it -> it.at(path).asDouble())).toList();
+            var fieldPollers = stream(paths).map(
+                    path -> MessageGauge.<JsonNode> messageGauge(gaugeName(topic, path), it -> it.at(path).asDouble()))
+                    .toList();
             return build(topic, (it) -> mapper.readTree(it), fieldPollers);
+        }
+
+        private static String gaugeName(String topic, String path) {
+            return topic + "_" + path.substring(1).replace(".", "");
         }
 
         private static interface MessageMapper<MESSAGE> {
