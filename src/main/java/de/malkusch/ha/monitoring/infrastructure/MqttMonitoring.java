@@ -2,6 +2,7 @@ package de.malkusch.ha.monitoring.infrastructure;
 
 import static com.hivemq.client.mqtt.MqttGlobalPublishFilter.ALL;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.stream;
 import static lombok.AccessLevel.PRIVATE;
 
 import java.util.Collection;
@@ -9,6 +10,7 @@ import java.util.function.Function;
 
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5BlockingClient;
 
@@ -29,16 +31,32 @@ public class MqttMonitoring<MESSAGE> {
 
         public <MESSAGE> MqttMonitoring<MESSAGE> build(Class<MESSAGE> type, String topic,
                 Collection<MessageGauge<MESSAGE>> fieldPollers) {
+
+            return build(topic, (it) -> mapper.readValue(it, type), fieldPollers);
+        }
+
+        public MqttMonitoring<JsonNode> build(String topic, String... paths) {
+            var fieldPollers = stream(paths).map(path -> MessageGauge
+                    .<JsonNode> messageGauge(topic + "_" + path.substring(1), it -> it.at(path).asDouble())).toList();
+            return build(topic, (it) -> mapper.readTree(it), fieldPollers);
+        }
+
+        private static interface MessageMapper<MESSAGE> {
+            MESSAGE map(String message) throws Exception;
+        }
+
+        private <MESSAGE> MqttMonitoring<MESSAGE> build(String topic, MessageMapper<MESSAGE> messageMapper,
+                Collection<MessageGauge<MESSAGE>> fieldPollers) {
             var poller = new MqttMonitoring<>(fieldPollers);
             mqtt.subscribeWith().topicFilter(topic).send();
 
             mqtt.toAsync().publishes(ALL, publish -> {
-                var jsonMessage = UTF_8.decode(publish.getPayload().get()).toString();
+                var rawMessage = UTF_8.decode(publish.getPayload().get()).toString();
                 try {
-                    var message = mapper.readValue(jsonMessage, type);
+                    var message = messageMapper.map(rawMessage);
                     poller.update(message);
                 } catch (Exception e) {
-                    log.error("Updating MqttMonitoring failed for topic {} with message {}", topic, jsonMessage, e);
+                    log.error("Updating MqttMonitoring failed for topic {} with message {}", topic, rawMessage, e);
                 }
             });
 
@@ -49,8 +67,7 @@ public class MqttMonitoring<MESSAGE> {
     @RequiredArgsConstructor
     static final class MessageGauge<MESSAGE> {
 
-        public static <MESSAGE> MessageGauge<MESSAGE> messageGauge(String name,
-                Function<MESSAGE, Double> fieldMapper) {
+        public static <MESSAGE> MessageGauge<MESSAGE> messageGauge(String name, Function<MESSAGE, Double> fieldMapper) {
             var help = name;
             var gauge = Gauge.build().name(name).help(help).create();
             gauge.register();

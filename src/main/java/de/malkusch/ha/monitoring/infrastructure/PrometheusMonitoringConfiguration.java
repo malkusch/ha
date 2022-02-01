@@ -1,13 +1,11 @@
 package de.malkusch.ha.monitoring.infrastructure;
 
-import static de.malkusch.ha.monitoring.infrastructure.MqttMonitoring.MessageGauge.messageGauge;
 import static de.malkusch.ha.monitoring.infrastructure.PrometheusProxyPoller.mapping;
 import static java.time.Duration.ZERO;
 import static java.util.Arrays.asList;
 import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,11 +19,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hivemq.client.mqtt.mqtt5.Mqtt5BlockingClient;
 
-import de.malkusch.ha.monitoring.infrastructure.MqttMonitoring.MessageGauge;
 import de.malkusch.ha.monitoring.infrastructure.PrometheusProxyPoller.Mapping;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
 import de.malkusch.ha.shared.infrastructure.http.JdkHttpClient;
@@ -140,38 +136,16 @@ class PrometheusMonitoringConfiguration {
 
     private final MqttMonitoring.Factory mqttMonitoringFactory;
 
-    public static record SolarEspTestMessage(double voltage, double v0, int voltage_raw, double temperature,
-            double humidity, double pressure) {
+    @Bean
+    MqttMonitoring<JsonNode> solarEspTestMonitoring() {
+        return mqttMonitoringFactory.build(properties.mqtt.solarTest.topic, "/voltage", "/v0", "/v0_raw",
+                "/temperature", "/humidity", "/pressure");
     }
 
     @Bean
-    MqttMonitoring<SolarEspTestMessage> solarEspTestMonitoring(Mqtt5BlockingClient mqtt) {
-        var fieldPollers = new ArrayList<MessageGauge<SolarEspTestMessage>>();
-        fieldPollers.add(messageGauge("solartest_voltage", SolarEspTestMessage::voltage));
-        fieldPollers.add(messageGauge("solartest_v0", SolarEspTestMessage::v0));
-        fieldPollers.add(messageGauge("solartest_v0_raw", it -> (double) it.voltage_raw()));
-        fieldPollers.add(messageGauge("solartest_temperature", SolarEspTestMessage::temperature));
-        fieldPollers.add(messageGauge("solartest_humidity", SolarEspTestMessage::humidity));
-        fieldPollers.add(messageGauge("solartest_pressure", SolarEspTestMessage::pressure));
-
-        return mqttMonitoringFactory.build(SolarEspTestMessage.class, properties.mqtt.solarTest.topic, fieldPollers);
-    }
-
-    public static record SensorMessage(String id, double pm10, @JsonProperty("pm2.5") double pm2_5, int co2,
-            double temperature, double humidity, double pressure) {
-    }
-
-    @Bean
-    MqttMonitoring<SensorMessage> kuecheMonitoring(Mqtt5BlockingClient mqtt) {
-        var fieldPollers = new ArrayList<MessageGauge<SensorMessage>>();
-        fieldPollers.add(messageGauge("kueche_pm10", SensorMessage::pm10));
-        fieldPollers.add(messageGauge("kueche_pm25", SensorMessage::pm2_5));
-        fieldPollers.add(messageGauge("kueche_co2", it -> (double) it.co2()));
-        fieldPollers.add(messageGauge("kueche_temperature", SensorMessage::temperature));
-        fieldPollers.add(messageGauge("kueche_humidity", SensorMessage::humidity));
-        fieldPollers.add(messageGauge("kueche_pressure", SensorMessage::pressure));
-
-        return mqttMonitoringFactory.build(SensorMessage.class, properties.mqtt.kueche.topic, fieldPollers);
+    MqttMonitoring<JsonNode> kuecheMonitoring2() {
+        return mqttMonitoringFactory.build(properties.mqtt.kueche.topic, "/pm10", "/pm25", "/co2", "/temperature",
+                "/humidity", "/pressure");
     }
 
     @Bean

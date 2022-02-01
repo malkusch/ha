@@ -62,7 +62,7 @@ monitoring:
    retries: 2
    mqtt:
       solarTest:
-         topic: test-1
+         topic: solarTest
       kueche:
          topic: test
 mqtt:
