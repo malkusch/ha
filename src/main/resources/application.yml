@@ -45,6 +45,7 @@ buderus:
             cloudiness-threshold: 0.75
             delta: 3
    heater:
+      external-reset-temperature-check-cron: 59 */30 * * * * # Every 30 minutes
       rules:
          window: PT30m
          evaluationRate: PT30m

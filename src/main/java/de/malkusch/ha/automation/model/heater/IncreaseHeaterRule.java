@@ -35,7 +35,7 @@ public class IncreaseHeaterRule implements Rule {
 
         var excessProduction = min(electricity.excessProduction(P75, window), electricity.excessProduction());
         if (excessProduction.isGreaterThan(threshold)) {
-            log.info("Increasing heater when p75 excess energy production was {}", excessProduction);
+            log.debug("Increasing heater when p75 excess energy production was {}", excessProduction);
             temporaryTemperatureService.changeTemporaryHeaterTemperature(increasedTemperature);
         }
 
@@ -46,5 +46,4 @@ public class IncreaseHeaterRule implements Rule {
     public Duration evaluationRate() {
         return evaluationRate;
     }
-
 }

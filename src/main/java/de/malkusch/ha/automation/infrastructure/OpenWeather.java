@@ -128,7 +128,7 @@ class OpenWeather implements Weather {
         var today = LocalDate.now();
         lastResponse.hourly.stream().filter(it -> it.date().equals(today)).forEach(it -> {
             var time = it.time();
-            log.debug("Update hourly forcast at {}", it.localDateTime());
+            log.debug("Update hourly forcast at {} with {}", time, it.localDateTime());
             todaysHourlyForecastsMap.put(time, it);
         });
     }
