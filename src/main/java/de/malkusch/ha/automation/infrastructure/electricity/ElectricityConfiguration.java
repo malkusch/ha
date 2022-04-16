@@ -32,6 +32,7 @@ public class ElectricityConfiguration {
         public static class Prediction {
             private double minimumPeak;
             private Duration peakWindow;
+            private Duration learningWindow;
         }
     }
 
@@ -41,7 +42,8 @@ public class ElectricityConfiguration {
 
         var minimumPeak = new Watt(properties.prediction.minimumPeak);
         var peakWindow = properties.prediction.peakWindow;
+        var learningWindow = properties.prediction.learningWindow;
 
-        return new ElectricityPredictionService(electricity, minimumPeak, peakWindow, weather);
+        return new ElectricityPredictionService(electricity, minimumPeak, peakWindow, weather, learningWindow);
     }
 }

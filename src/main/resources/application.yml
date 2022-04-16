@@ -31,6 +31,7 @@ electricity:
    prediction:
       minimumPeak: 4000
       peakWindow: P14D
+      learning-window: P5D
       learn-cron: 59 55 3 * * * # Daily at 3:55:59
 buderus:
    salt: 867845e97c4e29dce522b9a7d3a3e07b152bffadddbed7f5ffd842e9895ad1e4

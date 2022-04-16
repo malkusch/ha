@@ -23,15 +23,17 @@ public final class ElectricityPredictionService {
     private final Watt minimumPeak;
     private final Duration peakWindow;
     private final Weather weather;
+    private final Duration learningWindow;
     private volatile Cloudiness threshold = NO_CLOUDS;
 
-    public ElectricityPredictionService(Electricity electricity, Watt minimumPeak, Duration peakWindow, Weather weather)
-            throws ApiException, InterruptedException {
+    public ElectricityPredictionService(Electricity electricity, Watt minimumPeak, Duration peakWindow, Weather weather,
+            Duration learningWindow) throws ApiException, InterruptedException {
 
         this.electricity = electricity;
         this.minimumPeak = minimumPeak;
         this.peakWindow = peakWindow;
         this.weather = weather;
+        this.learningWindow = learningWindow;
 
         threshold = learnCloudinessThreshold();
     }
@@ -42,10 +44,8 @@ public final class ElectricityPredictionService {
     }
 
     private Cloudiness learnCloudinessThreshold() throws ApiException, InterruptedException {
-        var window = 5;
-
         List<Cloudiness> candidates = new ArrayList<>();
-        for (var day = 1; day < window; day++) {
+        for (var day = 1; day < learningWindow.toDays(); day++) {
             var date = LocalDate.now().minusDays(day);
             var cloudiness = weather.averageDaylightCloudiness(date);
             log.debug("Average cloudiness at {} is {}", date, cloudiness);
