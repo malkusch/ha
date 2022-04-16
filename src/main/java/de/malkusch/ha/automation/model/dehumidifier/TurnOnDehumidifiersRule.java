@@ -1,16 +1,16 @@
 package de.malkusch.ha.automation.model.dehumidifier;
 
-import static de.malkusch.ha.automation.model.Electricity.Aggregation.P75;
 import static de.malkusch.ha.automation.model.State.OFF;
-import static de.malkusch.ha.automation.model.Watt.min;
+import static de.malkusch.ha.automation.model.electricity.Electricity.Aggregation.P75;
+import static de.malkusch.ha.automation.model.electricity.Watt.min;
 
 import java.time.Duration;
 
 import de.malkusch.ha.automation.infrastructure.Debouncer.DebounceException;
-import de.malkusch.ha.automation.model.Electricity;
 import de.malkusch.ha.automation.model.Rule;
-import de.malkusch.ha.automation.model.Watt;
 import de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.DehumidifierRepository;
+import de.malkusch.ha.automation.model.electricity.Electricity;
+import de.malkusch.ha.automation.model.electricity.Watt;
 import de.malkusch.ha.shared.model.ApiException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +35,7 @@ public final class TurnOnDehumidifiersRule implements Rule {
         var threshold = dehumidifier.power.plus(buffer);
         var excess = min(electricity.excess(P75, window), electricity.excess());
         if (excess.isGreaterThan(threshold)) {
-            log.info("Turning on {} when p25 excess electricity was {}", dehumidifier, excess);
+            log.info("Turning on {} when p75 excess electricity was {}", dehumidifier, excess);
             dehumidifier.turnOn();
         }
     }

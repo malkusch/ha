@@ -1,4 +1,4 @@
-package de.malkusch.ha.automation.infrastructure;
+package de.malkusch.ha.automation.infrastructure.heater;
 
 import static java.time.DayOfWeek.FRIDAY;
 import static java.time.DayOfWeek.MONDAY;
@@ -25,31 +25,46 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.malkusch.ha.automation.infrastructure.prometheus.Prometheus;
+import de.malkusch.ha.automation.model.Temperature;
 import de.malkusch.ha.automation.model.heater.Heater;
 import de.malkusch.ha.shared.model.ApiException;
 import de.malkusch.km200.KM200;
 import de.malkusch.km200.KM200Exception;
 import de.malkusch.km200.KM200Exception.NotFound;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 class KM200Heater implements Heater {
 
     private final KM200 km200;
     private final Prometheus prometheus;
     private final ObjectMapper mapper;
 
-    public KM200Heater(KM200 km200, Prometheus prometheus, ObjectMapper mapper)
-            throws InterruptedException, ApiException {
-
-        this.km200 = km200;
-        this.prometheus = prometheus;
-        this.mapper = mapper;
-    }
-
     @Override
     public boolean isHeating() throws ApiException, InterruptedException {
         var delta = prometheus.query("delta(heater_heatSources_workingTime_totalSystem[5m:])");
         return delta.compareTo(BigDecimal.ZERO) > 0;
+    }
+
+    private static final String HEATER_TEMPERATURE = "/heatingCircuits/hc1/manualRoomSetpoint";
+    
+    @Override
+    public Temperature heaterTemperature() throws ApiException, InterruptedException {
+        return new Temperature(withApiException(() -> km200.queryBigDecimal(HEATER_TEMPERATURE)));
+    }
+
+    @Override
+    public void changeHeaterTemperature(Temperature temperature) throws ApiException, InterruptedException {
+        log.debug("Change temperature to {}", temperature);
+        withApiException(() -> km200.update(HEATER_TEMPERATURE, temperature.getValue()));
+        var current = heaterTemperature();
+        if (!current.equals(temperature)) {
+            throw new ApiException(
+                    String.format("changeHeaterTemperature() to %s resulted in %s", temperature, current));
+        }
     }
 
     SwitchProgram switchProgram(String path) throws IOException, InterruptedException {

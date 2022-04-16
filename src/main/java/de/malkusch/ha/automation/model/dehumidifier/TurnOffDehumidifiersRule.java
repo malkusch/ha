@@ -1,15 +1,15 @@
 package de.malkusch.ha.automation.model.dehumidifier;
 
-import static de.malkusch.ha.automation.model.Electricity.Aggregation.P75;
 import static de.malkusch.ha.automation.model.State.ON;
+import static de.malkusch.ha.automation.model.electricity.Electricity.Aggregation.P75;
 
 import java.time.Duration;
 
 import de.malkusch.ha.automation.infrastructure.Debouncer.DebounceException;
-import de.malkusch.ha.automation.model.Electricity;
 import de.malkusch.ha.automation.model.Rule;
-import de.malkusch.ha.automation.model.Watt;
 import de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.DehumidifierRepository;
+import de.malkusch.ha.automation.model.electricity.Electricity;
+import de.malkusch.ha.automation.model.electricity.Watt;
 import de.malkusch.ha.shared.model.ApiException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

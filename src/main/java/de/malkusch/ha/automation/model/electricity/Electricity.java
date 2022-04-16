@@ -1,6 +1,7 @@
-package de.malkusch.ha.automation.model;
+package de.malkusch.ha.automation.model.electricity;
 
 import java.time.Duration;
+import java.time.LocalDate;
 
 import de.malkusch.ha.shared.model.ApiException;
 
@@ -14,6 +15,10 @@ public interface Electricity {
 
     Watt excess() throws ApiException, InterruptedException;
 
+    Watt excessProduction(Aggregation aggregation, Duration duration) throws ApiException, InterruptedException;
+
+    Watt excessProduction() throws ApiException, InterruptedException;
+
     Watt consumption(Aggregation aggregation, Duration duration) throws ApiException, InterruptedException;
 
     Watt production(Aggregation aggregation, Duration duration) throws ApiException, InterruptedException;
@@ -21,4 +26,6 @@ public interface Electricity {
     Watt batteryConsumption(Aggregation aggregation, Duration duration) throws ApiException, InterruptedException;
 
     Capacity capacity() throws ApiException, InterruptedException;
+
+    boolean wasFullyCharged(LocalDate date) throws ApiException, InterruptedException;
 }

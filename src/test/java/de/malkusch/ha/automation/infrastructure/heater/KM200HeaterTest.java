@@ -1,4 +1,4 @@
-package de.malkusch.ha.automation.infrastructure;
+package de.malkusch.ha.automation.infrastructure.heater;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

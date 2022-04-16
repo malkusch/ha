@@ -1,11 +1,13 @@
 package de.malkusch.ha.automation.infrastructure.prometheus;
 
+import static de.malkusch.ha.shared.infrastructure.DateUtil.toTimestamp;
 import static java.math.BigDecimal.ZERO;
 import static java.net.URLEncoder.encode;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,8 +23,14 @@ public final class Prometheus {
     private final ObjectMapper mapper;
     private final String baseUrl;
 
-    public BigDecimal query(String query) throws ApiException, InterruptedException {
+    public BigDecimal query(String query, LocalDate date) throws ApiException, InterruptedException {
         var url = baseUrl + "/api/v1/query?query=" + encode(query, UTF_8);
+
+        if (date != null) {
+            var start = toTimestamp(date);
+            url += "&start=" + start;
+        }
+
         try (var response = http.get(url)) {
             var json = mapper.readValue(response.body, Response.class);
 
@@ -34,6 +42,10 @@ public final class Prometheus {
         } catch (IOException e) {
             throw new ApiException("Faild to query " + query, e);
         }
+    }
+
+    public BigDecimal query(String query) throws ApiException, InterruptedException {
+        return query(query, null);
     }
 
     private static class Response {

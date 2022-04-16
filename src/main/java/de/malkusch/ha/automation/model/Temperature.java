@@ -35,6 +35,6 @@ public final class Temperature {
 
     @Override
     public String toString() {
-        return String.format("%.2f ' °C'", value.doubleValue());
+        return String.format("%.2f °C", value.doubleValue());
     }
 }

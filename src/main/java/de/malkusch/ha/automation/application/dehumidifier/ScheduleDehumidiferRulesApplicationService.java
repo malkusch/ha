@@ -7,9 +7,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import de.malkusch.ha.automation.infrastructure.rule.RuleScheduler;
-import de.malkusch.ha.automation.model.Electricity;
-import de.malkusch.ha.automation.model.Watt;
 import de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.DehumidifierRepository;
+import de.malkusch.ha.automation.model.electricity.Electricity;
+import de.malkusch.ha.automation.model.electricity.Watt;
 import de.malkusch.ha.automation.model.dehumidifier.TurnOffDehumidifiersRule;
 import de.malkusch.ha.automation.model.dehumidifier.TurnOnDehumidifiersRule;
 import lombok.Data;

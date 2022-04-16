@@ -1,4 +1,4 @@
-package de.malkusch.ha.automation.model;
+package de.malkusch.ha.automation.model.electricity;
 
 import lombok.Value;
 
