@@ -37,6 +37,13 @@ final class PrometheusElectricity implements Electricity {
     }
 
     @Override
+    public Watt excess() throws ApiException, InterruptedException {
+        var query = "clamp_min(batterie_feed_in, 0)";
+        var result = prometheus.query(query);
+        return new Watt(result.doubleValue());
+    }
+
+    @Override
     public Watt consumption(Aggregation aggregation, Duration duration) throws ApiException, InterruptedException {
         var query = aggregation("batterie_consumption", duration, aggregation);
         var result = prometheus.query(query);

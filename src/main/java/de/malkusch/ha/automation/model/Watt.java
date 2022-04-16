@@ -33,9 +33,13 @@ public final class Watt {
     public Watt plus(Watt buffer) {
         return new Watt(value + buffer.value);
     }
-    
+
     public Watt minus(Watt buffer) {
         return new Watt(value - buffer.value);
+    }
+
+    public static Watt min(Watt a, Watt b) {
+        return a.isLessThan(b) ? a : b;
     }
 
     @Override
