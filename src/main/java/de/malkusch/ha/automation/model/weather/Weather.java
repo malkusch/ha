@@ -7,12 +7,8 @@ import de.malkusch.ha.shared.model.ApiException;
 
 public interface Weather {
 
-    Cloudiness cloudiness(LocalDate date) throws ApiException, InterruptedException;
-    
-    default Cloudiness cloudiness() throws ApiException, InterruptedException {
-        return cloudiness(LocalDate.now());
-    }
-    
+    Cloudiness averageDaylightCloudiness() throws ApiException, InterruptedException;
+
     Cloudiness averageDaylightCloudiness(LocalDate date) throws ApiException, InterruptedException;
 
     Temperature temperature() throws ApiException, InterruptedException;

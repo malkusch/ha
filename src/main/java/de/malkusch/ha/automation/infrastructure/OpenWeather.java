@@ -7,9 +7,14 @@ import static java.time.Instant.ofEpochSecond;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -40,6 +45,7 @@ class OpenWeather implements Weather {
     private final ObjectMapper mapper;
     private final LocalTime daylightStart;
     private final LocalTime daylightEnd;
+    private Map<LocalTime, Response.Forecast> todaysHourlyForecastsMap = new ConcurrentHashMap<>();
 
     @ConfigurationProperties("open-weather")
     @Component
@@ -70,33 +76,38 @@ class OpenWeather implements Weather {
         }
 
         lastResponse = downloadCurrentResponse();
+        updateTodaysHourlyForecastsMap();
     }
 
     @Override
-    public Cloudiness cloudiness(LocalDate date) throws ApiException {
-        return lastResponse.daily.stream() //
-                .filter(it -> it.localDate().equals(date)) //
-                .findFirst() //
-                .map(Response.Forecast::cloudiness) //
-                .orElseThrow(() -> new ApiException("No Forecast for " + date));
+    public Cloudiness averageDaylightCloudiness() throws ApiException {
+        return averageDaylightCloudiness(todaysHourlyForecastsMap.values()).orElseGet(() -> {
+            log.warn("Falling back to daily forcast");
+            return lastResponse.current.cloudiness();
+        });
     }
 
     @Override
     public Cloudiness averageDaylightCloudiness(LocalDate date) throws ApiException, InterruptedException {
-        var start = toTimestamp(date.atTime(daylightStart));
-        var end = toTimestamp(date.atTime(daylightEnd));
-
-        Response response;
         try {
-            response = downloadPastResponse(date);
+            return averageDaylightCloudiness(downloadPastResponse(date).hourly)
+                    .orElseThrow(() -> new ApiException("Couldn't fetch average cloudiness for " + date));
 
         } catch (IOException e) {
             throw new ApiException("Couldn't fetch average cloudiness for " + date, e);
         }
-        var average = response.hourly.stream().filter(it -> it.dt >= start && it.dt <= end).map(it -> it.clouds)
-                .mapToInt(it -> it).average()
-                .orElseThrow(() -> new ApiException("Couldn't fetch average cloudiness for " + date));
-        return new Cloudiness((int) average);
+    }
+
+    private Optional<Cloudiness> averageDaylightCloudiness(Collection<Response.Forecast> hourlies) throws ApiException {
+        var average = hourlies.stream()
+                .filter(it -> it.time().isAfter(daylightStart) && it.time().isBefore(daylightEnd)).map(it -> it.clouds)
+                .mapToInt(it -> it).average();
+
+        if (average.isPresent()) {
+            return Optional.of(new Cloudiness((int) average.getAsDouble()));
+        } else {
+            return Optional.empty();
+        }
     }
 
     private volatile Response lastResponse;
@@ -105,11 +116,21 @@ class OpenWeather implements Weather {
     void refreshResponseAndPublishWeatherEvents() throws IOException, InterruptedException {
         var lastWind = windspeed();
         lastResponse = downloadCurrentResponse();
+        updateTodaysHourlyForecastsMap();
 
         var currentWind = windspeed();
         if (!lastWind.equals(currentWind)) {
             publishSafely(new WindSpeedChanged(currentWind));
         }
+    }
+
+    private void updateTodaysHourlyForecastsMap() {
+        var today = LocalDate.now();
+        lastResponse.hourly.stream().filter(it -> it.date().equals(today)).forEach(it -> {
+            var time = it.time();
+            log.debug("Update hourly forcast at {}", it.localDateTime());
+            todaysHourlyForecastsMap.put(time, it);
+        });
     }
 
     private Response downloadPastResponse(LocalDate date) throws IOException, InterruptedException {
@@ -137,12 +158,20 @@ class OpenWeather implements Weather {
                 return ofEpochSecond(dt);
             }
 
+            LocalTime time() {
+                return localDateTime().toLocalTime();
+            }
+
+            LocalDate date() {
+                return localDateTime().toLocalDate();
+            }
+
             Cloudiness cloudiness() {
                 return new Cloudiness(clouds);
             }
 
-            LocalDate localDate() {
-                return instant().atZone(ZoneId.systemDefault()).toLocalDate();
+            LocalDateTime localDateTime() {
+                return instant().atZone(ZoneId.systemDefault()).toLocalDateTime();
             }
 
             WindSpeed windSpeed() {

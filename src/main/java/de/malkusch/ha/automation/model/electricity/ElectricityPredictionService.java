@@ -71,7 +71,7 @@ public final class ElectricityPredictionService {
             return false;
         }
 
-        var cloudiness = weather.cloudiness();
+        var cloudiness = weather.averageDaylightCloudiness();
         log.debug("Cloudiness is {}", cloudiness);
         if (cloudiness.isLessThan(threshold)) {
             log.debug("Predict loaded battery, because of cloudiness {} is less than {}", cloudiness, threshold);
