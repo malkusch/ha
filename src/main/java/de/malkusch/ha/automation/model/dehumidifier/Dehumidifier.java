@@ -9,6 +9,7 @@ import java.util.Collection;
 import de.malkusch.ha.automation.infrastructure.Debouncer;
 import de.malkusch.ha.automation.infrastructure.Debouncer.DebounceException;
 import de.malkusch.ha.automation.model.NotFoundException;
+import de.malkusch.ha.automation.model.RoomId;
 import de.malkusch.ha.automation.model.State;
 import de.malkusch.ha.automation.model.electricity.Watt;
 import de.malkusch.ha.shared.model.ApiException;
@@ -47,6 +48,7 @@ public final class Dehumidifier {
     }
 
     public final DehumidifierId id;
+    public final RoomId room;
     public final Watt power;
     private final Api api;
     private final Debouncer debouncer = new Debouncer(ofMinutes(5));

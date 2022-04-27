@@ -1,9 +1,14 @@
 logging.level.de.malkusch: DEBUG
 prometheus:
    url: http://localhost:9090
+   climate:
+      rooms:
+         - room: keller
+           prefix: kellerSensors
 dehumidifier:
    tasmota:
    -  name: keller
+      room: keller
       power: 250
       url: http://tasmota-1
 shutters:

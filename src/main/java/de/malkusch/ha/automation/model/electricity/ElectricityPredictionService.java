@@ -59,7 +59,7 @@ public final class ElectricityPredictionService {
             }
         }
 
-        var max = candidates.stream().max(comparingDouble(Cloudiness::cloudiness)).orElse(NO_CLOUDS);
+        var max = candidates.stream().max(comparingDouble(it -> it.value().value())).orElse(NO_CLOUDS);
         log.debug("Learned cloudiness threshold for a full battery is {}", max);
         return max;
     }

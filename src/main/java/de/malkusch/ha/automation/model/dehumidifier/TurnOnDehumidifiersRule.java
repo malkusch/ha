@@ -8,6 +8,8 @@ import java.time.Duration;
 
 import de.malkusch.ha.automation.infrastructure.Debouncer.DebounceException;
 import de.malkusch.ha.automation.model.Rule;
+import de.malkusch.ha.automation.model.climate.ClimateService;
+import de.malkusch.ha.automation.model.climate.Humidity;
 import de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.DehumidifierRepository;
 import de.malkusch.ha.automation.model.electricity.Electricity;
 import de.malkusch.ha.automation.model.electricity.Watt;
@@ -24,11 +26,18 @@ public final class TurnOnDehumidifiersRule implements Rule {
     private final Watt buffer;
     private final Duration window;
     private final Duration evaluationRate;
+    private final ClimateService climateService;
+    private final Humidity threshold;
 
     @Override
     public void evaluate() throws ApiException, InterruptedException, DebounceException {
         var dehumidifier = findNext();
         if (dehumidifier == null) {
+            return;
+        }
+        
+        var humidity = climateService.humidity(dehumidifier.room);
+        if (humidity.isLessThan(threshold)) {
             return;
         }
 

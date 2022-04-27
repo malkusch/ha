@@ -1,30 +1,35 @@
 package de.malkusch.ha.automation.model.weather;
 
-public record Cloudiness(double cloudiness) {
+import static java.util.Objects.requireNonNull;
 
-    public static final Cloudiness NO_CLOUDS = new Cloudiness(0);
+import de.malkusch.ha.automation.model.Percent;
 
-    public Cloudiness(double cloudiness) {
-        if (cloudiness < 0 || cloudiness > 1) {
-            throw new IllegalArgumentException("Cloudiness must be between 0 and 1");
-        }
-        this.cloudiness = cloudiness;
+public record Cloudiness(Percent value) {
+
+    public static final Cloudiness NO_CLOUDS = new Cloudiness(Percent.ZERO);
+
+    public Cloudiness(Percent value) {
+        this.value = requireNonNull(value);
     }
 
     public Cloudiness(int percent) {
-        this(percent / 100.0);
+        this(new Percent(percent));
     }
 
-    public boolean isGreaterThan(Cloudiness cloudiness) {
-        return this.cloudiness > cloudiness.cloudiness;
+    public Cloudiness(double percent) {
+        this(new Percent(percent));
     }
 
-    public boolean isLessThan(Cloudiness cloudiness) {
-        return this.cloudiness < cloudiness.cloudiness;
+    public boolean isGreaterThan(Cloudiness other) {
+        return value.isGreaterThan(other.value);
+    }
+
+    public boolean isLessThan(Cloudiness other) {
+        return value.isLessThan(other.value);
     }
 
     @Override
     public String toString() {
-        return String.format("%.2f%%", cloudiness * 100);
+        return value.toString();
     }
 }

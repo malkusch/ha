@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.malkusch.ha.automation.infrastructure.MapRepository;
 import de.malkusch.ha.automation.infrastructure.TasmotaApi;
 import de.malkusch.ha.automation.model.NotFoundException;
+import de.malkusch.ha.automation.model.RoomId;
 import de.malkusch.ha.automation.model.dehumidifier.Dehumidifier;
 import de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.DehumidifierId;
 import de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.DehumidifierRepository;
@@ -36,6 +37,7 @@ class DehumidifierConfiguration {
         @Data
         public static class Device {
             private String name;
+            private String room;
             private String url;
             private int power;
         }
@@ -48,9 +50,10 @@ class DehumidifierConfiguration {
         var map = new HashMap<DehumidifierId, Dehumidifier>();
         for (var device : properties.tasmota) {
             var api = new TasmotaDehumidiferApi(new TasmotaApi(device.url, http, mapper));
+            var room = new RoomId(device.room);
             var id = new DehumidifierId(device.name);
             var power = new Watt(device.power);
-            var dehumidifier = new Dehumidifier(id, power, api);
+            var dehumidifier = new Dehumidifier(id, room, power, api);
             map.put(id, dehumidifier);
         }
         var repository = new MapRepository<>(map);
