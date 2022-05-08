@@ -8,7 +8,7 @@ dehumidifier:
       evaluationRate: PT10m
       humidity:
          minimum: 0.40
-         maximum: 0.55
+         maximum: 0.50
 shutters:
    delay: PT0.2s
    wind-protection:
