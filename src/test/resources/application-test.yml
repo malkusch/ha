@@ -2,11 +2,19 @@ spring.main.allow-bean-definition-overriding: true
 logging.level.de.malkusch: DEBUG
 prometheus:
    url: http://localhost:9090
+   climate:
+      outside-prefix: aussen
+      rooms:
+         - room: keller
+           prefix: feinstaub
 dehumidifier:
    tasmota:
    -  name: keller
       power: 250
       url: http://tasmota-1
+room:
+   rooms:
+      - id: keller
 shutters:
    shelly:
       url: https://shelly-31-eu.shelly.cloud
@@ -22,10 +30,10 @@ buderus:
    privatePassword: 1234
    host: http://heizung
 location:
-   latitude: 12.3
-   longitude: 45.6
+   latitude: 52.520008
+   longitude: 13.404954
 open-weather:
-   api-key: 123abc
+   api-key: ${OPENWEATHER_API_KEY}
 notification:
    telegram:
       token: aToken

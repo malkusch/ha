@@ -1,8 +1,12 @@
 package de.malkusch.ha;
 
 import static de.malkusch.ha.automation.model.shutters.Shutter.Api.State.OPEN;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import java.math.BigDecimal;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,6 +18,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.ActiveProfiles;
 
+import de.malkusch.ha.automation.infrastructure.prometheus.Prometheus;
 import de.malkusch.ha.automation.infrastructure.shutters.ShellyCloudApi;
 import de.malkusch.ha.automation.model.shutters.Shutter.Api;
 import de.malkusch.ha.shared.model.ApiException;
@@ -36,6 +41,15 @@ public class ApplicationIT {
             var api = mock(Api.class);
             when(api.state()).thenReturn(OPEN);
             return (id, deviceId) -> api;
+        }
+        
+        @Bean
+        @Primary
+        public Prometheus prometheus() throws ApiException, InterruptedException {
+            var api = mock(Prometheus.class);
+            when(api.query(anyString(), any())).thenReturn(new BigDecimal(1));
+            when(api.query(anyString())).thenReturn(new BigDecimal(1));
+            return api;
         }
     }
 

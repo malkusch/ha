@@ -41,7 +41,7 @@ class PrometheusConfiguration {
 
     @Bean
     public Prometheus prometheus(HttpClient http, ObjectMapper mapper, PrometheusProperties properties) {
-        return new Prometheus(http, mapper, properties.url);
+        return new PrometheusHttpClient(http, mapper, properties.url);
     }
 
     @Bean
