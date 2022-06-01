@@ -9,6 +9,15 @@ dehumidifier:
       humidity:
          minimum: 0.40
          maximum: 0.50
+room:
+   rules:
+      open-window:
+         evaluationRate: PT2m
+         co2-threshold:
+            best: 500
+            old: 1500
+            unhealthy: 2500
+         dust-buffer-pm25: 3
 shutters:
    delay: PT0.2s
    wind-protection:

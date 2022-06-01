@@ -74,6 +74,11 @@
 			<artifactId>commons-suncalc</artifactId>
 			<version>3.5</version>
 		</dependency>
+		<dependency>
+			<groupId>com.github.malkusch</groupId>
+			<artifactId>broadlink-bulb-api</artifactId>
+			<version>0.2.0</version>
+		</dependency>
 
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>

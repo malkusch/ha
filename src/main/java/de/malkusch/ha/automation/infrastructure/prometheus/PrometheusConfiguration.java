@@ -10,8 +10,8 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import de.malkusch.ha.automation.model.RoomId;
 import de.malkusch.ha.automation.model.climate.ClimateService;
+import de.malkusch.ha.automation.model.room.RoomId;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
 import lombok.Data;
 
@@ -28,6 +28,7 @@ class PrometheusConfiguration {
 
         @Data
         public static class Climate {
+            private String outsidePrefix;
             private List<Room> rooms;
 
             @Data
@@ -45,12 +46,13 @@ class PrometheusConfiguration {
 
     @Bean
     public ClimateService climateService(Prometheus prometheus, PrometheusProperties properties) {
+        var outsidePrefix = properties.climate.outsidePrefix;
         var map = new HashMap<RoomId, String>();
         for (var property : properties.climate.rooms) {
             var room = new RoomId(property.room);
             var prefix = property.prefix;
             map.put(room, prefix);
         }
-        return new PrometheusClimateService(prometheus, map);
+        return new PrometheusClimateService(prometheus, outsidePrefix, map);
     }
 }

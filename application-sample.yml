@@ -2,6 +2,7 @@ logging.level.de.malkusch: DEBUG
 prometheus:
    url: http://localhost:9090
    climate:
+      outside-prefix: aussen
       rooms:
          - room: keller
            prefix: kellerSensors
@@ -11,6 +12,10 @@ dehumidifier:
       room: keller
       power: 250
       url: http://tasmota-1
+room:
+   rooms:
+      - id: keller
+        signal-light: ec:0b:ae:50:f9:c2
 shutters:
    shelly:
       url: https://shelly-31-eu.shelly.cloud
