@@ -7,9 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import de.malkusch.ha.automation.infrastructure.rule.RuleScheduler;
-import de.malkusch.ha.automation.model.Percent;
 import de.malkusch.ha.automation.model.climate.ClimateService;
-import de.malkusch.ha.automation.model.climate.Humidity;
 import de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.DehumidifierRepository;
 import de.malkusch.ha.automation.model.dehumidifier.TurnOffDehumidifiersRule;
 import de.malkusch.ha.automation.model.dehumidifier.TurnOnDehumidifiersRule;
@@ -27,28 +25,19 @@ public final class ScheduleDehumidiferRulesApplicationService {
         private int buffer;
         private Duration window;
         private Duration evaluationRate;
-        private Humidity humidity;
-
-        @Data
-        public static class Humidity {
-            private double minimum;
-            private double maximum;
-        }
     }
 
     ScheduleDehumidiferRulesApplicationService(DehumidifierRepository dehumidifiers, RuleScheduler scheduler,
             Electricity electricity, DehumidifierProperties properties, ClimateService climateService) {
 
         var buffer = new Watt(properties.buffer);
-        var minimumHumidity = new Humidity(new Percent(properties.humidity.minimum));
-        var maximumHumidity = new Humidity(new Percent(properties.humidity.maximum));
 
         var turnOn = new TurnOnDehumidifiersRule(dehumidifiers, electricity, buffer, properties.window,
-                properties.evaluationRate, climateService, maximumHumidity);
+                properties.evaluationRate, climateService);
         scheduler.schedule(turnOn);
 
         var turnOff = new TurnOffDehumidifiersRule(dehumidifiers, electricity, buffer, properties.window,
-                properties.evaluationRate, climateService, minimumHumidity);
+                properties.evaluationRate, climateService);
         scheduler.schedule(turnOff);
     }
 }

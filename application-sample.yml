@@ -11,6 +11,9 @@ dehumidifier:
    -  name: keller
       room: keller
       power: 250
+      desired-humidity:
+         minimum: 0.40
+         maximum: 0.50
       url: http://tasmota-1
 room:
    rooms:

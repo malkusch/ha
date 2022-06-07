@@ -6,9 +6,6 @@ dehumidifier:
       buffer: 50
       window: PT30m
       evaluationRate: PT10m
-      humidity:
-         minimum: 0.40
-         maximum: 0.50
 room:
    rules:
       open-window:

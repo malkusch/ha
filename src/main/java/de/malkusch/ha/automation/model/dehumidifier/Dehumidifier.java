@@ -50,6 +50,7 @@ public final class Dehumidifier {
     public final DehumidifierId id;
     public final RoomId room;
     public final Watt power;
+    public final DesiredHumidity desiredHumidity;
     private final Api api;
     private final Debouncer debouncer = new Debouncer(ofMinutes(5));
 

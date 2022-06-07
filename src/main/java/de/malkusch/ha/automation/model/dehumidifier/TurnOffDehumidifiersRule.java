@@ -1,6 +1,6 @@
 package de.malkusch.ha.automation.model.dehumidifier;
 
-import static de.malkusch.ha.automation.model.State.ON;
+import static de.malkusch.ha.automation.model.State.OFF;
 import static de.malkusch.ha.automation.model.electricity.Electricity.Aggregation.P75;
 
 import java.time.Duration;
@@ -8,7 +8,6 @@ import java.time.Duration;
 import de.malkusch.ha.automation.infrastructure.Debouncer.DebounceException;
 import de.malkusch.ha.automation.model.Rule;
 import de.malkusch.ha.automation.model.climate.ClimateService;
-import de.malkusch.ha.automation.model.climate.Humidity;
 import de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.DehumidifierRepository;
 import de.malkusch.ha.automation.model.electricity.Electricity;
 import de.malkusch.ha.automation.model.electricity.Watt;
@@ -26,36 +25,28 @@ public final class TurnOffDehumidifiersRule implements Rule {
     private final Duration window;
     private final Duration evaluationRate;
     private final ClimateService climateService;
-    private final Humidity minimum;
 
     @Override
     public void evaluate() throws ApiException, InterruptedException, DebounceException {
-        var dehumidifier = findNext();
-        if (dehumidifier == null) {
-            return;
-        }
+        for (var dehumidifier : dehumidifiers.findAll()) {
+            if (dehumidifier.state() == OFF) {
+                continue;
+            }
 
-        var humidity = climateService.humidity(dehumidifier.room);
-        if (humidity.isLessThan(minimum)) {
-            log.info("Turning off {} when humidity was {}", dehumidifier, humidity);
-            dehumidifier.turnOff();
-            return;
-        }
+            var humidity = climateService.humidity(dehumidifier.room);
+            if (humidity.isLessThan(dehumidifier.desiredHumidity.minimum())) {
+                log.info("Turning off {} when humidity was {}", dehumidifier, humidity);
+                dehumidifier.turnOff();
+                return;
+            }
 
-        var excess = electricity.excess(P75, window);
-        if (excess.isLessThan(buffer)) {
-            log.info("Turning off {} when p75 excess electricity was {}", dehumidifier, excess);
-            dehumidifier.turnOff();
-        }
-    }
-
-    private Dehumidifier findNext() throws ApiException, InterruptedException {
-        for (var canidate : dehumidifiers.findAll()) {
-            if (canidate.state() == ON) {
-                return canidate;
+            var excess = electricity.excess(P75, window);
+            if (excess.isLessThan(buffer)) {
+                log.info("Turning off {} when p75 excess electricity was {}", dehumidifier, excess);
+                dehumidifier.turnOff();
+                return;
             }
         }
-        return null;
     }
 
     @Override
