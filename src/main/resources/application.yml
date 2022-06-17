@@ -16,6 +16,7 @@ room:
             unhealthy: 2500
          dust-buffer-pm25: 3
 shutters:
+   cold-night-temperature: 10
    delay: PT0.2s
    wind-protection:
       release-wind-speed: 30
@@ -34,8 +35,6 @@ shutters:
          protect-wind-speed: 25
          protection-state: 0
          lock-duration: PT12h
-      terrasse:
-         night-close-threshold: 20
 electricity:
    prediction:
       minimumPeak: 4000
