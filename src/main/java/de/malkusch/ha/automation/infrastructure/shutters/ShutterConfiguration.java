@@ -14,7 +14,10 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.RateLimiter;
 
+import de.malkusch.ha.automation.infrastructure.shutters.ShutterConfiguration.Properties.ShellyProperties.ShutterProperty.DirectSunLightRangeProperty;
+import de.malkusch.ha.automation.model.astronomy.Azimuth;
 import de.malkusch.ha.automation.model.shutters.Blind;
+import de.malkusch.ha.automation.model.shutters.DirectSunLightRange;
 import de.malkusch.ha.automation.model.shutters.Shutter;
 import de.malkusch.ha.automation.model.shutters.Shutter.Api;
 import de.malkusch.ha.automation.model.shutters.ShutterId;
@@ -63,6 +66,13 @@ class ShutterConfiguration {
             public static class ShutterProperty {
                 private ShutterId id;
                 private String deviceId;
+                private DirectSunLightRangeProperty directSunLight;
+
+                @Data
+                public static class DirectSunLightRangeProperty {
+                    private double start;
+                    private double end;
+                }
             }
         }
 
@@ -97,11 +107,19 @@ class ShutterConfiguration {
     @Bean
     public ShutterRepository shutters() throws ApiException, InterruptedException {
         var shutters = new ArrayList<Shutter>();
-        shutters.addAll(
-                properties.shelly.shutters.stream().map(it -> shellyShutter(it.id, it.deviceId)).collect(toList()));
-        shutters.addAll(properties.shelly.blinds.stream().map(it -> shellyBlind(it.id, it.deviceId)).collect(toList()));
+        shutters.addAll(properties.shelly.shutters.stream()
+                .map(it -> shellyShutter(it.id, it.deviceId, directSunLightRange(it.directSunLight)))
+                .collect(toList()));
+        shutters.addAll(properties.shelly.blinds.stream()
+                .map(it -> shellyBlind(it.id, it.deviceId, directSunLightRange(it.directSunLight))).collect(toList()));
 
         return new InMemoryShutterRepository(shutters);
+    }
+
+    private static DirectSunLightRange directSunLightRange(DirectSunLightRangeProperty property) {
+        var start = new Azimuth(property.start);
+        var end = new Azimuth(property.end);
+        return new DirectSunLightRange(start, end);
     }
 
     private final HttpClient http;
@@ -118,27 +136,29 @@ class ShutterConfiguration {
                 mapper, deviceId);
     }
 
-    private Shutter shellyBlind(ShutterId id, String deviceId) {
+    private Shutter shellyBlind(ShutterId id, String deviceId, DirectSunLightRange directSunLightRange) {
         try {
-            return blind(id, shellyCloudApiFactory().build(id, deviceId));
+            return blind(id, shellyCloudApiFactory().build(id, deviceId), directSunLightRange);
         } catch (ApiException | InterruptedException e) {
             throw new IllegalStateException(e);
         }
     }
 
-    private Shutter shellyShutter(ShutterId id, String deviceId) {
+    private Shutter shellyShutter(ShutterId id, String deviceId, DirectSunLightRange directSunLightRange) {
         try {
-            return shutter(id, shellyCloudApiFactory().build(id, deviceId));
+            return shutter(id, shellyCloudApiFactory().build(id, deviceId), directSunLightRange);
         } catch (ApiException | InterruptedException e) {
             throw new IllegalStateException(e);
         }
     }
 
-    private Shutter shutter(ShutterId id, Api api) throws ApiException, InterruptedException {
-        return new Shutter(id, api, properties.delay);
+    private Shutter shutter(ShutterId id, Api api, DirectSunLightRange directSunLightRange)
+            throws ApiException, InterruptedException {
+        return new Shutter(id, api, properties.delay, directSunLightRange);
     }
 
-    private Blind blind(ShutterId id, Api api) throws ApiException, InterruptedException {
-        return new Blind(id, api, properties.delay);
+    private Blind blind(ShutterId id, Api api, DirectSunLightRange directSunLightRange)
+            throws ApiException, InterruptedException {
+        return new Blind(id, api, properties.delay, directSunLightRange);
     }
 }

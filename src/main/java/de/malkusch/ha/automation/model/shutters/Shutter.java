@@ -43,13 +43,16 @@ public class Shutter {
     public final ShutterId id;
     private final Api api;
     private final Duration delay;
+    public final DirectSunLightRange directSunLightRange;
 
     private State desired;
 
-    public Shutter(ShutterId id, Api api, Duration delay) throws ApiException, InterruptedException {
+    public Shutter(ShutterId id, Api api, Duration delay, DirectSunLightRange directSunLightRange)
+            throws ApiException, InterruptedException {
         this.id = requireNonNull(id);
         this.api = requireNonNull(api);
         this.delay = requireNonNull(delay);
+        this.directSunLightRange = requireNonNull(directSunLightRange);
         desired = api.state();
     }
 

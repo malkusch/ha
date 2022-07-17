@@ -25,9 +25,15 @@ shutters:
       shutters:
       -  id: KUECHENTUER
          device-id: 123abc
+         direct-sun-light:
+            start: 78
+            end: 282
       blinds:
       -  id: WOHNZIMMER_KLEIN
          device-id: 456
+         direct-sun-light:
+            start: 78
+            end: 282
 buderus:
    gatewayPassword: 1234-1234-1234-1234
    privatePassword: 1234

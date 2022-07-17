@@ -134,7 +134,7 @@ class OpenWeather implements Weather {
     }
 
     private Response downloadPastResponse(LocalDate date) throws IOException, InterruptedException {
-        var nextDayMidnight = toTimestamp(date.plusDays(1).atStartOfDay());
+        var nextDayMidnight = toTimestamp(date.plusDays(1).atStartOfDay(), apiZoneId());
         var url = baseUrl + "/timemachine" + query + "&dt=" + nextDayMidnight;
         return downloadResponse(url);
     }
@@ -152,8 +152,23 @@ class OpenWeather implements Weather {
         }
     }
 
-    private static record Response(Forecast current, List<Forecast> daily, List<Forecast> hourly) {
-        private static record Forecast(int clouds, int dt, double wind_speed) {
+    private ZoneId apiZoneId() {
+        return lastResponse.zoneID();
+    }
+
+    private static record Response(Forecast current, List<DailyForecast> daily, List<Forecast> hourly,
+            String timezone) {
+
+        ZoneId zoneID() {
+            return ZoneId.of(timezone);
+        }
+
+        @Data
+        private static class Forecast {
+            int clouds;
+            int dt;
+            double wind_speed;
+
             Instant instant() {
                 return ofEpochSecond(dt);
             }
@@ -178,6 +193,15 @@ class OpenWeather implements Weather {
                 return WindSpeed.fromMps(wind_speed);
             }
         }
+
+        @Data
+        private static class DailyForecast extends Forecast {
+            private static record Temp(double max) {
+
+            }
+
+            Temp temp;
+        }
     }
 
     @Override
@@ -188,5 +212,13 @@ class OpenWeather implements Weather {
     @Override
     public WindSpeed windspeed() {
         return lastResponse.current.windSpeed();
+    }
+
+    @Override
+    public Temperature highestDailyTemperature() throws ApiException, InterruptedException {
+        LocalDate today = LocalDate.now();
+        return lastResponse.daily.stream().filter(it -> it.date().equals(today)).findAny()
+                .map(it -> Temperature.fromKelvin(it.temp.max)).orElseThrow(() -> new IllegalStateException(
+                        String.format("Could not fetch highestDailyTemperature at %s", today)));
     }
 }

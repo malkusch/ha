@@ -6,7 +6,8 @@ import de.malkusch.ha.shared.model.ApiException;
 
 public final class Blind extends Shutter {
 
-    public Blind(ShutterId id, Api api, Duration delay) throws ApiException, InterruptedException {
-        super(id, api, delay);
+    public Blind(ShutterId id, Api api, Duration delay, DirectSunLightRange directSunLightRange)
+            throws ApiException, InterruptedException {
+        super(id, api, delay, directSunLightRange);
     }
 }

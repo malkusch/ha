@@ -13,5 +13,7 @@ public interface Weather {
 
     Temperature temperature() throws ApiException, InterruptedException;
 
+    Temperature highestDailyTemperature() throws ApiException, InterruptedException;
+
     WindSpeed windspeed() throws ApiException, InterruptedException;
 }

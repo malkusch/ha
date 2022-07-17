@@ -6,8 +6,12 @@ import static org.shredzone.commons.suncalc.SunTimes.Twilight.CIVIL;
 import static org.shredzone.commons.suncalc.SunTimes.Twilight.NAUTICAL;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
+import org.shredzone.commons.suncalc.SunPosition;
 import org.shredzone.commons.suncalc.SunTimes;
 import org.shredzone.commons.suncalc.SunTimes.Twilight;
 import org.springframework.stereotype.Service;
@@ -20,6 +24,7 @@ import de.malkusch.ha.automation.model.astronomy.AstronomicalEvent.CivilSunsetSt
 import de.malkusch.ha.automation.model.astronomy.AstronomicalEvent.NauticalSunriseStarted;
 import de.malkusch.ha.automation.model.astronomy.AstronomicalEvent.NauticalSunsetStarted;
 import de.malkusch.ha.automation.model.astronomy.Astronomy;
+import de.malkusch.ha.automation.model.astronomy.Azimuth;
 
 @Service
 class CommonsSunCalcAstronomy implements Astronomy {
@@ -48,5 +53,26 @@ class CommonsSunCalcAstronomy implements Astronomy {
 
     private SunTimes calculate(Twilight twilight, LocalDate date) {
         return SunTimes.compute().on(date).latitude(latitude).longitude(longitude).twilight(twilight).execute();
+    }
+
+    @Override
+    public LocalTime timeOfAzimuth(Azimuth azimuth, ZonedDateTime day) {
+        var start = day.truncatedTo(ChronoUnit.DAYS);
+        var end = start.plusDays(1);
+
+        var passedZero = false;
+        for (var time = start; time.isBefore(end); time = time.plusMinutes(15)) {
+            var position = SunPosition.compute().on(time).latitude(latitude).longitude(longitude).execute();
+            if (!passedZero) {
+                if (position.getAzimuth() <= azimuth.angle()) {
+                    passedZero = true;
+                }
+                continue;
+            }
+            if (position.getAzimuth() >= azimuth.angle()) {
+                return time.toLocalTime();
+            }
+        }
+        throw new IllegalStateException("Couldn't find time when azimuth is " + azimuth);
     }
 }

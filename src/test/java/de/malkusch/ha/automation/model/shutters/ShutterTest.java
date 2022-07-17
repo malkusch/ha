@@ -16,6 +16,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import de.malkusch.ha.automation.model.astronomy.Azimuth;
 import de.malkusch.ha.automation.model.shutters.Shutter.Api;
 import de.malkusch.ha.automation.model.shutters.Shutter.Api.State;
 import de.malkusch.ha.automation.model.shutters.Shutter.LockedException;
@@ -43,7 +44,8 @@ public class ShutterTest {
 
     @BeforeEach
     public void setUpShutter() throws Exception {
-        shutter = new Shutter(TERRASSE, api, Duration.ofNanos(1));
+        shutter = new Shutter(TERRASSE, api, Duration.ofNanos(1),
+                new DirectSunLightRange(new Azimuth(10), new Azimuth(20)));
         shutter.open();
     }
 

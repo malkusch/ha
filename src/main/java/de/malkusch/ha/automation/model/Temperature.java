@@ -9,6 +9,10 @@ public final class Temperature {
 
     private final BigDecimal value;
 
+    public static Temperature fromKelvin(double kelvin) {
+        return new Temperature(kelvin - 273.15);
+    }
+
     public Temperature(double value) {
         this(BigDecimal.valueOf(value));
     }

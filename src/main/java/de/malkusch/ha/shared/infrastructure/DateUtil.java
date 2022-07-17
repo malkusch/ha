@@ -11,6 +11,10 @@ public class DateUtil {
     }
 
     public static long toTimestamp(LocalDateTime date) {
-        return date.atZone(ZoneId.systemDefault()).toEpochSecond();
+        return toTimestamp(date, ZoneId.systemDefault());
+    }
+
+    public static long toTimestamp(LocalDateTime date, ZoneId zone) {
+        return date.atZone(zone).toEpochSecond();
     }
 }
