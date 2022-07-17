@@ -11,7 +11,7 @@ jobs:
     - name: Set up JDK 
       uses: actions/setup-java@v2
       with:
-        java-version: 16
+        java-version: 17
         distribution: adopt
         cache: maven
     - name: Build jar
@@ -33,10 +33,10 @@ jobs:
     needs: [build]
     steps:
       - uses: actions/checkout@v2
-      - name: Set up JDK 16
+      - name: Set up JDK
         uses: actions/setup-java@v2
         with:
-          java-version: 16
+          java-version: 17
           distribution: adopt
           cache: maven
       - name: Restore target
@@ -51,10 +51,10 @@ jobs:
     needs: [build]
     steps:
       - uses: actions/checkout@v2
-      - name: Set up JDK 16
+      - name: Set up JDK
         uses: actions/setup-java@v2
         with:
-          java-version: 16
+          java-version: 17
           distribution: adopt
           cache: maven
       - name: Restore target
