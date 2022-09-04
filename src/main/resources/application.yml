@@ -16,8 +16,8 @@ room:
             unhealthy: 2500
          dust-buffer-pm25: 3
 shutters:
-   minimum-highest-daily-temperature: 23
-   cold-night-temperature: 10
+   minimum-highest-daily-temperature: 25
+   cold-night-temperature: 15
    delay: PT0.2s
    wind-protection:
       release-wind-speed: 30
