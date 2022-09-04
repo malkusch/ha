@@ -44,7 +44,7 @@
 		<dependency>
 			<groupId>com.github.malkusch</groupId>
 			<artifactId>km200</artifactId>
-			<version>1.2.1</version>
+			<version>1.2.2</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-httpclient</groupId>
@@ -77,7 +77,7 @@
 		<dependency>
 			<groupId>com.github.malkusch</groupId>
 			<artifactId>broadlink-bulb-api</artifactId>
-			<version>0.2.0</version>
+			<version>0.2.1</version>
 		</dependency>
 
 		<dependency>
