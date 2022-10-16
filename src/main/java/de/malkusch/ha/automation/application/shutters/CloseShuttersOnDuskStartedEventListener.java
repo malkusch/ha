@@ -48,7 +48,7 @@ public class CloseShuttersOnDuskStartedEventListener {
     }
 
     private void closeShuttersWhenColdNight(Collection<Shutter> shutters) throws ApiException, InterruptedException {
-        var temperature = weather.temperature();
+        var temperature = weather.highestDailyTemperature();
         if (!temperature.isLessThan(coldNightTemperature)) {
             log.info("Night too warm ({}) for closing shutters", temperature);
             return;

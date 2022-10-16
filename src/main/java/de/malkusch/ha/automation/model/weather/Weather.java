@@ -11,8 +11,6 @@ public interface Weather {
 
     Cloudiness averageDaylightCloudiness(LocalDate date) throws ApiException, InterruptedException;
 
-    Temperature temperature() throws ApiException, InterruptedException;
-
     Temperature highestDailyTemperature() throws ApiException, InterruptedException;
 
     WindSpeed windspeed() throws ApiException, InterruptedException;

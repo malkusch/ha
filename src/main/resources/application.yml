@@ -17,7 +17,7 @@ room:
          dust-buffer-pm25: 3
 shutters:
    minimum-highest-daily-temperature: 25
-   cold-night-temperature: 15
+   cold-night-temperature: 21
    delay: PT0.2s
    wind-protection:
       release-wind-speed: 30

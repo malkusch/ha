@@ -23,7 +23,6 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import de.malkusch.ha.automation.infrastructure.prometheus.Prometheus;
 import de.malkusch.ha.automation.model.Temperature;
 import de.malkusch.ha.automation.model.weather.Cloudiness;
 import de.malkusch.ha.automation.model.weather.Weather;
@@ -41,7 +40,6 @@ class OpenWeather implements Weather {
     private final String baseUrl;
     private final String query;
     private final HttpClient http;
-    private final Prometheus prometheus;
     private final ObjectMapper mapper;
     private final LocalTime daylightStart;
     private final LocalTime daylightEnd;
@@ -57,15 +55,14 @@ class OpenWeather implements Weather {
         private String daylightEnd;
     }
 
-    OpenWeather(Properties properties, HttpClient http, Prometheus prometheus, ObjectMapper mapper,
-            LocationProperties locationProperties) throws IOException, InterruptedException {
+    OpenWeather(Properties properties, HttpClient http, ObjectMapper mapper, LocationProperties locationProperties)
+            throws IOException, InterruptedException {
 
         baseUrl = properties.baseUrl;
         query = String.format("?lat=%s&lon=%s&appid=%s&exclude=minutely,alerts", locationProperties.latitude,
                 locationProperties.longitude, properties.apiKey);
 
         this.http = http;
-        this.prometheus = prometheus;
         this.mapper = mapper;
 
         this.daylightStart = LocalTime.parse(properties.daylightStart);
@@ -202,11 +199,6 @@ class OpenWeather implements Weather {
 
             Temp temp;
         }
-    }
-
-    @Override
-    public Temperature temperature() throws ApiException, InterruptedException {
-        return new Temperature(prometheus.query("heater_system_sensors_temperatures_outdoor_t1"));
     }
 
     @Override
