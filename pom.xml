@@ -13,7 +13,6 @@
 		<java.version>17</java.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
-
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -33,7 +32,6 @@
 			<artifactId>java-telegram-bot-api</artifactId>
 			<version>6.3.0</version>
 		</dependency>
-
 		<dependency>
 			<groupId>de.malkusch.km200</groupId>
 			<artifactId>km200</artifactId>
@@ -59,10 +57,6 @@
 			<artifactId>commons-lang3</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>jakarta.xml.bind</groupId>
-			<artifactId>jakarta.xml.bind-api</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>org.shredzone.commons</groupId>
 			<artifactId>commons-suncalc</artifactId>
 			<version>3.5</version>
@@ -72,7 +66,6 @@
 			<artifactId>broadlink-bulb-api</artifactId>
 			<version>1.0.0</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter</artifactId>
