@@ -1,4 +1,4 @@
-package de.malkusch.ha.automation.infrastructure.light;
+package de.malkusch.ha.automation.infrastructure.light.broadlink;
 
 import de.malkusch.broadlinkBulb.BroadlinkBulb;
 import de.malkusch.ha.automation.model.light.Color;
@@ -7,7 +7,7 @@ import de.malkusch.ha.shared.model.ApiException;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-final class BroadlinkLightApi implements Api {
+final class BroadlinkApi implements Api {
 
     private final BroadlinkBulb bulb;
 

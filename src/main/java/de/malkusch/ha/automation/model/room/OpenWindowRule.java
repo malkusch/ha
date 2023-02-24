@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class OpenWindowRule implements Rule {
 
+    private final SignalService signalService;
     private final ClimateService climateService;
     private final RoomRepository rooms;
     private final Duration evaluationRate;
@@ -50,45 +51,45 @@ public class OpenWindowRule implements Rule {
 
         private void evaluate(Room room, CO2 co2, Dust.PM2_5 dust) throws ApiException {
             log.debug("Room {}: co2 = {}, dust = {}", room, co2, dust);
-            
+
             if (dust.isGreaterThan(outsideDust.plus(buffer))) {
                 log.debug("dust.isGreaterThan(outsideDust.plus(buffer)");
-                room.signalOpenWindows();
+                signalService.signalOpenWindows(room);
 
             } else if (co2.isGreaterThan(co2Threshold.unhealthy)) {
                 log.debug("co2.isGreaterThan(co2Threshold.unhealthy)");
-                room.signalOpenWindows();
-                
+                signalService.signalOpenWindows(room);
+
             } else if (co2.isGreaterThan(co2Threshold.old)) {
                 log.debug("co2.isGreaterThan(co2Threshold.old)");
                 if (dust.isLessThan(outsideDust)) {
                     log.debug("dust.isLessThan(outsideDust)");
-                    room.signalCloseWindows();
-                    
+                    signalService.signalCloseWindows(room);
+
                 } else {
-                    room.signalOldAir();
+                    signalService.signalOldAir(room);
                 }
             } else if (co2.isLessThan(co2Threshold.best)) {
                 log.debug("co2.isLessThan(co2Threshold.best)");
-                room.signalCloseWindows();
+                signalService.signalCloseWindows(room);
             }
         }
 
         private void evaluate(Room room, CO2 co2) throws ApiException {
             if (co2.isGreaterThan(co2Threshold.unhealthy)) {
-                room.signalOpenWindows();
+                signalService.signalOpenWindows(room);
             } else if (co2.isGreaterThan(co2Threshold.old)) {
-                room.signalOldAir();
+                signalService.signalOldAir(room);
             } else if (co2.isLessThan(co2Threshold.best)) {
-                room.signalCloseWindows();
+                signalService.signalCloseWindows(room);
             }
         }
 
         private void evaluate(Room room, Dust.PM2_5 dust) throws ApiException {
             if (dust.isGreaterThan(outsideDust.plus(buffer))) {
-                room.signalOpenWindows();
+                signalService.signalOpenWindows(room);
             } else {
-                room.signalCloseWindows();
+                signalService.signalCloseWindows(room);
             }
         }
     }
