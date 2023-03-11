@@ -2,14 +2,15 @@ package de.malkusch.ha.automation.infrastructure.prometheus;
 
 import static de.malkusch.ha.shared.infrastructure.DateUtil.toTimestamp;
 import static java.math.BigDecimal.ZERO;
-import static java.net.URLEncoder.encode;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.URLEncoder;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
@@ -24,7 +25,7 @@ final class PrometheusHttpClient implements Prometheus {
     private final String baseUrl;
 
     public BigDecimal query(String query, LocalDate date) throws ApiException, InterruptedException {
-        var url = baseUrl + "/api/v1/query?query=" + encode(query, UTF_8);
+        var url = baseUrl + "/api/v1/query?query=" + encode(query);
 
         if (date != null) {
             var start = toTimestamp(date);
@@ -44,12 +45,19 @@ final class PrometheusHttpClient implements Prometheus {
         }
     }
 
+    static String encode(String url) {
+        return URLEncoder.encode(url, UTF_8);
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
     private static class Response {
         public Data data;
 
+        @JsonIgnoreProperties(ignoreUnknown = true)
         private static class Data {
             public List<Result> result;
 
+            @JsonIgnoreProperties(ignoreUnknown = true)
             public static class Result {
                 public List<BigDecimal> value;
             }
