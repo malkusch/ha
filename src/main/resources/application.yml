@@ -78,6 +78,7 @@ location:
 open-weather:
    api-key: 123abc
    base-url: https://api.openweathermap.org/data/2.5/onecall
+   base-url-v3: https://api.openweathermap.org/data/3.0/onecall
    current:
       refresh-cron: 59 */10 * * * * # Every ten minutes
    daylight-start: "11:00"

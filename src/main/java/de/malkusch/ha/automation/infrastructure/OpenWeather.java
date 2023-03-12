@@ -3,6 +3,7 @@ package de.malkusch.ha.automation.infrastructure;
 import static de.malkusch.ha.shared.infrastructure.DateUtil.toTimestamp;
 import static de.malkusch.ha.shared.infrastructure.event.EventPublisher.publishSafely;
 import static java.time.Instant.ofEpochSecond;
+import static java.time.temporal.ChronoUnit.DAYS;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -10,6 +11,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 class OpenWeather implements Weather {
 
     private final String baseUrl;
+    private final String baseUrlV3;
     private final String query;
     private final HttpClient http;
     private final ObjectMapper mapper;
@@ -50,6 +53,7 @@ class OpenWeather implements Weather {
     @Data
     public static class Properties {
         private String baseUrl;
+        private String baseUrlV3;
         private String apiKey;
         private String daylightStart;
         private String daylightEnd;
@@ -59,6 +63,7 @@ class OpenWeather implements Weather {
             throws IOException, InterruptedException {
 
         baseUrl = properties.baseUrl;
+        baseUrlV3 = properties.baseUrlV3;
         query = String.format("?lat=%s&lon=%s&appid=%s&exclude=minutely,alerts", locationProperties.latitude,
                 locationProperties.longitude, properties.apiKey);
 
@@ -87,8 +92,42 @@ class OpenWeather implements Weather {
     @Override
     public Cloudiness averageDaylightCloudiness(LocalDate date) throws ApiException, InterruptedException {
         try {
-            return averageDaylightCloudiness(downloadPastResponse(date).hourly)
+            var daysInPast = DAYS.between(date, LocalDate.now());
+            if (daysInPast > 5) {
+                log.warn("{} is {} days in the past, falling back to v3", date, daysInPast);
+                return averageDaylightCloudinessV3(date);
+            }
+            try {
+                return averageDaylightCloudiness(downloadPastResponse(date).hourly)
+                        .orElseThrow(() -> new ApiException("Couldn't fetch average cloudiness for " + date));
+
+            } catch (BadRequest e) {
+                log.warn("Can't fetch past weather for {}, falling back to v3.", date);
+                return averageDaylightCloudinessV3(date);
+            }
+
+        } catch (IOException e) {
+            throw new ApiException("Couldn't fetch average cloudiness for " + date, e);
+        }
+    }
+
+    Cloudiness averageDaylightCloudinessV3(LocalDate date) throws ApiException, InterruptedException {
+        try {
+
+            List<Integer> hourlyCloudniess = new ArrayList<>();
+            for (var time = daylightStart; time.isBefore(daylightEnd); time = time.plusHours(1)) {
+                var dateTime = date.atTime(time);
+                var response = downloadPastResponseV3(dateTime);
+                if (response.data.isEmpty()) {
+                    throw new ApiException("Couldn't fetch average cloudiness for " + dateTime);
+                }
+                hourlyCloudniess.add(response.data.get(0).clouds);
+            }
+            var average = (int) hourlyCloudniess.stream() //
+                    .mapToInt(it -> it) //
+                    .average() //
                     .orElseThrow(() -> new ApiException("Couldn't fetch average cloudiness for " + date));
+            return new Cloudiness(average);
 
         } catch (IOException e) {
             throw new ApiException("Couldn't fetch average cloudiness for " + date, e);
@@ -136,21 +175,72 @@ class OpenWeather implements Weather {
         return downloadResponse(url);
     }
 
+    private ResponseV3 downloadPastResponseV3(LocalDateTime time) throws IOException, InterruptedException {
+        var nextDayMidnight = toTimestamp(time);
+        var url = baseUrlV3 + "/timemachine" + query + "&dt=" + nextDayMidnight;
+        return downloadResponseV3(url);
+    }
+
     private Response downloadCurrentResponse() throws IOException, InterruptedException {
         var url = baseUrl + query;
         return downloadResponse(url);
     }
 
+    public static class BadRequest extends IOException {
+        private static final long serialVersionUID = 7039678746979405397L;
+    }
+
+    private static final BadRequest BAD_REQUEST = new BadRequest();
+
     private Response downloadResponse(String url) throws IOException, InterruptedException {
         log.debug("Download {}", url);
         try (var response = http.get(url)) {
+            if (response.statusCode == 400) {
+                throw BAD_REQUEST;
+            }
             log.debug("Refreshing weather forecast");
             return mapper.readValue(response.body, Response.class);
         }
     }
 
+    private ResponseV3 downloadResponseV3(String url) throws IOException, InterruptedException {
+        log.debug("Download {}", url);
+        try (var response = http.get(url)) {
+            if (response.statusCode == 400) {
+                throw BAD_REQUEST;
+            }
+            log.debug("Refreshing weather forecast");
+            return mapper.readValue(response.body, ResponseV3.class);
+        }
+    }
+
     private ZoneId apiZoneId() {
         return lastResponse.zoneID();
+    }
+
+    private static record ResponseV3(List<Data> data) {
+        record Data(int clouds, int dt) {
+
+            Instant instant() {
+                return ofEpochSecond(dt);
+            }
+
+            LocalTime time() {
+                return localDateTime().toLocalTime();
+            }
+
+            LocalDate date() {
+                return localDateTime().toLocalDate();
+            }
+
+            Cloudiness cloudiness() {
+                return new Cloudiness(clouds);
+            }
+
+            LocalDateTime localDateTime() {
+                return instant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+            }
+        }
     }
 
     private static record Response(Forecast current, List<DailyForecast> daily, List<Forecast> hourly,
