@@ -2,18 +2,15 @@ package de.malkusch.ha;
 
 import static de.malkusch.ha.automation.model.shutters.Shutter.Api.State.OPEN;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.ActiveProfiles;
@@ -23,14 +20,11 @@ import de.malkusch.ha.automation.infrastructure.shutters.ShellyCloudApi;
 import de.malkusch.ha.automation.model.shutters.Shutter.Api;
 import de.malkusch.ha.shared.model.ApiException;
 import de.malkusch.km200.KM200;
+import de.malkusch.km200.KM200Exception;
 
 @SpringBootTest
 @ActiveProfiles(profiles = "test")
-@ExtendWith(MockitoExtension.class)
 public class ApplicationIT {
-
-    @MockBean
-    KM200 km200;
 
     @TestConfiguration
     static class TestApplicationConfiguration {
@@ -42,14 +36,22 @@ public class ApplicationIT {
             when(api.state()).thenReturn(OPEN);
             return (id, deviceId) -> api;
         }
-        
+
         @Bean
         @Primary
         public Prometheus prometheus() throws ApiException, InterruptedException {
             var api = mock(Prometheus.class);
-            when(api.query(anyString(), any())).thenReturn(new BigDecimal(1));
-            when(api.query(anyString())).thenReturn(new BigDecimal(1));
+            when(api.query(any(), any())).thenReturn(new BigDecimal(1));
+            when(api.query(any())).thenReturn(new BigDecimal(1));
             return api;
+        }
+
+        @Bean
+        @Primary
+        public KM200 km200() throws KM200Exception, IOException, InterruptedException {
+            var km200 = mock(KM200.class);
+            when(km200.queryBigDecimal(any())).thenReturn(new BigDecimal(1));
+            return km200;
         }
     }
 

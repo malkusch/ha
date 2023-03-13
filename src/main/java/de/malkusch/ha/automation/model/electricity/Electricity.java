@@ -20,6 +20,8 @@ public interface Electricity {
     Watt excessProduction() throws ApiException, InterruptedException;
 
     Watt consumption(Aggregation aggregation, Duration duration) throws ApiException, InterruptedException;
+    
+    boolean isConsumptionDuringProductionGreaterThan(LocalDate date, Watt threshold, Duration duration) throws ApiException, InterruptedException;
 
     Watt production(Aggregation aggregation, Duration duration) throws ApiException, InterruptedException;
 

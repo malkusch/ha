@@ -24,6 +24,7 @@ shutters:
       protect-wind-speed: 35
       protection-state: 100
       lock-duration: PT12h
+      evaluation-rate: PT15m
    shelly:
       url: https://shelly-31-eu.shelly.cloud
       key: 123abc
@@ -40,8 +41,14 @@ electricity:
    prediction:
       minimumPeak: 4000
       peakWindow: P14D
-      learning-window: P5D
+      learning-window: P14D
       learn-cron: 59 55 3 * * * # Daily at 3:55:59
+      qa:
+         predict-cron: 59 59 * * * * # Every hour
+         evaluate-cron: 59 55 6 * * * # Daily at 6:55:59
+   wallbox:
+      minimum-loading-consumption: 4000
+      minimum-loading-duration: PT30m
 buderus:
    salt: 867845e97c4e29dce522b9a7d3a3e07b152bffadddbed7f5ffd842e9895ad1e4
    queryRate: PT1m
@@ -75,14 +82,9 @@ buderus:
 location:
    latitude: 123
    longitude: 123
-open-weather:
-   api-key: 123abc
-   base-url: https://api.openweathermap.org/data/2.5/onecall
-   base-url-v3: https://api.openweathermap.org/data/3.0/onecall
-   current:
-      refresh-cron: 59 */10 * * * * # Every ten minutes
-   daylight-start: "11:00"
-   daylight-end: "16:00"
+open-meteo:
+   forecast:
+      refresh-cron: 59 */15 * * * * # Every 15 minutes
 http:
    timeout: PT10S
    userAgent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36

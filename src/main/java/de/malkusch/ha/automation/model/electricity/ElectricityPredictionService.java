@@ -1,7 +1,6 @@
 package de.malkusch.ha.automation.model.electricity;
 
 import static de.malkusch.ha.automation.model.electricity.Electricity.Aggregation.MAXIMUM;
-import static de.malkusch.ha.automation.model.weather.Cloudiness.NO_CLOUDS;
 import static java.util.Comparator.comparingDouble;
 
 import java.time.Duration;
@@ -11,8 +10,7 @@ import java.util.List;
 
 import org.springframework.scheduling.annotation.Scheduled;
 
-import de.malkusch.ha.automation.model.weather.Cloudiness;
-import de.malkusch.ha.automation.model.weather.Weather;
+import de.malkusch.ha.automation.model.electricity.ElectricityPredictionService.SolarIrradianceForecast.Irradiance;
 import de.malkusch.ha.shared.model.ApiException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,48 +18,98 @@ import lombok.extern.slf4j.Slf4j;
 public final class ElectricityPredictionService {
 
     private final Electricity electricity;
+    private final Wallbox wallbox;
     private final Watt minimumPeak;
     private final Duration peakWindow;
-    private final Weather weather;
+    private final SolarIrradianceForecast irradianaceForecast;
     private final Duration learningWindow;
-    private volatile Cloudiness threshold = NO_CLOUDS;
+    private volatile Irradiance threshold = Irradiance.MAX;
 
-    public ElectricityPredictionService(Electricity electricity, Watt minimumPeak, Duration peakWindow, Weather weather,
-            Duration learningWindow) throws ApiException, InterruptedException {
+    public static interface SolarIrradianceForecast {
+
+        Irradiance globalIrradiance(LocalDate date);
+
+        public static record Irradiance(double megajoule) {
+
+            public static final Irradiance MAX = new Irradiance(Double.MAX_VALUE);
+            public static final Irradiance MIN = new Irradiance(0.01);
+
+            public Irradiance {
+                if (megajoule <= 0) {
+                    throw new IllegalArgumentException("Must be greater than zero");
+                }
+            }
+
+            public boolean isGreaterThan(Irradiance other) {
+                return megajoule > other.megajoule;
+            }
+
+            public boolean isLessThan(Irradiance other) {
+                return megajoule < other.megajoule;
+            }
+
+            @Override
+            public String toString() {
+                return String.format("%.2f MJ/m²", megajoule);
+            }
+        }
+
+    }
+
+    public ElectricityPredictionService(Electricity electricity, Watt minimumPeak, Duration peakWindow,
+            SolarIrradianceForecast irradianceForecast, Duration learningWindow, Wallbox wallbox)
+            throws ApiException, InterruptedException {
 
         this.electricity = electricity;
         this.minimumPeak = minimumPeak;
         this.peakWindow = peakWindow;
-        this.weather = weather;
+        this.irradianaceForecast = irradianceForecast;
         this.learningWindow = learningWindow;
+        this.wallbox = wallbox;
 
-        threshold = learnCloudinessThreshold();
+        threshold = learnThreshold();
     }
 
     @Scheduled(cron = "${electricity.prediction.learn-cron}")
-    void updateCloudinessThreshold() throws ApiException, InterruptedException {
-        threshold = learnCloudinessThreshold();
+    void updateThreshold() throws ApiException, InterruptedException {
+        threshold = learnThreshold();
     }
 
-    private Cloudiness learnCloudinessThreshold() throws ApiException, InterruptedException {
-        List<Cloudiness> candidates = new ArrayList<>();
+    private Irradiance learnThreshold() throws ApiException, InterruptedException {
+        List<Irradiance> fullyCharged = new ArrayList<>();
+        List<Irradiance> notFullyCharged = new ArrayList<>();
+        var today = LocalDate.now();
         for (var day = 1; day < learningWindow.toDays(); day++) {
-            var date = LocalDate.now().minusDays(day);
-            var cloudiness = weather.averageDaylightCloudiness(date);
-            log.debug("Average cloudiness at {} is {}", date, cloudiness);
+            var date = today.minusDays(day);
+
+            var irradiance = irradianaceForecast.globalIrradiance(date);
+            log.debug("Irradiance at {} is {}", date, irradiance);
 
             if (electricity.wasFullyCharged(date)) {
-                log.debug("Adding cloudiness {} from {} as candidate", cloudiness, date);
-                candidates.add(cloudiness);
+                log.debug("Adding irradiance {} from {} as candidate", irradiance, date);
+                fullyCharged.add(irradiance);
             } else {
-                log.debug("Removing all candidates greater than", cloudiness);
-                candidates.removeIf(it -> it.isGreaterThan(cloudiness));
+                if (wallbox.isLoadingWhileProducingElectricity(date)) {
+                    log.debug("Ignoring {} as wallbox was used", date);
+                    continue;
+                }
+
+                log.debug("Adding irradiance {} from {} as negative candidate", irradiance, date);
+                notFullyCharged.add(irradiance);
             }
         }
 
-        var max = candidates.stream().max(comparingDouble(it -> it.value().value())).orElse(NO_CLOUDS);
-        log.debug("Learned cloudiness threshold for a full battery is {}", max);
-        return max;
+        var maxNotFullyCharged = notFullyCharged.stream() //
+                .max(comparingDouble(Irradiance::megajoule)) //
+                .orElse(Irradiance.MIN);
+        log.debug("Not fully charged threshold {}", maxNotFullyCharged);
+
+        var threshold = fullyCharged.stream() //
+                .filter(maxNotFullyCharged::isLessThan) //
+                .min(comparingDouble(Irradiance::megajoule)) //
+                .orElse(this.threshold);
+        log.debug("Learned irradiance threshold for a full battery is {}", threshold);
+        return threshold;
     }
 
     public boolean predictLoadedBattery() throws ApiException, InterruptedException {
@@ -71,10 +119,10 @@ public final class ElectricityPredictionService {
             return false;
         }
 
-        var cloudiness = weather.averageDaylightCloudiness();
-        log.debug("Cloudiness is {}", cloudiness);
-        if (cloudiness.isLessThan(threshold)) {
-            log.debug("Predict loaded battery, because of cloudiness {} is less than {}", cloudiness, threshold);
+        var irradiance = irradianaceForecast.globalIrradiance(LocalDate.now());
+        log.debug("Irradiance is {}", irradiance);
+        if (irradiance.isGreaterThan(threshold)) {
+            log.debug("Predict loaded battery, because irradiance {} is greater than {}", irradiance, threshold);
             return true;
         }
 

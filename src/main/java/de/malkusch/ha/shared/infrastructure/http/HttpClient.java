@@ -45,8 +45,7 @@ public interface HttpClient {
 
         @Override
         public boolean equals(Object obj) {
-            if (obj instanceof Field) {
-                Field other = (Field) obj;
+            if (obj instanceof Field other) {
                 return name.equals(other.name) && value.equals(other.value);
             } else {
                 return false;

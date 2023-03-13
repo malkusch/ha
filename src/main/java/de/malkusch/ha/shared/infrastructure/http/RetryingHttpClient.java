@@ -38,11 +38,11 @@ public final class RetryingHttpClient extends HttpClientProxy {
         } catch (FailsafeException e) {
             var cause = e.getCause();
 
-            if (cause instanceof IOException) {
-                throw (IOException) cause;
+            if (cause instanceof IOException io) {
+                throw io;
 
-            } else if (cause instanceof InterruptedException) {
-                throw (InterruptedException) cause;
+            } else if (cause instanceof InterruptedException interrupted) {
+                throw interrupted;
 
             } else {
                 throw e;

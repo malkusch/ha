@@ -28,28 +28,25 @@ public final class TasmotaApi {
 
     public void turnOn() throws ApiException, InterruptedException {
         var result = parsePower(sendCommand("Power On"));
-        if (!(result == ON)) {
+        if (result != ON) {
             throw new ApiException("Failed turning on " + url + ": " + result);
         }
     }
 
     public void turnOff() throws ApiException, InterruptedException {
         var result = parsePower(sendCommand("Power Off"));
-        if (!(result == OFF)) {
+        if (result != OFF) {
             throw new ApiException("Failed turning off " + url + ": " + result);
         }
     }
 
     private static State parsePower(JsonNode response) throws ApiException {
         var power = response.path("POWER").textValue();
-        switch (power) {
-        case "ON":
-            return ON;
-        case "OFF":
-            return OFF;
-        default:
-            throw new ApiException("Invalid response: " + response);
-        }
+        return switch (power) {
+        case "ON" -> ON;
+        case "OFF" -> OFF;
+        default -> throw new ApiException("Invalid response: " + response);
+        };
     }
 
     private JsonNode sendCommand(String command) throws ApiException, InterruptedException {

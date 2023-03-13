@@ -16,20 +16,24 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
 import de.malkusch.ha.shared.model.ApiException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RequiredArgsConstructor
-final class PrometheusHttpClient implements Prometheus {
+@Slf4j
+public final class PrometheusHttpClient implements Prometheus {
 
     private final HttpClient http;
     private final ObjectMapper mapper;
     private final String baseUrl;
 
-    public BigDecimal query(String query, LocalDate date) throws ApiException, InterruptedException {
-        var url = baseUrl + "/api/v1/query?query=" + encode(query);
+    public BigDecimal query(Query query, LocalDate end) throws ApiException, InterruptedException {
+        var promQL = query.promQL();
+        log.debug("Query{}: {}", end == null ? "" : ("@" + end), promQL);
+        var url = baseUrl + "/api/v1/query?query=" + encode(promQL);
 
-        if (date != null) {
-            var start = toTimestamp(date);
-            url += "&start=" + start;
+        if (end != null) {
+            var time = toTimestamp(end);
+            url += "&time=" + time;
         }
 
         try (var response = http.get(url)) {
@@ -45,7 +49,7 @@ final class PrometheusHttpClient implements Prometheus {
         }
     }
 
-    static String encode(String url) {
+    public static String encode(String url) {
         return URLEncoder.encode(url, UTF_8);
     }
 

@@ -1,10 +1,16 @@
 package de.malkusch.ha.automation.model.climate;
 
+import java.math.BigDecimal;
+
 import de.malkusch.ha.automation.model.climate.Dust.PM2_5;
 
 public final record Dust(PM2_5 pm2_5) {
 
     public final record PM2_5(double value) {
+        
+        public PM2_5(BigDecimal value) {
+            this(value.doubleValue());
+        }
 
         public boolean isGreaterThan(PM2_5 other) {
             return value > other.value;

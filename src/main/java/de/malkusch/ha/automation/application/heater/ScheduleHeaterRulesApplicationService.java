@@ -18,7 +18,7 @@ import de.malkusch.ha.automation.model.heater.ResetHeaterRule;
 import lombok.Data;
 
 @Service
-public final class SchedulHeaterRulesApplicationService {
+public final class ScheduleHeaterRulesApplicationService {
 
     @ConfigurationProperties("buderus.heater.rules")
     @Component
@@ -43,7 +43,7 @@ public final class SchedulHeaterRulesApplicationService {
         }
     }
 
-    SchedulHeaterRulesApplicationService(DehumidifierRepository dehumidifiers, RuleScheduler scheduler,
+    ScheduleHeaterRulesApplicationService(DehumidifierRepository dehumidifiers, RuleScheduler scheduler,
             Electricity electricity, HeaterProperties properties,
             TemporaryTemperatureService temporaryTemperatureService,
             ElectricityPredictionService electricityPredictionService) {

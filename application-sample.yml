@@ -42,8 +42,6 @@ buderus:
 location:
    latitude: 12.3
    longitude: 45.6
-open-weather:
-   api-key: 123abc
 notification:
    telegram:
       token: aToken

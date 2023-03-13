@@ -183,14 +183,9 @@ public class ShutterTest {
 
     private static Api.State state(String state) {
         return switch (state) {
-        case "OPEN": {
-            yield OPEN;
-        }
-        case "CLOSED": {
-            yield CLOSED;
-        }
-        default:
-            throw new IllegalArgumentException(state);
+        case "OPEN" -> OPEN;
+        case "CLOSED" -> CLOSED;
+        default -> throw new IllegalArgumentException(state);
         };
     }
 

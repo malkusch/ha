@@ -1,5 +1,7 @@
 package de.malkusch.ha.automation.infrastructure.heater;
 
+import static de.malkusch.ha.automation.infrastructure.prometheus.Prometheus.AggregationQuery.Aggregation.DELTA;
+import static java.math.BigDecimal.ZERO;
 import static java.time.DayOfWeek.FRIDAY;
 import static java.time.DayOfWeek.MONDAY;
 import static java.time.DayOfWeek.SATURDAY;
@@ -11,8 +13,8 @@ import static java.time.LocalTime.MIDNIGHT;
 import static java.util.Comparator.comparingInt;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -25,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.malkusch.ha.automation.infrastructure.prometheus.Prometheus;
+import de.malkusch.ha.automation.infrastructure.prometheus.Prometheus.SimpleQuery;
 import de.malkusch.ha.automation.model.Temperature;
 import de.malkusch.ha.automation.model.heater.Heater;
 import de.malkusch.ha.shared.model.ApiException;
@@ -43,14 +46,19 @@ class KM200Heater implements Heater {
     private final Prometheus prometheus;
     private final ObjectMapper mapper;
 
+    private static final Duration IS_HEATING_WINDOW = Duration.ofMinutes(5);
+    private static final Prometheus.Query IS_HEATING = new SimpleQuery("heater_heatSources_workingTime_totalSystem") //
+            .subquery(IS_HEATING_WINDOW) //
+            .aggregate(DELTA);
+
     @Override
     public boolean isHeating() throws ApiException, InterruptedException {
-        var delta = prometheus.query("delta(heater_heatSources_workingTime_totalSystem[5m:])");
-        return delta.compareTo(BigDecimal.ZERO) > 0;
+        var result = prometheus.query(IS_HEATING);
+        return result.compareTo(ZERO) > 0;
     }
 
     private static final String HEATER_TEMPERATURE = "/heatingCircuits/hc1/manualRoomSetpoint";
-    
+
     @Override
     public Temperature heaterTemperature() throws ApiException, InterruptedException {
         return new Temperature(withApiException(() -> km200.queryBigDecimal(HEATER_TEMPERATURE)));

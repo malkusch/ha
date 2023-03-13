@@ -3,9 +3,12 @@ package de.malkusch.ha.automation.infrastructure.heater;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.matches;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
 
@@ -13,13 +16,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import de.malkusch.ha.automation.infrastructure.prometheus.Prometheus;
+import de.malkusch.ha.automation.infrastructure.prometheus.PrometheusHttpClient;
+import de.malkusch.ha.shared.infrastructure.http.HttpClient;
+import de.malkusch.ha.shared.infrastructure.http.HttpResponse;
 import de.malkusch.km200.KM200;
 import de.malkusch.km200.KM200Exception;
 
@@ -29,11 +35,16 @@ public class KM200HeaterTest {
     @Mock
     private KM200 km200;
 
+    @Mock
+    private HttpClient http;
+
     private KM200Heater heater;
 
     @BeforeEach
     public void setup() throws Exception {
-        heater = new KM200Heater(km200, mock(Prometheus.class), new ObjectMapper());
+        var mapper = new ObjectMapper();
+        var prometheus = new PrometheusHttpClient(http, mapper, "http://example.org");
+        heater = new KM200Heater(km200, prometheus, mapper);
     }
 
     private void mockSwitchProgram() throws KM200Exception, IOException, InterruptedException {
@@ -140,6 +151,47 @@ public class KM200HeaterTest {
         when(km200.queryString("/system/holidayModes/hm2/startStop")).thenReturn("2021-11-05/2021-11-05");
 
         assertTrue(heater.isHoliday());
+    }
+
+    @ParameterizedTest
+    @CsvSource({ //
+            "1, true", //
+            "1.1, true", //
+            "2, true", //
+            "0, false", //
+            ", false", //
+    })
+    public void testIsHeating(String response, boolean expected) throws Exception {
+        givenPrometheusQuery(response);
+
+        var result = heater.isHeating();
+
+        assertEquals(expected, result);
+        verify(http).get(matches(PrometheusHttpClient.encode("delta(heater_heatSources_workingTime_totalSystem[300s:]")));
+    }
+
+    private void givenPrometheusQuery(String value) throws IOException, InterruptedException {
+        if (value == null) {
+            givenPrometheusQueryWithoutResponse();
+        } else {
+            givenPrometheusQueryWithResponse(value);
+        }
+    }
+
+    private void givenPrometheusQueryWithResponse(String value) throws IOException, InterruptedException {
+        when(http.get(any())).thenReturn(response(String.format("""
+                {"status":"success","data":{"resultType":"vector","result":[{"metric":{"instance":"localhost:8090","job":"ha"},"value":[1678541585.468, "%s"]}]}}
+                """, value)));
+    }
+
+    private void givenPrometheusQueryWithoutResponse()  throws IOException, InterruptedException {
+        when(http.get(any())).thenReturn(response("""
+                {"status":"success","data":{"resultType":"vector","result":[]}}
+                """));
+    }
+
+    private static HttpResponse response(String body) {
+        return new HttpResponse(200, "http://example.org/", false, new ByteArrayInputStream(body.getBytes()));
     }
 
     private void givenDateTime(String time) throws Exception {

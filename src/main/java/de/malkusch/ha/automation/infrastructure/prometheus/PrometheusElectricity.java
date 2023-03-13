@@ -1,18 +1,19 @@
 package de.malkusch.ha.automation.infrastructure.prometheus;
 
+import static de.malkusch.ha.automation.infrastructure.prometheus.Prometheus.AggregationQuery.Aggregation.COUNT;
 import static de.malkusch.ha.automation.model.electricity.Capacity.FULL;
 import static de.malkusch.ha.automation.model.electricity.Electricity.Aggregation.MAXIMUM;
-import static de.malkusch.ha.automation.model.electricity.Electricity.Aggregation.MINIMUM;
-import static de.malkusch.ha.automation.model.electricity.Electricity.Aggregation.P25;
-import static de.malkusch.ha.automation.model.electricity.Electricity.Aggregation.P75;
 
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDate;
-import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
+import de.malkusch.ha.automation.infrastructure.prometheus.Prometheus.AggregationQuery;
+import de.malkusch.ha.automation.infrastructure.prometheus.Prometheus.Query;
+import de.malkusch.ha.automation.infrastructure.prometheus.Prometheus.SimpleQuery;
+import de.malkusch.ha.automation.infrastructure.prometheus.Prometheus.Subquery;
 import de.malkusch.ha.automation.model.electricity.Capacity;
 import de.malkusch.ha.automation.model.electricity.Electricity;
 import de.malkusch.ha.automation.model.electricity.Watt;
@@ -25,67 +26,83 @@ final class PrometheusElectricity implements Electricity {
 
     private final Prometheus prometheus;
 
-    private static final Map<Aggregation, String> AGGREGATIONS = Map.of(//
-            MINIMUM, "min_over_time(%s)", //
-            P25, "quantile_over_time(0.25, %s)", //
-            P75, "quantile_over_time(0.75, %s)", //
-            MAXIMUM, "max_over_time(%s)" //
-    );
+    private static final Query EXCESS = new SimpleQuery("clamp_min(batterie_feed_in, 0)");
 
     @Override
     public Watt excess(Aggregation aggregation, Duration duration) throws ApiException, InterruptedException {
-        var query = aggregation("clamp_min(batterie_feed_in, 0)", duration, aggregation);
+        var query = EXCESS //
+                .subquery(duration) //
+                .aggregate(aggregation(aggregation));
+
         var result = prometheus.query(query);
         return new Watt(result.doubleValue());
     }
 
     @Override
     public Watt excess() throws ApiException, InterruptedException {
-        var query = "clamp_min(batterie_feed_in, 0)";
-        var result = prometheus.query(query);
+        var result = prometheus.query(EXCESS);
         return new Watt(result.doubleValue());
     }
 
+    private static final Query EXCESS_PRODUCTION = new SimpleQuery(
+            "clamp_min(batterie_production - batterie_consumption, 0)");
+
     @Override
     public Watt excessProduction(Aggregation aggregation, Duration duration) throws ApiException, InterruptedException {
-        var query = aggregation("clamp_min(batterie_production - batterie_consumption, 0)", duration, aggregation);
+        var query = EXCESS_PRODUCTION //
+                .subquery(duration) //
+                .aggregate(aggregation(aggregation));
+
         var result = prometheus.query(query);
         return new Watt(result.doubleValue());
     }
 
     @Override
     public Watt excessProduction() throws ApiException, InterruptedException {
-        var query = "clamp_min(batterie_production - batterie_consumption, 0)";
-        var result = prometheus.query(query);
+        var result = prometheus.query(EXCESS_PRODUCTION);
         return new Watt(result.doubleValue());
     }
+
+    private static final Query CONSUMPTION = new SimpleQuery("batterie_consumption");
 
     @Override
     public Watt consumption(Aggregation aggregation, Duration duration) throws ApiException, InterruptedException {
-        var query = aggregation("batterie_consumption", duration, aggregation);
+        var query = CONSUMPTION //
+                .subquery(duration) //
+                .aggregate(aggregation(aggregation));
         var result = prometheus.query(query);
         return new Watt(result.doubleValue());
     }
 
-    @Override
-    public Watt production(Aggregation aggregation, Duration duration) throws ApiException, InterruptedException {
-        var query = aggregation("batterie_production", duration, aggregation);
-        var result = prometheus.query(query);
-        return new Watt(result.doubleValue());
-    }
+    private static final Query BATTERY_CONSUMPTION = new SimpleQuery("clamp_min(batterie_battery_consumption, 0)");
 
     @Override
     public Watt batteryConsumption(Aggregation aggregation, Duration duration)
             throws ApiException, InterruptedException {
 
-        var query = aggregation("clamp_min(batterie_battery_consumption, 0)", duration, aggregation);
+        var query = BATTERY_CONSUMPTION //
+                .subquery(duration) //
+                .aggregate(aggregation(aggregation));
         var result = prometheus.query(query);
         return new Watt(result.doubleValue());
     }
 
+    private static final Query PRODUCTION = new SimpleQuery("batterie_production");
+
+    @Override
+    public Watt production(Aggregation aggregation, Duration duration) throws ApiException, InterruptedException {
+        var query = PRODUCTION //
+                .subquery(duration) //
+                .aggregate(aggregation(aggregation));
+        var result = prometheus.query(query);
+        return new Watt(result.doubleValue());
+    }
+
+    private static final Query CAPACITY = new SimpleQuery("batterie_charge");
+
     @Override
     public Capacity capacity() throws ApiException, InterruptedException {
-        var result = prometheus.query("batterie_charge");
+        var result = prometheus.query(CAPACITY);
         return capacity(result);
     }
 
@@ -97,19 +114,35 @@ final class PrometheusElectricity implements Electricity {
 
     @Override
     public boolean wasFullyCharged(LocalDate date) throws ApiException, InterruptedException {
-        var query = aggregation("batterie_charge", ONE_DAY, MAXIMUM);
-        var result = prometheus.query(query, date);
+        var query = CAPACITY //
+                .subquery(ONE_DAY) //
+                .aggregate(aggregation(MAXIMUM));
+        var result = prometheus.query(query, date.plusDays(1));
         var max = capacity(result);
         return max.equals(FULL);
     }
 
-    private static String aggregation(String query, Duration duration, Aggregation aggregation) {
-        var timeSeries = timeSeries(query, duration);
-        return String.format(AGGREGATIONS.get(aggregation), timeSeries);
+    @Override
+    public boolean isConsumptionDuringProductionGreaterThan(LocalDate date, Watt threshold, Duration duration)
+            throws ApiException, InterruptedException {
+
+        var query = new SimpleQuery("(batterie_consumption > %.2f and batterie_production > 0)", threshold.getValue()) //
+                .subquery(ONE_DAY, duration);
+        return count(query, date) > 0;
     }
 
-    private static String timeSeries(String query, Duration duration) {
-        var promDuration = duration.toSeconds() + "s";
-        return String.format("%s[%s:]", query, promDuration);
+    private int count(Subquery timeSeries, LocalDate date) throws ApiException, InterruptedException {
+        var query = timeSeries.aggregate(COUNT);
+        var result = prometheus.query(query, date.plusDays(1));
+        return result.intValue();
+    }
+
+    private static AggregationQuery.Aggregation aggregation(Aggregation aggregation) {
+        return switch (aggregation) {
+        case MAXIMUM -> AggregationQuery.Aggregation.MAXIMUM;
+        case MINIMUM -> AggregationQuery.Aggregation.MINIMUM;
+        case P25 -> AggregationQuery.Aggregation.P25;
+        case P75 -> AggregationQuery.Aggregation.P75;
+        };
     }
 }

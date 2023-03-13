@@ -2,6 +2,7 @@ package de.malkusch.ha.automation.infrastructure.prometheus;
 
 import static de.malkusch.ha.automation.model.electricity.Electricity.Aggregation.MAXIMUM;
 import static de.malkusch.ha.shared.infrastructure.DateUtil.toTimestamp;
+import static java.util.Optional.empty;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.matches;
@@ -12,6 +13,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -207,26 +209,66 @@ public class PrometheusElectricityTest {
         var result = electricity.wasFullyCharged(date);
 
         assertEquals(expected, result);
-        verifyQuery(MAXIMUM, "batterie_charge", Duration.ofDays(1), date);
+        verifyQuery(MAXIMUM, "batterie_charge", Duration.ofDays(1), date.plusDays(1));
+    }
+
+    @ParameterizedTest
+    @CsvSource({ //
+            "2023-03-11, 4000, PT30m, 1, true", //
+            "2023-03-11, 4000, PT30m, 2, true", //
+            "2023-03-11, 4000, PT30m, 0, false", //
+    })
+    void testIsConsumptionDuringProductionGreaterThan(String dateString, String thresholdString, String durationString,
+            String response, boolean expected) throws Exception {
+
+        var date = LocalDate.parse(dateString);
+        var threshold = watt(thresholdString);
+        var duration = duration(durationString);
+        mock(response);
+
+        var result = electricity.isConsumptionDuringProductionGreaterThan(date, threshold, duration);
+
+        assertEquals(expected, result);
+        verifyQuery(
+                "(batterie_consumption > " + thresholdString + ".00 and batterie_production > 0)"
+                        + expectedDuration(Duration.ofDays(1), duration), //
+                date.plusDays(1));
+    }
+
+    private void verifyQuery(String query, LocalDate date) throws IOException, InterruptedException {
+        verifyQuery(new QueryMatcher(empty(), query, empty(), Optional.of(date)));
     }
 
     private void verifyQuery(String query) throws IOException, InterruptedException {
-        var path = ".*\\Q" + PrometheusHttpClient.encode(query) + "\\E.*";
-        verify(http).get(matches(path));
+        verifyQuery(new QueryMatcher(empty(), query, empty(), empty()));
     }
 
     private void verifyQuery(Aggregation aggregation, String name, Duration duration)
             throws IOException, InterruptedException {
-        verifyQuery(aggregation, name, duration, null);
+
+        verifyQuery(new QueryMatcher(Optional.of(aggregation), name, Optional.of(duration), empty()));
     }
 
     private void verifyQuery(Aggregation aggregation, String name, Duration duration, LocalDate date)
             throws IOException, InterruptedException {
-        var path = ".*\\Q" + expectedAggregation(aggregation) + "\\E.*" //
-                + ".*\\Q" + PrometheusHttpClient.encode(name) + "\\E.*"//
-                + ".*\\Q" + expectedDuration(duration) + "\\E.*" //
-                + (date == null ? "" : ".*&start=" + toTimestamp(date) + ".*");
-        verify(http).get(matches(path));
+
+        verifyQuery(new QueryMatcher(Optional.of(aggregation), name, Optional.of(duration), Optional.ofNullable(date)));
+    }
+
+    private void verifyQuery(QueryMatcher matcher) throws IOException, InterruptedException {
+        verify(http).get(matches(matcher.regexp()));
+    }
+
+    private static record QueryMatcher(Optional<Aggregation> aggregation, String query, Optional<Duration> duration,
+            Optional<LocalDate> date) {
+
+        public String regexp() {
+            return aggregation.map(it -> ".*\\Q" + expectedAggregation(it) + "\\E.*").orElse("")//
+                    + ".*\\Q" + PrometheusHttpClient.encode(query) + "\\E"//
+                    + duration.map(it -> ".*\\Q" + PrometheusHttpClient.encode(expectedDuration(it)) + "\\E").orElse("") //
+                    + date.map(it -> ".*&time=" + toTimestamp(it)).orElse("") //
+                    + ".*";
+        }
     }
 
     private static String expectedAggregation(Aggregation aggregation) {
@@ -241,8 +283,13 @@ public class PrometheusElectricityTest {
     private static String expectedDuration(Duration duration) {
         var seconds = duration.toSeconds();
         var prometheusDuration = String.format("[%ss:]", seconds);
-        var encoded = PrometheusHttpClient.encode(prometheusDuration);
-        return encoded;
+        return prometheusDuration;
+    }
+
+    private static String expectedDuration(Duration duration, Duration aggregation) {
+        var seconds = duration.toSeconds();
+        var prometheusDuration = String.format("[%ss:%ss]", seconds, aggregation.toSeconds());
+        return prometheusDuration;
     }
 
     private void mock(String value) throws IOException, InterruptedException {
