@@ -41,7 +41,8 @@ public class PrometheusElectricityTest {
     @BeforeEach
     void setupPrometheus() {
         var prometheus = new PrometheusHttpClient(http, new ObjectMapper(), "http://example.org");
-        electricity = new PrometheusElectricity(prometheus);
+        var fullyCharged = new Capacity(1);
+        electricity = new PrometheusElectricity(prometheus, fullyCharged);
     }
 
     @ParameterizedTest

@@ -43,6 +43,13 @@ public class ElectricityConfiguration {
             private double minimumLoadingConsumption;
             private Duration minimumLoadingDuration;
         }
+        
+        private Battery battery;
+        
+        @Data
+        public static class Battery {
+            private double fullyCharged;
+        }
 
     }
 

@@ -6,7 +6,6 @@ import lombok.Value;
 public final class Capacity {
 
     private final double value;
-    public static final Capacity FULL = new Capacity(1);
 
     public Capacity(double value) {
         if (value < 0 || value > 1) {
@@ -17,6 +16,10 @@ public final class Capacity {
 
     public boolean isLessThan(Capacity other) {
         return value < other.value;
+    }
+
+    public boolean isGreaterThanOrEquals(Capacity other) {
+        return value >= other.value;
     }
 
     @Override

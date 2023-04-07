@@ -10,13 +10,20 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import de.malkusch.ha.automation.infrastructure.electricity.ElectricityConfiguration.ElectricityProperties;
 import de.malkusch.ha.automation.model.climate.ClimateService;
+import de.malkusch.ha.automation.model.electricity.Capacity;
+import de.malkusch.ha.automation.model.electricity.Electricity;
 import de.malkusch.ha.automation.model.room.RoomId;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
 @Configuration
+@RequiredArgsConstructor
 class PrometheusConfiguration {
+
+    private final PrometheusProperties properties;
 
     @ConfigurationProperties("prometheus")
     @Component
@@ -39,13 +46,24 @@ class PrometheusConfiguration {
         }
     }
 
+    private final HttpClient http;
+    private final ObjectMapper mapper;
+
     @Bean
-    public Prometheus prometheus(HttpClient http, ObjectMapper mapper, PrometheusProperties properties) {
+    Prometheus prometheus() {
         return new PrometheusHttpClient(http, mapper, properties.url);
     }
 
+    private final ElectricityProperties electricityProperties;
+
     @Bean
-    public ClimateService climateService(Prometheus prometheus, PrometheusProperties properties) {
+    Electricity electricity() {
+        var fullyCharged = new Capacity(electricityProperties.getBattery().getFullyCharged());
+        return new PrometheusElectricity(prometheus(), fullyCharged);
+    }
+
+    @Bean
+    ClimateService climateService() {
         var outsidePrefix = properties.climate.outsidePrefix;
         var map = new HashMap<RoomId, String>();
         for (var property : properties.climate.rooms) {
@@ -53,6 +71,6 @@ class PrometheusConfiguration {
             var prefix = property.prefix;
             map.put(room, prefix);
         }
-        return new PrometheusClimateService(prometheus, outsidePrefix, map);
+        return new PrometheusClimateService(prometheus(), outsidePrefix, map);
     }
 }

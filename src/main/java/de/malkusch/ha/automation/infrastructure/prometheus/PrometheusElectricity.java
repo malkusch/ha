@@ -1,14 +1,11 @@
 package de.malkusch.ha.automation.infrastructure.prometheus;
 
 import static de.malkusch.ha.automation.infrastructure.prometheus.Prometheus.AggregationQuery.Aggregation.COUNT;
-import static de.malkusch.ha.automation.model.electricity.Capacity.FULL;
 import static de.malkusch.ha.automation.model.electricity.Electricity.Aggregation.MAXIMUM;
 
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDate;
-
-import org.springframework.stereotype.Service;
 
 import de.malkusch.ha.automation.infrastructure.prometheus.Prometheus.AggregationQuery;
 import de.malkusch.ha.automation.infrastructure.prometheus.Prometheus.Query;
@@ -18,13 +15,19 @@ import de.malkusch.ha.automation.model.electricity.Capacity;
 import de.malkusch.ha.automation.model.electricity.Electricity;
 import de.malkusch.ha.automation.model.electricity.Watt;
 import de.malkusch.ha.shared.model.ApiException;
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
-@RequiredArgsConstructor
-@Service
+@Slf4j
 final class PrometheusElectricity implements Electricity {
 
     private final Prometheus prometheus;
+
+    PrometheusElectricity(Prometheus prometheus, Capacity fullyCharged) {
+        this.prometheus = prometheus;
+
+        log.info("Fully charged battery threshold is {}", fullyCharged);
+        this.fullyCharged = fullyCharged;
+    }
 
     private static final Query EXCESS = new SimpleQuery("clamp_min(batterie_feed_in, 0)");
 
@@ -111,6 +114,7 @@ final class PrometheusElectricity implements Electricity {
     }
 
     private static final Duration ONE_DAY = Duration.ofDays(1);
+    private final Capacity fullyCharged;
 
     @Override
     public boolean wasFullyCharged(LocalDate date) throws ApiException, InterruptedException {
@@ -119,7 +123,7 @@ final class PrometheusElectricity implements Electricity {
                 .aggregate(aggregation(MAXIMUM));
         var result = prometheus.query(query, date.plusDays(1));
         var max = capacity(result);
-        return max.equals(FULL);
+        return max.isGreaterThanOrEquals(fullyCharged);
     }
 
     @Override
