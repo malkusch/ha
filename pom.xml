@@ -67,6 +67,20 @@
 			<version>1.0.2</version>
 		</dependency>
 		<dependency>
+			<groupId>de.malkusch.niu</groupId>
+			<artifactId>niu-api</artifactId>
+			<version>0.3.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.smarthomej.addons.bundles</groupId>
+			<artifactId>org.smarthomej.binding.tuya</artifactId>
+			<version>3.2.16</version>
+		</dependency>
+		<dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-all</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter</artifactId>
 			<scope>test</scope>

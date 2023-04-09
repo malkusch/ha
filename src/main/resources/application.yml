@@ -51,6 +51,26 @@ electricity:
    wallbox:
       minimum-loading-consumption: 4000
       minimum-loading-duration: PT30m
+   scooter:
+      wallbox:
+         tuya-socket:
+            timeout: PT5s
+            expiration: PT15m
+            discover-cron: 59 */30 * * * * # Every half an hour
+         cool-down: PT30m
+         balancing-threshold: 0.95
+      charging-rule:
+         evaluation-rate: PT15m
+         minimum-charge:
+            start: 0.4
+            stop: 0.5
+         maximum-charge: 0.8
+         excess-charging:
+            window: PT30m
+            start-excess: 1000
+            stop-excess: 200
+            start-charge: 0.7
+         
 buderus:
    salt: 867845e97c4e29dce522b9a7d3a3e07b152bffadddbed7f5ffd842e9895ad1e4
    queryRate: PT1m

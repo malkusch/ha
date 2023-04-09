@@ -21,6 +21,9 @@ import de.malkusch.ha.automation.model.shutters.Shutter.Api;
 import de.malkusch.ha.shared.model.ApiException;
 import de.malkusch.km200.KM200;
 import de.malkusch.km200.KM200Exception;
+import de.malkusch.niu.Niu;
+import de.malkusch.niu.Niu.BatteryInfo;
+import de.malkusch.niu.Niu.Vehicle;
 
 @SpringBootTest
 @ActiveProfiles(profiles = "test")
@@ -52,6 +55,15 @@ public class ApplicationIT {
             var km200 = mock(KM200.class);
             when(km200.queryBigDecimal(any())).thenReturn(new BigDecimal(1));
             return km200;
+        }
+
+        @Bean
+        @Primary
+        public Niu niu() throws IOException {
+            var niu = mock(Niu.class);
+            when(niu.batteryInfo(any())).thenReturn(new BatteryInfo(false, 66, 23, 55, 1));
+            when(niu.vehicles()).thenReturn(new Vehicle[] { new Vehicle("asdfdsf", "foo") });
+            return niu;
         }
     }
 

@@ -45,3 +45,13 @@ notification:
    telegram:
       token: aToken
       chatId: 1234
+electricity:
+   scooter:
+      wallbox:
+         tuya-socket:
+            device-id: 21312321
+            local-key: 21312321
+      niu:
+         account: foo@examaple.org
+         password: Secret
+         countryCode: 45
