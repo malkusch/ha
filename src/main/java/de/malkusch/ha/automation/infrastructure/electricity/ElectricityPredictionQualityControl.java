@@ -1,5 +1,7 @@
 package de.malkusch.ha.automation.infrastructure.electricity;
 
+import static de.malkusch.ha.shared.infrastructure.DateUtil.formatTime;
+
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -37,6 +39,11 @@ public class ElectricityPredictionQualityControl {
             return LocalTime.ofInstant(timestamp, ZoneId.systemDefault());
         }
 
+        @Override
+        public String toString() {
+            return String.format("%s(loaded=%s, %s)", getClass().getSimpleName(), predictLoadedBattery,
+                    formatTime(timestamp));
+        }
     }
 
     private final List<Prediction> predictions = new CopyOnWriteArrayList<>();

@@ -7,5 +7,8 @@ import de.malkusch.ha.shared.infrastructure.event.Event;
 
 public record DirectSunLightStarted(LocalTime time, ShutterId shutter) implements Event {
 
-
+    @Override
+    public String toString() {
+        return String.format("DirectSunLightStarted(%s)", shutter);
+    }
 }

@@ -42,7 +42,7 @@ public final class TurnOnDehumidifiersRule implements Rule {
             var threshold = dehumidifier.power.plus(buffer);
             var excess = min(electricity.excess(P75, window), electricity.excess());
             if (excess.isGreaterThan(threshold)) {
-                log.info("Turning on {} when p75 excess electricity was {}", dehumidifier, excess);
+                log.info("Turning on {}: Excess electricity was {} greater than {}", dehumidifier, excess, threshold);
                 dehumidifier.turnOn();
                 return;
             }
@@ -56,6 +56,6 @@ public final class TurnOnDehumidifiersRule implements Rule {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName();
+        return String.format("%s(±%s)", getClass().getSimpleName(), buffer);
     }
 }

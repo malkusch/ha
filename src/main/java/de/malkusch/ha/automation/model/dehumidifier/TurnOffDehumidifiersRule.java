@@ -35,14 +35,15 @@ public final class TurnOffDehumidifiersRule implements Rule {
 
             var humidity = climateService.humidity(dehumidifier.room);
             if (humidity.isLessThan(dehumidifier.desiredHumidity.minimum())) {
-                log.info("Turning off {} when humidity was {}", dehumidifier, humidity);
+                log.info("Turning off {}: Humidity was {} less than {}", dehumidifier, humidity,
+                        dehumidifier.desiredHumidity.minimum());
                 dehumidifier.turnOff();
                 return;
             }
 
             var excess = electricity.excess(P75, window);
             if (excess.isLessThan(buffer)) {
-                log.info("Turning off {} when p75 excess electricity was {}", dehumidifier, excess);
+                log.info("Turning off {}: Excess electricity was {} less than {}", dehumidifier, excess, buffer);
                 dehumidifier.turnOff();
                 return;
             }
@@ -56,6 +57,6 @@ public final class TurnOffDehumidifiersRule implements Rule {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName();
+        return String.format("%s(<%s)", getClass().getSimpleName(), buffer);
     }
 }

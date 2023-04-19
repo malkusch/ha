@@ -1,5 +1,6 @@
 package de.malkusch.ha.automation.infrastructure.rule;
 
+import static de.malkusch.ha.shared.infrastructure.DateUtil.formatDuration;
 import static de.malkusch.ha.shared.infrastructure.event.EventPublisher.publishSafely;
 import static java.lang.System.exit;
 import static java.time.Duration.ZERO;
@@ -42,7 +43,7 @@ public final class RuleScheduler implements AutoCloseable {
 
     public void schedule(Rule rule) {
         nextDelay = nextDelay.plus(delay);
-        log.info("Scheduling {} in {}", rule, nextDelay);
+        log.info("Scheduling {} in {}", rule, formatDuration(nextDelay));
         var rateInSeconds = rule.evaluationRate().toSeconds();
         scheduler.scheduleAtFixedRate(() -> evaluate(rule), nextDelay.toSeconds(), rateInSeconds, SECONDS);
     }

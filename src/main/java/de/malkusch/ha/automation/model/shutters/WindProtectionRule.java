@@ -31,4 +31,9 @@ public final class WindProtectionRule implements Rule {
     public Duration evaluationRate() {
         return evaluationRate;
     }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName();
+    }
 }

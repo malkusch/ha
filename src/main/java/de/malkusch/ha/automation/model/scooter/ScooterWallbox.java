@@ -1,5 +1,8 @@
 package de.malkusch.ha.automation.model.scooter;
 
+import static de.malkusch.ha.shared.infrastructure.DateUtil.formatDuration;
+import static de.malkusch.ha.shared.infrastructure.DateUtil.formatTime;
+
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
@@ -21,7 +24,7 @@ public final class ScooterWallbox {
         public boolean isCharging() throws IOException;
 
         public void stop();
-        
+
         public boolean isOnline();
     }
 
@@ -33,28 +36,28 @@ public final class ScooterWallbox {
         this.scooter = scooter;
 
         this.coolDown = coolDown;
-        log.info("Wallbox switch cool down is {}", coolDown);
+        log.info("Wallbox switch cool down is {}", formatDuration(coolDown));
 
         this.balancingThreshold = balancingThreshold;
         log.info("Wallbox balancing threshold is {}", balancingThreshold);
 
         if (api.isCharging()) {
             stopCoolDown = untilCoolDown();
-            log.info("Wallbox started charging with stop cool down until {}", stopCoolDown);
+            log.info("Wallbox started charging with stop cool down until {}", formatTime(stopCoolDown));
 
         } else {
             startCoolDown = untilCoolDown();
-            log.info("Wallbox started not charging with start cool down until {}", startCoolDown);
+            log.info("Wallbox started not charging with start cool down until {}", formatTime(startCoolDown));
         }
     }
-    
+
     public static class OfflineException extends Exception {
         private static final long serialVersionUID = -2345002162124839455L;
-        
+
     }
-    
+
     private static final OfflineException OFFLINE_EXCEPTION = new OfflineException();
-    
+
     private void assertOnline() throws OfflineException {
         if (!api.isOnline()) {
             throw OFFLINE_EXCEPTION;
@@ -63,7 +66,7 @@ public final class ScooterWallbox {
 
     public void startCharging() throws IOException, OfflineException {
         assertOnline();
-        
+
         log.debug("Starting charging");
         if (api.isCharging()) {
             return;
@@ -88,7 +91,7 @@ public final class ScooterWallbox {
 
     public void stopCharging() throws IOException, OfflineException {
         assertOnline();
-        
+
         log.debug("Stopping charging");
         if (!api.isCharging()) {
             return;

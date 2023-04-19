@@ -1,5 +1,7 @@
 package de.malkusch.ha.shared.infrastructure.event;
 
+import static de.malkusch.ha.shared.infrastructure.DateUtil.formatSeconds;
+import static de.malkusch.ha.shared.infrastructure.DateUtil.formatTime;
 import static de.malkusch.ha.shared.infrastructure.event.EventPublisher.publishSafely;
 import static de.malkusch.ha.shared.infrastructure.scheduler.Schedulers.singleThreadScheduler;
 import static java.time.temporal.ChronoUnit.SECONDS;
@@ -44,7 +46,7 @@ public final class EventScheduler implements AutoCloseable {
         }
         var seconds = now.until(scheduledDateTime, SECONDS);
 
-        log.info("Scheduling {} at {} ({} s)", event, time, seconds);
+        log.info("Scheduling {} at {} ({})", event, formatTime(time), formatSeconds(seconds));
         var future = scheduler.schedule(() -> publishSafely(event), seconds, TimeUnit.SECONDS);
         var bucket = events.computeIfAbsent(event.getClass(), it -> new ConcurrentLinkedQueue<>());
         bucket.add(future);

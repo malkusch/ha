@@ -115,14 +115,14 @@ public final class ElectricityPredictionService {
     public boolean predictLoadedBattery() throws ApiException, InterruptedException {
         var peak = electricity.production(MAXIMUM, peakWindow);
         if (peak.isLessThan(minimumPeak)) {
-            log.debug("Predict no loaded battery, because peak {} is too low", peak);
+            log.debug("Predict no loaded battery: Peak {} is less than {}", peak, minimumPeak);
             return false;
         }
 
         var irradiance = irradianaceForecast.globalIrradiance(LocalDate.now());
         log.debug("Irradiance is {}", irradiance);
         if (irradiance.isGreaterThan(threshold)) {
-            log.debug("Predict loaded battery, because irradiance {} is greater than {}", irradiance, threshold);
+            log.debug("Predict loaded battery: Irradiance {} is greater than {}", irradiance, threshold);
             return true;
         }
 

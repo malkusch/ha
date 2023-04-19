@@ -29,21 +29,26 @@ public class IncreaseHeaterRule implements Rule {
     @Override
     public void evaluate() throws Exception {
         if (!electricityPredictionService.predictLoadedBattery()) {
-            log.debug("Don't increase, because the battery won't be loaded");
+            log.debug("Don't increase heater: Battery won't be loaded");
             return;
         }
 
         var excessProduction = min(electricity.excessProduction(P75, window), electricity.excessProduction());
         if (excessProduction.isGreaterThan(threshold)) {
-            log.debug("Increasing heater when p75 excess energy production was {}", excessProduction);
+            log.debug("Increasing heater: Excess production ({}) was greater than {}", excessProduction, threshold);
             temporaryTemperatureService.changeTemporaryHeaterTemperature(increasedTemperature);
         }
 
-        log.debug("Don't increase, because not enough excess production {}", excessProduction);
+        log.debug("Don't increase heater: Excess production {} less than {}", excessProduction, threshold);
     }
 
     @Override
     public Duration evaluationRate() {
         return evaluationRate;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s(>%s)", getClass().getSimpleName(), threshold);
     }
 }

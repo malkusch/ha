@@ -25,7 +25,7 @@ public final class ResetHeaterRule implements Rule {
     public void evaluate() throws Exception {
         var excessProduction = electricity.excessProduction(P75, window);
         if (excessProduction.isLessThan(threshold)) {
-            log.debug("Resetting heater when p75 excess energy production was {}", excessProduction);
+            log.debug("Resetting heater: Excess production ({}) was less than {}", excessProduction, threshold);
             temporaryTemperatureService.resetTemporaryHeaterTemperature();
         }
     }
@@ -33,5 +33,10 @@ public final class ResetHeaterRule implements Rule {
     @Override
     public Duration evaluationRate() {
         return evaluationRate;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s(<%s)", getClass().getSimpleName(), threshold);
     }
 }
