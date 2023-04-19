@@ -45,4 +45,9 @@ public class TuyaSocket implements Socket, AutoCloseable {
     static void close(TuyaDevice device) {
         device.dispose();
     }
+
+    @Override
+    public boolean isOnline() {
+        return true;
+    }
 }

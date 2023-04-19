@@ -102,6 +102,11 @@ public final class ReconnectingTuyaSocket implements Socket, AutoCloseable {
         return lastOn;
     }
 
+    @Override
+    public boolean isOnline() {
+        return connected && socket.isOnline();
+    }
+
     private static interface Query<T, E extends Exception> {
 
         T query() throws E;

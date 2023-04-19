@@ -30,4 +30,9 @@ public class TuyaWallboxApi implements Api, AutoCloseable {
     public void close() throws Exception {
         socket.close();
     }
+
+    @Override
+    public boolean isOnline() {
+        return socket.isOnline();
+    }
 }

@@ -21,6 +21,8 @@ public final class ScooterWallbox {
         public boolean isCharging() throws IOException;
 
         public void stop();
+        
+        public boolean isOnline();
     }
 
     private volatile Instant startCoolDown = Instant.MIN;
@@ -45,8 +47,23 @@ public final class ScooterWallbox {
             log.info("Wallbox started not charging with start cool down until {}", startCoolDown);
         }
     }
+    
+    public static class OfflineException extends Exception {
+        private static final long serialVersionUID = -2345002162124839455L;
+        
+    }
+    
+    private static final OfflineException OFFLINE_EXCEPTION = new OfflineException();
+    
+    private void assertOnline() throws OfflineException {
+        if (!api.isOnline()) {
+            throw OFFLINE_EXCEPTION;
+        }
+    }
 
-    public void startCharging() throws IOException {
+    public void startCharging() throws IOException, OfflineException {
+        assertOnline();
+        
         log.debug("Starting charging");
         if (api.isCharging()) {
             return;
@@ -69,7 +86,9 @@ public final class ScooterWallbox {
         return Instant.now().plus(coolDown);
     }
 
-    public void stopCharging() throws IOException {
+    public void stopCharging() throws IOException, OfflineException {
+        assertOnline();
+        
         log.debug("Stopping charging");
         if (!api.isCharging()) {
             return;

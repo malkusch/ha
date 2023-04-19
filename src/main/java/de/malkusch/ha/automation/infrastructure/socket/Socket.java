@@ -9,5 +9,7 @@ public interface Socket extends AutoCloseable {
     void turnOff();
 
     boolean isOn() throws IOException;
+    
+    boolean isOnline();
 
 }

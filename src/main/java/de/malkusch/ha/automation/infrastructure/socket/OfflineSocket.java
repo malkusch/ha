@@ -68,6 +68,10 @@ public class OfflineSocket implements Socket {
             return power;
         }
 
+        @Override
+        public boolean isOnline() {
+            return false;
+        }
     }
 
     @Override
@@ -90,4 +94,8 @@ public class OfflineSocket implements Socket {
         return socket.isOn();
     }
 
+    @Override
+    public boolean isOnline() {
+        return socket.isOnline();
+    }
 }
