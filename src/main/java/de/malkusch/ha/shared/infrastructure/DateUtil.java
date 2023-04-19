@@ -1,6 +1,7 @@
 package de.malkusch.ha.shared.infrastructure;
 
 import static java.time.ZoneId.systemDefault;
+import static java.time.ZoneOffset.UTC;
 import static java.util.Locale.ENGLISH;
 import static net.time4j.format.TextWidth.NARROW;
 
@@ -18,12 +19,16 @@ import net.time4j.PrettyTime;
 @Slf4j
 public class DateUtil {
 
+    public static long toTimestamp(LocalDate date, ZoneId zone) {
+        return toTimestamp(date.atStartOfDay(), zone);
+    }
+
     public static long toTimestamp(LocalDate date) {
-        return toTimestamp(date.atStartOfDay());
+        return toTimestamp(date, defaultZone());
     }
 
     public static long toTimestamp(LocalDateTime date) {
-        return toTimestamp(date, ZoneId.systemDefault());
+        return toTimestamp(date, defaultZone());
     }
 
     public static long toTimestamp(LocalDateTime date, ZoneId zone) {
@@ -32,7 +37,7 @@ public class DateUtil {
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter //
             .ofPattern("HH:mm") //
-            .withZone(systemDefault());
+            .withZone(defaultZone());
 
     public static String formatTime(Instant time) {
         return TIME_FORMATTER.format(time);
@@ -56,5 +61,15 @@ public class DateUtil {
 
     public static String formatSeconds(long seconds) {
         return formatDuration(Duration.ofSeconds(seconds));
+    }
+
+    public static ZoneId defaultZone() {
+        try {
+            return systemDefault();
+
+        } catch (Exception e) {
+            log.warn("Can't use system timezone; Falling back to UTC", e);
+            return UTC;
+        }
     }
 }

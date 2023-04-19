@@ -5,7 +5,6 @@ import static org.shredzone.commons.suncalc.SunTimes.Twilight.ASTRONOMICAL;
 import static org.shredzone.commons.suncalc.SunTimes.Twilight.CIVIL;
 import static org.shredzone.commons.suncalc.SunTimes.Twilight.NAUTICAL;
 
-import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
@@ -38,20 +37,18 @@ class CommonsSunCalcAstronomy implements Astronomy {
     }
 
     @Override
-    public List<AstronomicalEvent> calculateEvents(LocalDate date) {
+    public List<AstronomicalEvent> calculateEvents(ZonedDateTime date) {
         var astronomical = calculate(ASTRONOMICAL, date);
         var nautical = calculate(NAUTICAL, date);
         var civil = calculate(CIVIL, date);
 
-        return asList(new AstronomicalSunriseStarted(astronomical.getRise().toLocalTime()),
-                new AstronomicalSunsetStarted(astronomical.getSet().toLocalTime()),
-                new NauticalSunriseStarted(nautical.getRise().toLocalTime()),
-                new NauticalSunsetStarted(nautical.getSet().toLocalTime()),
-                new CivilSunriseStarted(civil.getRise().toLocalTime()),
-                new CivilSunsetStarted(civil.getSet().toLocalTime()));
+        return asList(new AstronomicalSunriseStarted(astronomical.getRise()),
+                new AstronomicalSunsetStarted(astronomical.getSet()), new NauticalSunriseStarted(nautical.getRise()),
+                new NauticalSunsetStarted(nautical.getSet()), new CivilSunriseStarted(civil.getRise()),
+                new CivilSunsetStarted(civil.getSet()));
     }
 
-    private SunTimes calculate(Twilight twilight, LocalDate date) {
+    private SunTimes calculate(Twilight twilight, ZonedDateTime date) {
         return SunTimes.compute().on(date).latitude(latitude).longitude(longitude).twilight(twilight).execute();
     }
 

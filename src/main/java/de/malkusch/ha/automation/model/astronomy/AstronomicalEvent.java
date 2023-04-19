@@ -1,14 +1,19 @@
 package de.malkusch.ha.automation.model.astronomy;
 
 import java.time.LocalTime;
+import java.time.ZonedDateTime;
 
 import de.malkusch.ha.shared.infrastructure.event.Event;
 
 public interface AstronomicalEvent extends Event {
 
-    LocalTime time();
+    ZonedDateTime dateTime();
+    
+    default LocalTime time() {
+        return dateTime().toLocalTime();
+    }
 
-    record AstronomicalSunriseStarted(LocalTime time) implements AstronomicalEvent {
+    public record AstronomicalSunriseStarted(ZonedDateTime dateTime) implements AstronomicalEvent {
 
         @Override
         public String toString() {
@@ -16,7 +21,7 @@ public interface AstronomicalEvent extends Event {
         }
     }
 
-    record AstronomicalSunsetStarted(LocalTime time) implements AstronomicalEvent {
+    public record AstronomicalSunsetStarted(ZonedDateTime dateTime) implements AstronomicalEvent {
 
         @Override
         public String toString() {
@@ -24,7 +29,7 @@ public interface AstronomicalEvent extends Event {
         }
     }
 
-    record CivilSunriseStarted(LocalTime time) implements AstronomicalEvent {
+    public record CivilSunriseStarted(ZonedDateTime dateTime) implements AstronomicalEvent {
 
         @Override
         public String toString() {
@@ -32,7 +37,7 @@ public interface AstronomicalEvent extends Event {
         }
     }
 
-    record CivilSunsetStarted(LocalTime time) implements AstronomicalEvent {
+    public record CivilSunsetStarted(ZonedDateTime dateTime) implements AstronomicalEvent {
 
         @Override
         public String toString() {
@@ -40,7 +45,7 @@ public interface AstronomicalEvent extends Event {
         }
     }
 
-    record NauticalSunriseStarted(LocalTime time) implements AstronomicalEvent {
+    public record NauticalSunriseStarted(ZonedDateTime dateTime) implements AstronomicalEvent {
 
         @Override
         public String toString() {
@@ -48,7 +53,7 @@ public interface AstronomicalEvent extends Event {
         }
     }
 
-    record NauticalSunsetStarted(LocalTime time) implements AstronomicalEvent {
+    public record NauticalSunsetStarted(ZonedDateTime dateTime) implements AstronomicalEvent {
 
         @Override
         public String toString() {
