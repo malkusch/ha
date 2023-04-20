@@ -24,4 +24,13 @@ class NiuScooter implements Scooter {
         return api.batteryInfo(serialNumber).isCharging();
     }
 
+    @Override
+    public boolean isBatteryConnected() throws IOException {
+        return api.vehicle(serialNumber).isConnected();
+    }
+
+    @Override
+    public boolean isOnline() throws IOException {
+        return api.vehicle(serialNumber).ss_online_sta() == 1;
+    }
 }

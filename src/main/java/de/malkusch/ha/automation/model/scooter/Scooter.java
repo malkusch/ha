@@ -7,7 +7,11 @@ import de.malkusch.ha.automation.model.electricity.Capacity;
 public interface Scooter {
 
     public Capacity charge() throws IOException;
-    
+
     public boolean isCharging() throws IOException;
+
+    public boolean isBatteryConnected() throws IOException;
     
+    public boolean isOnline() throws IOException;
+
 }

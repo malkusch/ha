@@ -61,7 +61,12 @@ public class ApplicationIT {
         @Primary
         public Niu niu() throws IOException {
             var niu = mock(Niu.class);
+
             when(niu.batteryInfo(any())).thenReturn(new BatteryInfo(false, 66, 23, 55, 1));
+
+            var vehicleInfo = new Niu.VehicleInfo(null, null, 0, 0, 0, 0, null, 0, null, 0, 0, true, 0, 1, null);
+            when(niu.vehicle(any())).thenReturn(vehicleInfo);
+
             when(niu.vehicles()).thenReturn(new Vehicle[] { new Vehicle("asdfdsf", "foo") });
             return niu;
         }

@@ -8,6 +8,8 @@ import java.time.Duration;
 import java.time.Instant;
 
 import de.malkusch.ha.automation.model.electricity.Capacity;
+import de.malkusch.ha.automation.model.scooter.ScooterWallbox.WallboxException.Error;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -51,21 +53,37 @@ public final class ScooterWallbox {
         }
     }
 
-    public static class OfflineException extends Exception {
-        private static final long serialVersionUID = -2345002162124839455L;
+    @RequiredArgsConstructor
+    public static class WallboxException extends Exception {
+
+        public final Error error;
+
+        public static enum Error {
+            WALLBOX_OFFLINE, BATTERY_NOT_CONNECTED, SCOOTER_OFFLINE
+        }
 
     }
 
-    private static final OfflineException OFFLINE_EXCEPTION = new OfflineException();
+    private static final WallboxException WALLBOX_OFFLINE = new WallboxException(Error.WALLBOX_OFFLINE);
+    private static final WallboxException BATTERY_NOT_CONNECTED = new WallboxException(Error.BATTERY_NOT_CONNECTED);
+    private static final WallboxException SCOOTER_OFFLINE = new WallboxException(Error.SCOOTER_OFFLINE);
 
-    private void assertOnline() throws OfflineException {
+    private void assertOnline() throws WallboxException {
         if (!api.isOnline()) {
-            throw OFFLINE_EXCEPTION;
+            throw WALLBOX_OFFLINE;
         }
     }
 
-    public void startCharging() throws IOException, OfflineException {
+    public void startCharging() throws IOException, WallboxException {
         assertOnline();
+
+        if (!scooter.isOnline()) {
+            throw SCOOTER_OFFLINE;
+        }
+
+        if (!scooter.isBatteryConnected()) {
+            throw BATTERY_NOT_CONNECTED;
+        }
 
         log.debug("Starting charging");
         if (api.isCharging()) {
@@ -77,11 +95,11 @@ public final class ScooterWallbox {
             return;
         }
 
+        stopCoolDown = untilCoolDown();
         api.start();
         if (!api.isCharging()) {
             throw new IllegalStateException("Wallbox didn't start charging");
         }
-        stopCoolDown = untilCoolDown();
         log.info("Charging started");
     }
 
@@ -89,7 +107,7 @@ public final class ScooterWallbox {
         return Instant.now().plus(coolDown);
     }
 
-    public void stopCharging() throws IOException, OfflineException {
+    public void stopCharging() throws IOException, WallboxException {
         assertOnline();
 
         log.debug("Stopping charging");
@@ -107,11 +125,11 @@ public final class ScooterWallbox {
             return;
         }
 
+        startCoolDown = untilCoolDown();
         api.stop();
         if (api.isCharging()) {
             throw new IllegalStateException("Wallbox didn't stop charging");
         }
-        startCoolDown = untilCoolDown();
         log.info("Charging stopped");
     }
 
