@@ -96,9 +96,10 @@ public class ScooterConfiguration {
 
     @Bean
     Scooter scooter() throws IOException {
-        var api = niu();
-        var serialNumber = api.vehicles()[0].serialNumber();
-        return new NiuScooter(serialNumber, api);
+        var niu = niu();
+        var serialNumber = niu.vehicles()[0].serialNumber();
+        var api = new NiuScooterApi(serialNumber, niu);
+        return new Scooter(api);
     }
 
     private final Gson gson;
