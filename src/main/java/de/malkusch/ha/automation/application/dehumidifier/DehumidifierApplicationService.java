@@ -6,10 +6,10 @@ import java.util.Collection;
 
 import org.springframework.stereotype.Service;
 
-import de.malkusch.ha.automation.infrastructure.Debouncer.DebounceException;
 import de.malkusch.ha.automation.model.NotFoundException;
 import de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.DehumidifierId;
 import de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.DehumidifierRepository;
+import de.malkusch.ha.shared.infrastructure.CoolDown.CoolDownException;
 import de.malkusch.ha.shared.model.ApiException;
 import lombok.RequiredArgsConstructor;
 
@@ -24,7 +24,7 @@ public final class DehumidifierApplicationService {
         private final String id;
     }
 
-    public void turnOn(TurnOn command) throws NotFoundException, ApiException, InterruptedException, DebounceException {
+    public void turnOn(TurnOn command) throws NotFoundException, ApiException, InterruptedException, CoolDownException {
         var id = new DehumidifierId(command.id);
         var dehumidifier = dehumidifiers.find(id);
 
@@ -37,7 +37,7 @@ public final class DehumidifierApplicationService {
     }
 
     public void turnOff(TurnOff command)
-            throws NotFoundException, ApiException, InterruptedException, DebounceException {
+            throws NotFoundException, ApiException, InterruptedException, CoolDownException {
 
         var id = new DehumidifierId(command.id);
         var dehumidifier = dehumidifiers.find(id);

@@ -6,12 +6,12 @@ import static de.malkusch.ha.automation.model.electricity.Watt.min;
 
 import java.time.Duration;
 
-import de.malkusch.ha.automation.infrastructure.Debouncer.DebounceException;
 import de.malkusch.ha.automation.model.Rule;
 import de.malkusch.ha.automation.model.climate.ClimateService;
 import de.malkusch.ha.automation.model.dehumidifier.Dehumidifier.DehumidifierRepository;
 import de.malkusch.ha.automation.model.electricity.Electricity;
 import de.malkusch.ha.automation.model.electricity.Watt;
+import de.malkusch.ha.shared.infrastructure.CoolDown.CoolDownException;
 import de.malkusch.ha.shared.model.ApiException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +28,7 @@ public final class TurnOnDehumidifiersRule implements Rule {
     private final ClimateService climateService;
 
     @Override
-    public void evaluate() throws ApiException, InterruptedException, DebounceException {
+    public void evaluate() throws ApiException, InterruptedException, CoolDownException {
         for (var dehumidifier : dehumidifiers.findAll()) {
             if (dehumidifier.state() == ON) {
                 continue;

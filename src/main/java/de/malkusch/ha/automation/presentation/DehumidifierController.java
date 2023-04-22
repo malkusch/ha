@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import de.malkusch.ha.automation.application.dehumidifier.DehumidifierApplicationService;
-import de.malkusch.ha.automation.infrastructure.Debouncer.DebounceException;
 import de.malkusch.ha.automation.model.NotFoundException;
+import de.malkusch.ha.shared.infrastructure.CoolDown.CoolDownException;
 import de.malkusch.ha.shared.model.ApiException;
 import lombok.RequiredArgsConstructor;
 
@@ -21,7 +21,7 @@ public final class DehumidifierController {
 
     @PutMapping("/dehumidifier/{id}/on")
     public void turnOn(@PathVariable String id)
-            throws NotFoundException, ApiException, InterruptedException, DebounceException {
+            throws NotFoundException, ApiException, InterruptedException, CoolDownException {
 
         var command = new DehumidifierApplicationService.TurnOn(id);
         api.turnOn(command);
@@ -29,7 +29,7 @@ public final class DehumidifierController {
 
     @PutMapping("/dehumidifier/{id}/off")
     public void turnOff(@PathVariable String id)
-            throws NotFoundException, ApiException, InterruptedException, DebounceException {
+            throws NotFoundException, ApiException, InterruptedException, CoolDownException {
 
         var command = new DehumidifierApplicationService.TurnOff(id);
         api.turnOff(command);

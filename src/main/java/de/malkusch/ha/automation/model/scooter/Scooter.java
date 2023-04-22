@@ -55,6 +55,7 @@ public final class Scooter {
 
     @RequiredArgsConstructor
     public static class ScooterException extends Exception {
+        private static final long serialVersionUID = -4715560577812483842L;
 
         public final Error error;
 

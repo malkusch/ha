@@ -4,9 +4,9 @@ import java.io.IOException;
 
 public interface Socket extends AutoCloseable {
 
-    void turnOn();
+    void turnOn() throws IOException;
 
-    void turnOff();
+    void turnOff() throws IOException;
 
     boolean isOn() throws IOException;
     

@@ -12,7 +12,7 @@ public class TuyaWallboxApi implements Api, AutoCloseable {
     private final Socket socket;
 
     @Override
-    public void start() {
+    public void start() throws IOException {
         socket.turnOn();
     }
 
@@ -22,7 +22,7 @@ public class TuyaWallboxApi implements Api, AutoCloseable {
     }
 
     @Override
-    public void stop() {
+    public void stop() throws IOException {
         socket.turnOff();
     }
 

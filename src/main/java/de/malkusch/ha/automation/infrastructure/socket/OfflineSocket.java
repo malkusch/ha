@@ -80,12 +80,12 @@ public class OfflineSocket implements Socket {
     }
 
     @Override
-    public void turnOn() {
+    public void turnOn() throws IOException {
         socket.turnOn();
     }
 
     @Override
-    public void turnOff() {
+    public void turnOff() throws IOException {
         socket.turnOff();
     }
 

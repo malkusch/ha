@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-import de.malkusch.ha.automation.infrastructure.Debouncer.DebounceException;
 import de.malkusch.ha.automation.model.NotFoundException;
+import de.malkusch.ha.shared.infrastructure.CoolDown.CoolDownException;
 import de.malkusch.ha.shared.model.ApiException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,10 +36,10 @@ final class ErrorHandler {
         return String.format("Upstream API error [%s]", reference);
     }
 
-    @ExceptionHandler(DebounceException.class)
+    @ExceptionHandler(CoolDownException.class)
     @ResponseStatus(TOO_MANY_REQUESTS)
     @ResponseBody
-    public String apiError(DebounceException error) {
+    public String apiError(CoolDownException error) {
         return String.format("Too many requests. Try again after %s", error.retryAfter);
     }
 }

@@ -38,8 +38,6 @@ public class IncreaseHeaterRule implements Rule {
             log.debug("Increasing heater: Excess production ({}) was greater than {}", excessProduction, threshold);
             temporaryTemperatureService.changeTemporaryHeaterTemperature(increasedTemperature);
         }
-
-        log.debug("Don't increase heater: Excess production {} less than {}", excessProduction, threshold);
     }
 
     @Override

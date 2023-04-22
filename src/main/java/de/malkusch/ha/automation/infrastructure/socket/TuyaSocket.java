@@ -1,11 +1,8 @@
 package de.malkusch.ha.automation.infrastructure.socket;
 
 import java.io.IOException;
-import java.util.Map;
 
-import org.smarthomej.binding.tuya.internal.local.TuyaDevice;
-
-import de.malkusch.ha.automation.infrastructure.socket.TuyaState.Power;
+import de.malkusch.tuya.TuyaApi;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -13,41 +10,32 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class TuyaSocket implements Socket, AutoCloseable {
 
-    final TuyaDevice tuyaDevice;
-    final TuyaState state;
+    private final TuyaApi tuya;
 
     @Override
-    public void turnOn() {
+    public void turnOn() throws IOException {
         log.debug("Turn on");
-        state.expire();
-        tuyaDevice.set(Map.of(1, true));
+        tuya.turnOn();
     }
 
     @Override
-    public void turnOff() {
+    public void turnOff() throws IOException {
         log.debug("Turn off");
-        state.expire();
-        tuyaDevice.set(Map.of(1, false));
+        tuya.turnOff();
     }
 
     @Override
     public boolean isOn() throws IOException {
-        var power = state.state().power();
-        return power == Power.ON;
-    }
-
-    @Override
-    public void close() throws Exception {
-        close(tuyaDevice);
-        state.close();
-    }
-    
-    static void close(TuyaDevice device) {
-        device.dispose();
+        return tuya.isOn();
     }
 
     @Override
     public boolean isOnline() {
-        return true;
+        return tuya.isOnline();
+    }
+
+    @Override
+    public void close() throws Exception {
+        tuya.close();
     }
 }

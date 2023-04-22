@@ -8,11 +8,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
-import com.google.gson.Gson;
-
 import de.malkusch.ha.automation.infrastructure.socket.OfflineSocket;
 import de.malkusch.ha.automation.infrastructure.socket.Socket;
-import de.malkusch.ha.automation.infrastructure.socket.TuyaSocketFactory;
+import de.malkusch.ha.automation.infrastructure.socket.TuyaSocket;
 import de.malkusch.ha.automation.model.electricity.Capacity;
 import de.malkusch.ha.automation.model.electricity.Electricity;
 import de.malkusch.ha.automation.model.electricity.Watt;
@@ -20,7 +18,9 @@ import de.malkusch.ha.automation.model.scooter.Scooter;
 import de.malkusch.ha.automation.model.scooter.ScooterChargingRule;
 import de.malkusch.ha.automation.model.scooter.ScooterWallbox;
 import de.malkusch.ha.automation.model.scooter.ScooterWallbox.Api;
+import de.malkusch.ha.shared.infrastructure.CoolDown;
 import de.malkusch.niu.Niu;
+import de.malkusch.tuya.TuyaApi;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
@@ -102,15 +102,13 @@ public class ScooterConfiguration {
         return new Scooter(api);
     }
 
-    private final Gson gson;
-
     @Bean
-    TuyaSocketFactory tuyaSocketFactory() {
+    TuyaApi.Factory tuyaSocketFactory() {
         var properties = scooterProperties.wallbox.tuyaSocket;
         var timeout = properties.timeout;
         var expiration = properties.expiration;
 
-        return new TuyaSocketFactory(gson, timeout, expiration);
+        return TuyaApi.buildFactory().withDeviceTimeout(timeout).withExpiration(expiration).factory();
     }
 
     @Bean
@@ -120,7 +118,7 @@ public class ScooterConfiguration {
         var localKey = properties.localKey;
         var factory = tuyaSocketFactory();
 
-        var socket = new OfflineSocket(() -> factory.build(deviceId, localKey));
+        var socket = new OfflineSocket(() -> new TuyaSocket(factory.api(deviceId, localKey)));
         return socket;
     }
 
@@ -134,7 +132,8 @@ public class ScooterConfiguration {
     @Bean
     ScooterWallbox scooterWallbox() throws IOException {
         var balancingThreshold = new Capacity(scooterProperties.wallbox.balancingThreshold);
-        return new ScooterWallbox(tuya(), scooter(), scooterProperties.wallbox.coolDown, balancingThreshold);
+        var coolDown = new CoolDown(scooterProperties.wallbox.coolDown);
+        return new ScooterWallbox(tuya(), scooter(), coolDown, balancingThreshold);
     }
 
     @Bean

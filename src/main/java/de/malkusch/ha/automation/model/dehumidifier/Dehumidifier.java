@@ -6,12 +6,12 @@ import static java.time.Duration.ofMinutes;
 
 import java.util.Collection;
 
-import de.malkusch.ha.automation.infrastructure.Debouncer;
-import de.malkusch.ha.automation.infrastructure.Debouncer.DebounceException;
 import de.malkusch.ha.automation.model.NotFoundException;
 import de.malkusch.ha.automation.model.State;
 import de.malkusch.ha.automation.model.electricity.Watt;
 import de.malkusch.ha.automation.model.room.RoomId;
+import de.malkusch.ha.shared.infrastructure.CoolDown;
+import de.malkusch.ha.shared.infrastructure.CoolDown.CoolDownException;
 import de.malkusch.ha.shared.model.ApiException;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
@@ -52,24 +52,26 @@ public final class Dehumidifier {
     public final Watt power;
     public final DesiredHumidity desiredHumidity;
     private final Api api;
-    private final Debouncer debouncer = new Debouncer(ofMinutes(5));
+    private final CoolDown coolDown = new CoolDown(ofMinutes(5));
 
-    public void turnOn() throws ApiException, InterruptedException, DebounceException {
-        debouncer.debounce();
-        api.turnOn(id);
-        if (state() != ON) {
-            throw new ApiException(id + " is not on");
-        }
-        log.info("Dehumidier {} turned on", id);
+    public void turnOn() throws ApiException, InterruptedException, CoolDownException {
+        coolDown.<ApiException, InterruptedException> withCoolDown(() -> {
+            api.turnOn(id);
+            if (state() != ON) {
+                throw new ApiException(id + " is not on");
+            }
+            log.info("Dehumidier {} turned on", id);
+        });
     }
 
-    public void turnOff() throws ApiException, InterruptedException, DebounceException {
-        debouncer.debounce();
-        api.turnOff(id);
-        if (state() != OFF) {
-            throw new ApiException(id + " is not off");
-        }
-        log.info("Dehumidier {} turned off", id);
+    public void turnOff() throws ApiException, InterruptedException, CoolDownException {
+        coolDown.<ApiException, InterruptedException> withCoolDown(() -> {
+            api.turnOff(id);
+            if (state() != OFF) {
+                throw new ApiException(id + " is not off");
+            }
+            log.info("Dehumidier {} turned off", id);
+        });
     }
 
     public State state() throws ApiException, InterruptedException {
