@@ -30,6 +30,7 @@ import de.malkusch.ha.automation.model.astronomy.AstronomicalEvent.CivilSunsetSt
 import de.malkusch.ha.automation.model.astronomy.AstronomicalEvent.NauticalSunriseStarted;
 import de.malkusch.ha.automation.model.astronomy.AstronomicalEvent.NauticalSunsetStarted;
 import de.malkusch.ha.automation.model.astronomy.Azimuth;
+import de.malkusch.ha.automation.model.geo.Location;
 
 public class CommonsSunCalcAstronomyTest {
 
@@ -50,11 +51,8 @@ public class CommonsSunCalcAstronomyTest {
             AstronomicalSunsetStarted astronomicalSunsetStarted) {
     }
 
-    private static LocationProperties berlin() {
-        var berlin = new LocationProperties();
-        berlin.latitude = "52.518044";
-        berlin.longitude = "13.408246";
-        return berlin;
+    private static Location berlin() {
+        return new Location(52.518044, 13.408246);
     }
 
     private static LocalDate[] oneYear() {

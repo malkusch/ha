@@ -12,6 +12,8 @@ import de.malkusch.ha.automation.model.Rule;
 import de.malkusch.ha.automation.model.electricity.Capacity;
 import de.malkusch.ha.automation.model.electricity.Electricity;
 import de.malkusch.ha.automation.model.electricity.Watt;
+import de.malkusch.ha.automation.model.geo.Distance;
+import de.malkusch.ha.automation.model.geo.DistanceCalculator;
 import de.malkusch.ha.automation.model.scooter.Scooter.ScooterException;
 import de.malkusch.ha.automation.model.scooter.ScooterWallbox.WallboxException;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +36,9 @@ public class ScooterChargingRule implements Rule {
     private final Watt stopExcess;
     private final Capacity excessStartCharge;
 
+    private final DistanceCalculator distanceCalculator;
+    private final Distance maxDistance;
+
     @Override
     public void evaluate() throws Exception {
         try {
@@ -45,6 +50,13 @@ public class ScooterChargingRule implements Rule {
             }
             if (scooterState == BATTERY_DISCONNECTED) {
                 log.info("Stop charging scooter: Battery is disconnected");
+                wallbox.stopCharging();
+                return;
+            }
+
+            var distance = distanceCalculator.between(wallbox.location, scooter.location());
+            if (distance.isGreaterThan(maxDistance)) {
+                log.info("Stop charging scooter: Scooter is too far ({})", distance);
                 wallbox.stopCharging();
                 return;
             }

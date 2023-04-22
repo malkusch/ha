@@ -61,6 +61,7 @@ electricity:
          balancing-threshold: 0.95
       charging-rule:
          evaluation-rate: PT15m
+         maximum-distance: 15
          minimum-charge:
             start: 0.4
             stop: 0.5

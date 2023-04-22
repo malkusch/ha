@@ -8,6 +8,7 @@ import static de.malkusch.ha.automation.model.scooter.Scooter.State.READY_TO_CHA
 import java.io.IOException;
 
 import de.malkusch.ha.automation.model.electricity.Capacity;
+import de.malkusch.ha.automation.model.geo.Location;
 import de.malkusch.ha.automation.model.scooter.Scooter;
 import de.malkusch.ha.automation.model.scooter.Scooter.State;
 import de.malkusch.niu.Niu;
@@ -45,5 +46,12 @@ final class NiuScooterApi implements Scooter.Api {
                 return READY_TO_CHARGE;
             }
         }
+    }
+
+    @Override
+    public Location location() throws IOException {
+        var vehicle = api.vehicle(serialNumber);
+        var location = new Location(vehicle.position().lat(), vehicle.position().lng());
+        return location;
     }
 }

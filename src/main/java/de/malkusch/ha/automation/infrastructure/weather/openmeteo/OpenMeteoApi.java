@@ -14,11 +14,11 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import de.malkusch.ha.automation.infrastructure.LocationProperties;
 import de.malkusch.ha.automation.infrastructure.weather.openmeteo.OpenMeteoApi.Forecast.Daily;
 import de.malkusch.ha.automation.infrastructure.weather.openmeteo.OpenMeteoApi.Forecast.Hourly;
 import de.malkusch.ha.automation.model.Temperature;
 import de.malkusch.ha.automation.model.electricity.ElectricityPredictionService.SolarIrradianceForecast.Irradiance;
+import de.malkusch.ha.automation.model.geo.Location;
 import de.malkusch.ha.automation.model.weather.WindSpeed;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
 import lombok.extern.slf4j.Slf4j;
@@ -28,17 +28,16 @@ import lombok.extern.slf4j.Slf4j;
 final class OpenMeteoApi {
 
     private final HttpClient http;
-    private final LocationProperties locationProperties;
+    private final Location location;
     private final ObjectMapper mapper;
     private final TimeZone timeZone = TimeZone.getDefault();
 
     private static final String BASE_URL = "https://api.open-meteo.com/v1/forecast";
 
-    OpenMeteoApi(HttpClient http, LocationProperties locationProperties, ObjectMapper mapper)
-            throws IOException, InterruptedException {
+    OpenMeteoApi(HttpClient http, Location location, ObjectMapper mapper) throws IOException, InterruptedException {
 
         this.http = http;
-        this.locationProperties = locationProperties;
+        this.location = location;
         this.mapper = mapper;
     }
 
@@ -46,8 +45,8 @@ final class OpenMeteoApi {
 
     public Forecast fetchForecast(int pastDays) throws IOException, InterruptedException {
         var url = BASE_URL //
-                + "?latitude=" + locationProperties.latitude //
-                + "&longitude=" + locationProperties.longitude //
+                + "?latitude=" + location.latitude() //
+                + "&longitude=" + location.longitude() //
                 + "&daily=temperature_2m_max,shortwave_radiation_sum" //
                 + "&hourly=windspeed_10m,windgusts_10m" //
                 + "&timezone=" + timeZone.getID() //

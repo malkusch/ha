@@ -6,6 +6,7 @@ import static de.malkusch.ha.automation.model.scooter.Scooter.State.OFFLINE;
 import java.io.IOException;
 
 import de.malkusch.ha.automation.model.electricity.Capacity;
+import de.malkusch.ha.automation.model.geo.Location;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -17,6 +18,12 @@ public final class Scooter {
         Capacity charge() throws IOException;
 
         State state() throws IOException;
+
+        Location location() throws IOException;
+    }
+
+    public Location location() throws IOException {
+        return api.location();
     }
 
     public static enum State {

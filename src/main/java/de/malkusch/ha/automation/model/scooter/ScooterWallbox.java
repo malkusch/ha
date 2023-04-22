@@ -5,6 +5,7 @@ import static de.malkusch.ha.automation.model.scooter.Scooter.State.READY_TO_CHA
 import java.io.IOException;
 
 import de.malkusch.ha.automation.model.electricity.Capacity;
+import de.malkusch.ha.automation.model.geo.Location;
 import de.malkusch.ha.automation.model.scooter.Scooter.ScooterException;
 import de.malkusch.ha.automation.model.scooter.ScooterWallbox.WallboxException.Error;
 import de.malkusch.ha.shared.infrastructure.CoolDown;
@@ -27,10 +28,14 @@ public final class ScooterWallbox {
     }
 
     private final Scooter scooter;
+    public final Location location;
     private final Capacity balancingThreshold;
     private final CoolDown coolDown;
 
-    public ScooterWallbox(Api api, Scooter scooter, CoolDown coolDown, Capacity balancingThreshold) throws IOException {
+    public ScooterWallbox(Location location, Api api, Scooter scooter, CoolDown coolDown, Capacity balancingThreshold)
+            throws IOException {
+
+        this.location = location;
         this.api = api;
         this.scooter = scooter;
 

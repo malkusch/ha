@@ -24,17 +24,14 @@ import de.malkusch.ha.automation.model.astronomy.AstronomicalEvent.NauticalSunri
 import de.malkusch.ha.automation.model.astronomy.AstronomicalEvent.NauticalSunsetStarted;
 import de.malkusch.ha.automation.model.astronomy.Astronomy;
 import de.malkusch.ha.automation.model.astronomy.Azimuth;
+import de.malkusch.ha.automation.model.geo.Location;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 class CommonsSunCalcAstronomy implements Astronomy {
 
-    private final double latitude;
-    private final double longitude;
-
-    CommonsSunCalcAstronomy(LocationProperties locationProperties) {
-        this.latitude = Double.valueOf(locationProperties.latitude);
-        this.longitude = Double.valueOf(locationProperties.longitude);
-    }
+    private final Location location;
 
     @Override
     public List<AstronomicalEvent> calculateEvents(ZonedDateTime date) {
@@ -49,7 +46,12 @@ class CommonsSunCalcAstronomy implements Astronomy {
     }
 
     private SunTimes calculate(Twilight twilight, ZonedDateTime date) {
-        return SunTimes.compute().on(date).latitude(latitude).longitude(longitude).twilight(twilight).execute();
+        return SunTimes.compute() //
+                .on(date) //
+                .latitude(location.latitude()) //
+                .longitude(location.longitude()) //
+                .twilight(twilight) //
+                .execute();
     }
 
     @Override
@@ -59,7 +61,11 @@ class CommonsSunCalcAstronomy implements Astronomy {
 
         var passedZero = false;
         for (var time = start; time.isBefore(end); time = time.plusMinutes(15)) {
-            var position = SunPosition.compute().on(time).latitude(latitude).longitude(longitude).execute();
+            var position = SunPosition.compute() //
+                    .on(time) //
+                    .latitude(location.latitude()) //
+                    .longitude(location.longitude()) //
+                    .execute();
             if (!passedZero) {
                 if (position.getAzimuth() <= azimuth.angle()) {
                     passedZero = true;

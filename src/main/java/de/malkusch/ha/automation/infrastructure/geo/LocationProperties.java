@@ -1,4 +1,4 @@
-package de.malkusch.ha.automation.infrastructure;
+package de.malkusch.ha.automation.infrastructure.geo;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
