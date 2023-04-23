@@ -46,6 +46,11 @@ public final class ScooterWallbox {
         this.balancingThreshold = balancingThreshold;
     }
 
+    public boolean isCharging() throws IOException, WallboxException {
+        assertOnline();
+        return api.isCharging();
+    }
+
     public void startCharging() throws IOException, WallboxException {
         assertOnline();
 

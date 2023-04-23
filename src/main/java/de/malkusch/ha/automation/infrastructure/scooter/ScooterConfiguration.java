@@ -12,13 +12,8 @@ import de.malkusch.ha.automation.infrastructure.socket.OfflineSocket;
 import de.malkusch.ha.automation.infrastructure.socket.Socket;
 import de.malkusch.ha.automation.infrastructure.socket.TuyaSocket;
 import de.malkusch.ha.automation.model.electricity.Capacity;
-import de.malkusch.ha.automation.model.electricity.Electricity;
-import de.malkusch.ha.automation.model.electricity.Watt;
-import de.malkusch.ha.automation.model.geo.Distance;
-import de.malkusch.ha.automation.model.geo.DistanceCalculator;
 import de.malkusch.ha.automation.model.geo.Location;
 import de.malkusch.ha.automation.model.scooter.Scooter;
-import de.malkusch.ha.automation.model.scooter.ScooterChargingRule;
 import de.malkusch.ha.automation.model.scooter.ScooterWallbox;
 import de.malkusch.ha.automation.model.scooter.ScooterWallbox.Api;
 import de.malkusch.ha.shared.infrastructure.CoolDown;
@@ -140,27 +135,5 @@ public class ScooterConfiguration {
         var balancingThreshold = new Capacity(scooterProperties.wallbox.balancingThreshold);
         var coolDown = new CoolDown(scooterProperties.wallbox.coolDown);
         return new ScooterWallbox(location, tuya(), scooter(), coolDown, balancingThreshold);
-    }
-
-    private final DistanceCalculator distanceCalculator;
-
-    @Bean
-    ScooterChargingRule scooterChargingRule(Electricity electricity) throws IOException {
-        var properties = scooterProperties.chargingRule;
-        var evaluationRate = properties.evaluationRate;
-        var minimumStartCharge = new Capacity(properties.minimumCharge.start);
-        var minimumStopCharge = new Capacity(properties.minimumCharge.stop);
-        var maximumCharge = new Capacity(properties.maximumCharge);
-
-        var excessWindow = properties.excessCharging.window;
-        var startExcess = new Watt(properties.excessCharging.startExcess);
-        var stopExcess = new Watt(properties.excessCharging.stopExcess);
-        var excessStartCharge = new Capacity(properties.excessCharging.startCharge);
-
-        var maxDistance = new Distance(properties.maximumDistance);
-
-        return new ScooterChargingRule(evaluationRate, minimumStartCharge, minimumStopCharge, maximumCharge, scooter(),
-                scooterWallbox(), electricity, excessWindow, startExcess, stopExcess, excessStartCharge,
-                distanceCalculator, maxDistance);
     }
 }
