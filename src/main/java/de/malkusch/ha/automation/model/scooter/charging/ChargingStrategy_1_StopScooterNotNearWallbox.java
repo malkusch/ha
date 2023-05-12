@@ -43,6 +43,6 @@ final class ChargingStrategy_1_StopScooterNotNearWallbox extends ChargingStrateg
 
     @Override
     public String toString() {
-        return String.format("%s(<%s)", getClass().getSimpleName(), maxDistance);
+        return String.format("%s(>%s)", getClass().getSimpleName(), maxDistance);
     }
 }

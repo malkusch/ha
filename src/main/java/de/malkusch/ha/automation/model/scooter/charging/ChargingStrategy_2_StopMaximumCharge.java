@@ -34,6 +34,6 @@ final class ChargingStrategy_2_StopMaximumCharge extends ChargingStrategy {
 
     @Override
     public String toString() {
-        return String.format("%s(<%s)", getClass().getSimpleName(), maximumCharge);
+        return String.format("%s(>=%s)", getClass().getSimpleName(), maximumCharge);
     }
 }

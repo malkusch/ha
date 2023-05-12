@@ -42,6 +42,6 @@ final class ChargingStrategy_3_StartMinimumCharge extends ChargingStrategy {
 
     @Override
     public String toString() {
-        return String.format("%s(<%s - <%s)", getClass().getSimpleName(), minimumStartCharge, minimumStopCharge);
+        return String.format("%s(<[%s; %s])", getClass().getSimpleName(), minimumStartCharge, minimumStopCharge);
     }
 }
