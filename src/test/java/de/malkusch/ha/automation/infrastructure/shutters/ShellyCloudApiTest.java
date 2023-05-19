@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.malkusch.ha.automation.model.shutters.Shutter.Api;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
+import de.malkusch.ha.shared.infrastructure.http.HttpClient.Field;
 import de.malkusch.ha.shared.infrastructure.http.HttpResponse;
 
 @ExtendWith(MockitoExtension.class)
@@ -43,7 +44,7 @@ public class ShellyCloudApiTest {
     @ParameterizedTest
     @CsvSource({ "open,0", "open,100", "stop,100" })
     public void stateShouldReturnOpen(String state, int current_pos) throws Exception {
-        when(http.post(eq(ANY_HOST + "/device/status"), any())).thenReturn(statusResponse(state, current_pos));
+        when(http.post(eq(ANY_HOST + "/device/status"), any(Field[].class))).thenReturn(statusResponse(state, current_pos));
 
         var result = api.state();
 
@@ -53,7 +54,7 @@ public class ShellyCloudApiTest {
     @ParameterizedTest
     @CsvSource({ "close,0", "close,100", "stop,0" })
     public void stateShouldReturnClosed(String state, int current_pos) throws Exception {
-        when(http.post(eq(ANY_HOST + "/device/status"), any())).thenReturn(statusResponse(state, current_pos));
+        when(http.post(eq(ANY_HOST + "/device/status"), any(Field[].class))).thenReturn(statusResponse(state, current_pos));
 
         var result = api.state();
 
@@ -63,7 +64,7 @@ public class ShellyCloudApiTest {
     @ParameterizedTest
     @CsvSource({ "stop,1", "stop,99" })
     public void stateShouldReturnHalfClosed(String state, int current_pos) throws Exception {
-        when(http.post(eq(ANY_HOST + "/device/status"), any())).thenReturn(statusResponse(state, current_pos));
+        when(http.post(eq(ANY_HOST + "/device/status"), any(Field[].class))).thenReturn(statusResponse(state, current_pos));
 
         var result = api.state();
 
@@ -72,35 +73,35 @@ public class ShellyCloudApiTest {
 
     @Test
     public void shouldOpen() throws Exception {
-        when(http.post(eq(ANY_HOST + "/device/relay/roller/control"), any())).thenReturn(response("""
+        when(http.post(eq(ANY_HOST + "/device/relay/roller/control"), any(Field[].class))).thenReturn(response("""
                 {"isok":true,"data":{"device_id":"e8db84aaccd6"}}
                                 """));
 
         api.setState(OPEN);
 
-        verify(http).post(eq(ANY_HOST + "/device/relay/roller/control"), any());
+        verify(http).post(eq(ANY_HOST + "/device/relay/roller/control"), any(Field[].class));
     }
 
     @Test
     public void shouldClose() throws Exception {
-        when(http.post(eq(ANY_HOST + "/device/relay/roller/control"), any())).thenReturn(response("""
+        when(http.post(eq(ANY_HOST + "/device/relay/roller/control"), any(Field[].class))).thenReturn(response("""
                 {"isok":true,"data":{"device_id":"e8db84aaccd6"}}
                 """));
 
         api.setState(CLOSED);
 
-        verify(http).post(eq(ANY_HOST + "/device/relay/roller/control"), any());
+        verify(http).post(eq(ANY_HOST + "/device/relay/roller/control"), any(Field[].class));
     }
 
     @Test
     public void shouldHalfOpen() throws Exception {
-        when(http.post(eq(ANY_HOST + "/device/relay/roller/settings/topos"), any())).thenReturn(response("""
+        when(http.post(eq(ANY_HOST + "/device/relay/roller/settings/topos"), any(Field[].class))).thenReturn(response("""
                 {"isok":true,"data":{"device_id":"e8db84aaccd6"}}
                                 """));
 
         api.setState(new Api.State(50));
 
-        verify(http).post(eq(ANY_HOST + "/device/relay/roller/settings/topos"), any());
+        verify(http).post(eq(ANY_HOST + "/device/relay/roller/settings/topos"), any(Field[].class));
     }
 
     private static final String STATUS_TEMPLATE = """
