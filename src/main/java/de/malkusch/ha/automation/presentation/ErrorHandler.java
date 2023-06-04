@@ -1,5 +1,6 @@
 package de.malkusch.ha.automation.presentation;
 
+import static de.malkusch.ha.shared.infrastructure.DateUtil.formatTime;
 import static org.springframework.http.HttpStatus.BAD_GATEWAY;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.TOO_MANY_REQUESTS;
@@ -40,6 +41,6 @@ final class ErrorHandler {
     @ResponseStatus(TOO_MANY_REQUESTS)
     @ResponseBody
     public String apiError(CoolDownException error) {
-        return String.format("Too many requests. Try again after %s", error.retryAfter);
+        return String.format("Too many requests. Try again after %s", formatTime(error.retryAfter));
     }
 }

@@ -1,5 +1,6 @@
 package de.malkusch.ha.automation.application.scooter;
 
+import java.io.IOException;
 import java.util.concurrent.Callable;
 
 import org.springframework.stereotype.Service;
@@ -7,16 +8,26 @@ import org.springframework.stereotype.Service;
 import de.malkusch.ha.automation.infrastructure.socket.Socket;
 import de.malkusch.ha.automation.model.scooter.Scooter;
 import de.malkusch.ha.automation.model.scooter.ScooterWallbox;
+import de.malkusch.ha.automation.model.scooter.ScooterWallbox.WallboxException;
+import de.malkusch.ha.shared.infrastructure.CoolDown.CoolDownException;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public final class GetScooterChargingStateApplicationService {
+public final class ScooterChargingApplicationService {
 
     private final ScooterWallbox wallbox;
     private final ScooterWallbox.Api wallboxApi;
     private final Socket wallboxSocket;
     private final Scooter scooter;
+
+    public void startCharging() throws IOException, WallboxException, CoolDownException {
+        wallbox.startCharging();
+    }
+
+    public void stopCharging() throws IOException, WallboxException, CoolDownException {
+        wallbox.stopCharging();
+    }
 
     public ChargingState getChargingState() {
         var wallboxOnline = wallboxApi.isOnline();

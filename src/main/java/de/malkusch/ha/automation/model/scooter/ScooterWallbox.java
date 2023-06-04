@@ -9,6 +9,7 @@ import de.malkusch.ha.automation.model.geo.Location;
 import de.malkusch.ha.automation.model.scooter.Scooter.ScooterException;
 import de.malkusch.ha.automation.model.scooter.ScooterWallbox.WallboxException.Error;
 import de.malkusch.ha.shared.infrastructure.CoolDown;
+import de.malkusch.ha.shared.infrastructure.CoolDown.CoolDownException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -50,7 +51,7 @@ public final class ScooterWallbox {
         return api.isCharging();
     }
 
-    public void startCharging() throws IOException, WallboxException {
+    public void startCharging() throws IOException, WallboxException, CoolDownException {
         assertOnline();
 
         if (scooter.state() != READY_TO_CHARGE) {
@@ -62,7 +63,7 @@ public final class ScooterWallbox {
             return;
         }
 
-        coolDown.withSilentCoolDown(() -> {
+        coolDown.withCoolDown(() -> {
             log.debug("Start charging");
             api.start();
             if (!api.isCharging()) {
@@ -72,7 +73,7 @@ public final class ScooterWallbox {
         });
     }
 
-    public void stopCharging() throws IOException, WallboxException {
+    public void stopCharging() throws IOException, WallboxException, CoolDownException {
         assertOnline();
 
         if (!api.isCharging()) {
@@ -85,7 +86,7 @@ public final class ScooterWallbox {
             return;
         }
 
-        coolDown.withSilentCoolDown(() -> {
+        coolDown.withCoolDown(() -> {
             log.debug("Stop charging");
             api.stop();
             if (api.isCharging()) {

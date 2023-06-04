@@ -1,5 +1,6 @@
 package de.malkusch.ha.automation.model.scooter.charging;
 
+import static de.malkusch.ha.shared.infrastructure.DateUtil.formatTime;
 import static java.util.Collections.sort;
 import static java.util.Collections.unmodifiableList;
 
@@ -18,6 +19,7 @@ import de.malkusch.ha.automation.model.scooter.charging.ChargingStrategy.Evaluat
 import de.malkusch.ha.automation.model.scooter.charging.ChargingStrategy.Evaluation.Reason;
 import de.malkusch.ha.automation.model.scooter.charging.ChargingStrategy.Evaluation.Request;
 import de.malkusch.ha.automation.model.scooter.charging.ContextFactory.Context;
+import de.malkusch.ha.shared.infrastructure.CoolDown.CoolDownException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -64,6 +66,9 @@ public final class ChargingRule implements Rule {
 
         } catch (ScooterException e) {
             log.warn("Ignore scooter charging automation: {}", e.error);
+
+        } catch (CoolDownException e) {
+            log.warn("Cooldown scooter charging automation until: {}", formatTime(e.retryAfter));
         }
     }
 
