@@ -10,6 +10,9 @@ public record Distance(double meter) {
 
     @Override
     public String toString() {
+        if (meter >= 1000) {
+            return String.format("%.2f km", meter / 1000);
+        }
         return String.format("%.2f m", meter);
     }
 

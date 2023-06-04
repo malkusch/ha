@@ -6,6 +6,7 @@ import java.util.concurrent.Callable;
 import org.springframework.stereotype.Service;
 
 import de.malkusch.ha.automation.infrastructure.socket.Socket;
+import de.malkusch.ha.automation.model.geo.DistanceCalculator;
 import de.malkusch.ha.automation.model.scooter.BalancingService;
 import de.malkusch.ha.automation.model.scooter.Scooter;
 import de.malkusch.ha.automation.model.scooter.ScooterWallbox;
@@ -22,6 +23,7 @@ public final class ScooterChargingApplicationService {
     private final ScooterWallbox.Api wallboxApi;
     private final Socket wallboxSocket;
     private final Scooter scooter;
+    private final DistanceCalculator distanceCalculator;
 
     public void startCharging() throws IOException, WallboxException, CoolDownException {
         wallbox.startCharging();
@@ -38,12 +40,13 @@ public final class ScooterChargingApplicationService {
         var scooterState = query(scooter::state);
         var charge = query(scooter::charge);
         var lastBalancing = query(balancingService::lastBalancing);
+        var distance = query(() -> distanceCalculator.between(wallbox.location, scooter.location()));
 
-        return new ChargingState(wallboxOnline, socket, charging, scooterState, charge, lastBalancing);
+        return new ChargingState(wallboxOnline, socket, charging, scooterState, charge, lastBalancing, distance);
     }
 
     public static record ChargingState(boolean wallboxOnline, String socket, String charging, String scooterState,
-            String charge, String lastBalancing) {
+            String charge, String lastBalancing, String distance) {
     }
 
     private static String query(Callable<Object> query) {
