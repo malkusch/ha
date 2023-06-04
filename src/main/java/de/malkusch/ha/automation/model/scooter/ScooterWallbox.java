@@ -47,13 +47,13 @@ public final class ScooterWallbox {
     public void startCharging() throws IOException, WallboxException, CoolDownException {
         assertOnline();
 
-        if (scooter.state() != READY_TO_CHARGE) {
-            throw SCOOTER_NOT_READY_TO_CHARGE;
-        }
-
         if (api.isCharging()) {
             log.debug("Already charging");
             return;
+        }
+
+        if (scooter.state() != READY_TO_CHARGE) {
+            throw SCOOTER_NOT_READY_TO_CHARGE;
         }
 
         coolDown.withCoolDown(() -> {
