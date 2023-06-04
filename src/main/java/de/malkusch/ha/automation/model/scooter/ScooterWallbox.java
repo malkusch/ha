@@ -9,7 +9,6 @@ import de.malkusch.ha.automation.model.geo.Location;
 import de.malkusch.ha.automation.model.scooter.Scooter.ScooterException;
 import de.malkusch.ha.automation.model.scooter.ScooterWallbox.WallboxException.Error;
 import de.malkusch.ha.shared.infrastructure.CoolDown;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -106,7 +105,6 @@ public final class ScooterWallbox {
         }
     }
 
-    @RequiredArgsConstructor
     public static class WallboxException extends Exception {
         private static final long serialVersionUID = 5845898922927989990L;
 
@@ -114,6 +112,11 @@ public final class ScooterWallbox {
 
         public static enum Error {
             WALLBOX_OFFLINE, BATTERY_NOT_CONNECTED, SCOOTER_NOT_READY_TO_CHARGE
+        }
+
+        WallboxException(Error error) {
+            super(error.toString());
+            this.error = error;
         }
     }
 

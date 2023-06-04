@@ -38,4 +38,9 @@ public class TuyaSocket implements Socket, AutoCloseable {
     public void close() throws Exception {
         tuya.close();
     }
+    
+    @Override
+    public String toString() {
+        return "TuyaSocket";
+    }
 }

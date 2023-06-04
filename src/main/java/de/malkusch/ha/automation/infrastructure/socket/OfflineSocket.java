@@ -72,6 +72,11 @@ public class OfflineSocket implements Socket {
         public boolean isOnline() {
             return false;
         }
+
+        @Override
+        public String toString() {
+            return "NULL_SOCKET";
+        }
     }
 
     @Override
@@ -97,5 +102,10 @@ public class OfflineSocket implements Socket {
     @Override
     public boolean isOnline() {
         return socket.isOnline();
+    }
+
+    @Override
+    public String toString() {
+        return socket.toString();
     }
 }
