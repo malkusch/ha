@@ -97,8 +97,16 @@ public class ScooterConfiguration {
 
             @Data
             public static class Balancing {
-                private Duration interval;
-                private double kilometers;
+
+                private double earlyStartCharge;
+                private Interval earliest;
+                private Interval latest;
+
+                @Data
+                public static class Interval {
+                    private Duration interval;
+                    private double kilometers;
+                }
             }
         }
     }
