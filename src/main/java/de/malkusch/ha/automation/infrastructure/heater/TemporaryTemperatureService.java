@@ -64,6 +64,16 @@ public final class TemporaryTemperatureService implements AutoCloseable {
         }
     }
 
+    public boolean isChanged() {
+        synchronized (lock) {
+            return changed;
+        }
+    }
+
+    public Temperature resetTemperature() {
+        return resetTemperature;
+    }
+
     public void close() throws Exception {
         resetTemporaryHeaterTemperature();
     }
