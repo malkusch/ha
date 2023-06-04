@@ -6,6 +6,7 @@ import java.util.concurrent.Callable;
 import org.springframework.stereotype.Service;
 
 import de.malkusch.ha.automation.infrastructure.socket.Socket;
+import de.malkusch.ha.automation.model.scooter.BalancingService;
 import de.malkusch.ha.automation.model.scooter.Scooter;
 import de.malkusch.ha.automation.model.scooter.ScooterWallbox;
 import de.malkusch.ha.automation.model.scooter.ScooterWallbox.WallboxException;
@@ -17,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 public final class ScooterChargingApplicationService {
 
     private final ScooterWallbox wallbox;
+    private final BalancingService balancingService;
     private final ScooterWallbox.Api wallboxApi;
     private final Socket wallboxSocket;
     private final Scooter scooter;
@@ -35,12 +37,13 @@ public final class ScooterChargingApplicationService {
         var charging = query(() -> wallbox.isCharging() ? "CHARGING" : "NOT_CHARGING");
         var scooterState = query(scooter::state);
         var charge = query(scooter::charge);
+        var lastBalancing = query(balancingService::lastBalancing);
 
-        return new ChargingState(wallboxOnline, socket, charging, scooterState, charge);
+        return new ChargingState(wallboxOnline, socket, charging, scooterState, charge, lastBalancing);
     }
 
     public static record ChargingState(boolean wallboxOnline, String socket, String charging, String scooterState,
-            String charge) {
+            String charge, String lastBalancing) {
     }
 
     private static String query(Callable<Object> query) {

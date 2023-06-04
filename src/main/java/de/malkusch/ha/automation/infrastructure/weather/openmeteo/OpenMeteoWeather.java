@@ -1,5 +1,6 @@
 package de.malkusch.ha.automation.infrastructure.weather.openmeteo;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -33,5 +34,10 @@ final class OpenMeteoWeather implements Weather {
         return forecast.hourly(LocalDateTime.now()) //
                 .map(Hourly::windspeed) //
                 .orElseThrow();
+    }
+
+    @Override
+    public Instant lastUpdate() {
+        return forecastFactory.forecast().timestamp();
     }
 }

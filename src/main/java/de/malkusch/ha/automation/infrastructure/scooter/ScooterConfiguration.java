@@ -8,11 +8,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
+import de.malkusch.ha.automation.infrastructure.prometheus.Prometheus;
 import de.malkusch.ha.automation.infrastructure.socket.OfflineSocket;
 import de.malkusch.ha.automation.infrastructure.socket.Socket;
 import de.malkusch.ha.automation.infrastructure.socket.TuyaSocket;
-import de.malkusch.ha.automation.model.electricity.Capacity;
 import de.malkusch.ha.automation.model.geo.Location;
+import de.malkusch.ha.automation.model.scooter.BalancingService;
 import de.malkusch.ha.automation.model.scooter.Scooter;
 import de.malkusch.ha.automation.model.scooter.ScooterWallbox;
 import de.malkusch.ha.automation.model.scooter.ScooterWallbox.Api;
@@ -47,7 +48,6 @@ public class ScooterConfiguration {
         @Data
         public static class Wallbox {
             private Duration coolDown;
-            private double balancingThreshold;
 
             private Socket tuyaSocket;
 
@@ -57,6 +57,14 @@ public class ScooterConfiguration {
                 private Duration expiration;
                 private String deviceId;
                 private String localKey;
+            }
+
+            private Balancing balancing;
+
+            @Data
+            public static class Balancing {
+                private Duration duration;
+                private Duration searchWindow;
             }
         }
 
@@ -83,6 +91,14 @@ public class ScooterConfiguration {
                 private double startExcess;
                 private double stopExcess;
                 private double startCharge;
+            }
+
+            private Balancing balancing;
+
+            @Data
+            public static class Balancing {
+                private Duration interval;
+                private double kilometers;
             }
         }
     }
@@ -132,8 +148,16 @@ public class ScooterConfiguration {
 
     @Bean
     ScooterWallbox scooterWallbox() throws IOException {
-        var balancingThreshold = new Capacity(scooterProperties.wallbox.balancingThreshold);
         var coolDown = new CoolDown(scooterProperties.wallbox.coolDown);
-        return new ScooterWallbox(location, tuya(), scooter(), coolDown, balancingThreshold);
+        return new ScooterWallbox(location, tuya(), scooter(), coolDown);
+    }
+
+    private final Prometheus prometheus;
+
+    @Bean
+    BalancingService.Api balancingServiceApi() throws IOException {
+        var balancingDuration = scooterProperties.wallbox.balancing.duration;
+        var searchWindow = scooterProperties.wallbox.balancing.searchWindow;
+        return new PrometheusBalancingApi(prometheus, balancingDuration, searchWindow);
     }
 }

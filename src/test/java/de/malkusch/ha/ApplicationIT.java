@@ -7,6 +7,8 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -44,7 +46,8 @@ public class ApplicationIT {
         @Primary
         public Prometheus prometheus() throws ApiException, InterruptedException {
             var api = mock(Prometheus.class);
-            when(api.query(any(), any())).thenReturn(new BigDecimal(1));
+            when(api.query(any(), any(Instant.class))).thenReturn(new BigDecimal(1));
+            when(api.query(any(), any(LocalDate.class))).thenReturn(new BigDecimal(1));
             when(api.query(any())).thenReturn(new BigDecimal(1));
             return api;
         }

@@ -4,6 +4,7 @@ import static java.util.Locale.ENGLISH;
 
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 
 import de.malkusch.ha.automation.infrastructure.prometheus.Prometheus.AggregationQuery.Aggregation;
@@ -12,10 +13,10 @@ import de.malkusch.ha.shared.model.ApiException;
 public interface Prometheus {
 
     BigDecimal query(Query query, LocalDate end) throws ApiException, InterruptedException;
-    
-    default BigDecimal query(Query query) throws ApiException, InterruptedException {
-        return query(query, null);
-    }
+
+    BigDecimal query(Query query, Instant time) throws ApiException, InterruptedException;
+
+    BigDecimal query(Query query) throws ApiException, InterruptedException;
 
     public static interface Query {
         String promQL();

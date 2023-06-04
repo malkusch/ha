@@ -13,10 +13,10 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-final class ChargingStrategy_4_StartExcessCharging extends ChargingStrategy {
+final class ChargingStrategy_5_StartExcessCharging extends ChargingStrategy {
 
     @Autowired
-    ChargingStrategy_4_StartExcessCharging(ScooterProperties properties) {
+    ChargingStrategy_5_StartExcessCharging(ScooterProperties properties) {
         this(new Capacity(properties.getChargingRule().getExcessCharging().getStartCharge()),
                 new Watt(properties.getChargingRule().getExcessCharging().getStartExcess()));
     }

@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 public final class WindProtectionService<T extends Shutter> {
 
     private final WindSpeed releaseThreshold;
-    private final WindSpeed protectThreshold;
+    public final WindSpeed protectThreshold;
     private final State protection;
     private final Duration lockDuration;
 

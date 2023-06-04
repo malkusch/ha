@@ -13,10 +13,10 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-final class ChargingStrategy_3_StartMinimumCharge extends ChargingStrategy {
+final class ChargingStrategy_4_StartMinimumCharge extends ChargingStrategy {
 
     @Autowired
-    ChargingStrategy_3_StartMinimumCharge(ScooterProperties properties) {
+    ChargingStrategy_4_StartMinimumCharge(ScooterProperties properties) {
         this(new Capacity(properties.getChargingRule().getMinimumCharge().getStart()),
                 new Capacity(properties.getChargingRule().getMinimumCharge().getStop()));
     }

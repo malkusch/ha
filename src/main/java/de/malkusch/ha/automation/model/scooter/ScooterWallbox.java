@@ -4,9 +4,7 @@ import static de.malkusch.ha.automation.model.scooter.Scooter.State.READY_TO_CHA
 
 import java.io.IOException;
 
-import de.malkusch.ha.automation.model.electricity.Capacity;
 import de.malkusch.ha.automation.model.geo.Location;
-import de.malkusch.ha.automation.model.scooter.Scooter.ScooterException;
 import de.malkusch.ha.automation.model.scooter.ScooterWallbox.WallboxException.Error;
 import de.malkusch.ha.shared.infrastructure.CoolDown;
 import de.malkusch.ha.shared.infrastructure.CoolDown.CoolDownException;
@@ -29,11 +27,9 @@ public final class ScooterWallbox {
 
     private final Scooter scooter;
     public final Location location;
-    private final Capacity balancingThreshold;
     private final CoolDown coolDown;
 
-    public ScooterWallbox(Location location, Api api, Scooter scooter, CoolDown coolDown, Capacity balancingThreshold)
-            throws IOException {
+    public ScooterWallbox(Location location, Api api, Scooter scooter, CoolDown coolDown) throws IOException {
 
         this.location = location;
         this.api = api;
@@ -41,9 +37,6 @@ public final class ScooterWallbox {
 
         log.info("Wallbox switch cool down: {}", coolDown);
         this.coolDown = coolDown;
-
-        log.info("Wallbox balancing threshold is {}", balancingThreshold);
-        this.balancingThreshold = balancingThreshold;
     }
 
     public boolean isCharging() throws IOException, WallboxException {
@@ -81,11 +74,6 @@ public final class ScooterWallbox {
             return;
         }
 
-        if (isBalancing()) {
-            log.debug("Can't stop while balancing");
-            return;
-        }
-
         coolDown.withCoolDown(() -> {
             log.debug("Stop charging");
             api.stop();
@@ -96,23 +84,13 @@ public final class ScooterWallbox {
         });
     }
 
-    private boolean isBalancing() throws IOException {
-        try {
-            return scooter.charge().isGreaterThanOrEquals(balancingThreshold);
-
-        } catch (ScooterException e) {
-            log.warn("Can't get Scooter charge ({}), assuming no balancing", e.error);
-            return false;
-        }
-    }
-
     public static class WallboxException extends Exception {
         private static final long serialVersionUID = 5845898922927989990L;
 
         public final Error error;
 
         public static enum Error {
-            WALLBOX_OFFLINE, BATTERY_NOT_CONNECTED, SCOOTER_NOT_READY_TO_CHARGE
+            WALLBOX_OFFLINE, BATTERY_NOT_CONNECTED, SCOOTER_NOT_READY_TO_CHARGE, CANT_STOP_BALANCING
         }
 
         WallboxException(Error error) {

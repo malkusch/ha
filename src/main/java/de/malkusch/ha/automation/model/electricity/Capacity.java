@@ -22,6 +22,10 @@ public final class Capacity {
         return value >= other.value;
     }
 
+    public boolean isFull() {
+        return value >= 0.99999999999999999;
+    }
+
     @Override
     public String toString() {
         return String.format("%.2f%%", value * 100);

@@ -3,6 +3,7 @@ package de.malkusch.ha.automation.infrastructure.weather.openmeteo;
 import static java.time.temporal.ChronoUnit.HOURS;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -81,7 +82,7 @@ final class OpenMeteoApi {
             hourlies.put(time, hourly);
         }
 
-        return new Forecast(dailies, hourlies);
+        return new Forecast(Instant.now(), dailies, hourlies);
     }
 
     private static record ForecastResponse(Daily daily, Hourly hourly, String timezone, double latitude,
@@ -94,7 +95,7 @@ final class OpenMeteoApi {
         }
     }
 
-    static record Forecast(Map<LocalDate, Daily> daily, Map<LocalDateTime, Hourly> hourly) {
+    static record Forecast(Instant timestamp, Map<LocalDate, Daily> daily, Map<LocalDateTime, Hourly> hourly) {
         static record Daily(Temperature highestDailyTemperature, Irradiance globalIrradiance) {
         }
 

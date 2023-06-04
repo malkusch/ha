@@ -7,6 +7,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URLEncoder;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -26,13 +27,27 @@ public final class PrometheusHttpClient implements Prometheus {
     private final ObjectMapper mapper;
     private final String baseUrl;
 
+    @Override
+    public BigDecimal query(Query query, Instant time) throws ApiException, InterruptedException {
+        return query(query, time.getEpochSecond());
+    }
+
+    @Override
     public BigDecimal query(Query query, LocalDate end) throws ApiException, InterruptedException {
+        return query(query, toTimestamp(end));
+    }
+
+    @Override
+    public BigDecimal query(Query query) throws ApiException, InterruptedException {
+        return query(query, 0);
+    }
+
+    private BigDecimal query(Query query, long time) throws ApiException, InterruptedException {
         var promQL = query.promQL();
-        log.debug("Query{}: {}", end == null ? "" : ("@" + end), promQL);
+        log.debug("Query{}: {}", time == 0 ? "" : ("@" + time), promQL);
         var url = baseUrl + "/api/v1/query?query=" + encode(promQL);
 
-        if (end != null) {
-            var time = toTimestamp(end);
+        if (time != 0) {
             url += "&time=" + time;
         }
 
@@ -45,7 +60,7 @@ public final class PrometheusHttpClient implements Prometheus {
             return json.data.result.get(0).value.get(1);
 
         } catch (IOException e) {
-            throw new ApiException("Faild to query " + query, e);
+            throw new ApiException("Failed to query " + query, e);
         }
     }
 

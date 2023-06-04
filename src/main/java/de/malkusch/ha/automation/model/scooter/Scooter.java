@@ -20,6 +20,8 @@ public final class Scooter {
         State state() throws IOException;
 
         Location location() throws IOException;
+
+        Mileage mileage() throws IOException;
     }
 
     public Location location() throws IOException {
@@ -27,7 +29,7 @@ public final class Scooter {
     }
 
     public static enum State {
-        OFFLINE, BATTERY_DISCONNECTED, READY_TO_CHARGE, CHARGING,
+        OFFLINE, BATTERY_DISCONNECTED, READY_TO_CHARGE, CHARGING
     }
 
     public State state() throws IOException {
@@ -40,6 +42,10 @@ public final class Scooter {
         assertBatteryConnected(state);
 
         return api.charge();
+    }
+
+    public Mileage mileage() throws IOException {
+        return api.mileage();
     }
 
     private static final ScooterException SCOOTER_OFFLINE = new ScooterException(

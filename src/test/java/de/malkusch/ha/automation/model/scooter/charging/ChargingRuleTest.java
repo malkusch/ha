@@ -24,6 +24,7 @@ import de.malkusch.ha.automation.model.electricity.Electricity;
 import de.malkusch.ha.automation.model.electricity.Watt;
 import de.malkusch.ha.automation.model.geo.Distance;
 import de.malkusch.ha.automation.model.geo.DistanceCalculator;
+import de.malkusch.ha.automation.model.scooter.BalancingService;
 import de.malkusch.ha.automation.model.scooter.Scooter;
 import de.malkusch.ha.automation.model.scooter.Scooter.State;
 import de.malkusch.ha.automation.model.scooter.ScooterWallbox;
@@ -34,6 +35,9 @@ public class ChargingRuleTest {
 
     @Mock
     ScooterWallbox wallbox;
+
+    @Mock
+    BalancingService balancingService;
 
     @Mock
     Scooter scooter;
@@ -52,13 +56,13 @@ public class ChargingRuleTest {
                 new ChargingStrategy_0_StopScooterStates(),
                 new ChargingStrategy_1_StopScooterNotNearWallbox(scooter, wallbox, distanceCalculator,
                         new Distance(MAX_DISTANCE)),
-                new ChargingStrategy_2_StopMaximumCharge(charge(MAXIMUM_CHARGE)), //
-                new ChargingStrategy_3_StartMinimumCharge(charge(MINIMUM_START_CHARGE), charge(MINIMUM_STOP_CHARGE)), //
-                new ChargingStrategy_4_StartExcessCharging(charge(EXCESS_START_CHARGE), new Watt(EXCESS_START_EXCESS)), //
-                new ChargingStrategy_5_StopExcessCharging(new Watt(STOP_EXCESS))
+                new ChargingStrategy_3_StopMaximumCharge(charge(MAXIMUM_CHARGE)), //
+                new ChargingStrategy_4_StartMinimumCharge(charge(MINIMUM_START_CHARGE), charge(MINIMUM_STOP_CHARGE)), //
+                new ChargingStrategy_5_StartExcessCharging(charge(EXCESS_START_CHARGE), new Watt(EXCESS_START_EXCESS)), //
+                new ChargingStrategy_6_StopExcessCharging(new Watt(STOP_EXCESS))
         //
         );
-        var contextFactory = new ContextFactory(scooter, electricity, ANY_DURATION);
+        var contextFactory = new ContextFactory(scooter, electricity, ANY_DURATION, balancingService);
         rule = new ChargingRule(ANY_DURATION, contextFactory, strategies, wallbox);
     }
 

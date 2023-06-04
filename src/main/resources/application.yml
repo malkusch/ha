@@ -58,9 +58,14 @@ electricity:
             expiration: PT15m
             discover-cron: 59 */30 * * * * # Every half an hour
          cool-down: PT30m
-         balancing-threshold: 0.95
+         balancing:
+            duration: PT6h
+            search-window: P33D
       charging-rule:
          evaluation-rate: PT15m
+         balancing:
+            interval: P30D
+            kilometers: 300
          maximum-distance: 15
          minimum-charge:
             start: 0.4

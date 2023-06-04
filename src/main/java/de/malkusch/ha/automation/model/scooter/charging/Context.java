@@ -13,6 +13,9 @@ import de.malkusch.ha.automation.infrastructure.scooter.ScooterConfiguration.Sco
 import de.malkusch.ha.automation.model.electricity.Capacity;
 import de.malkusch.ha.automation.model.electricity.Electricity;
 import de.malkusch.ha.automation.model.electricity.Watt;
+import de.malkusch.ha.automation.model.scooter.BalancingService;
+import de.malkusch.ha.automation.model.scooter.BalancingService.Balancing;
+import de.malkusch.ha.automation.model.scooter.Mileage;
 import de.malkusch.ha.automation.model.scooter.Scooter;
 import lombok.RequiredArgsConstructor;
 
@@ -23,10 +26,13 @@ final class ContextFactory {
     private final Scooter scooter;
     private final Electricity electricity;
     private final Duration excessWindow;
+    private final BalancingService balancingService;
 
     @Autowired
-    public ContextFactory(Scooter scooter, Electricity electricity, ScooterProperties properties) {
-        this(scooter, electricity, properties.getChargingRule().getExcessCharging().getWindow());
+    public ContextFactory(Scooter scooter, Electricity electricity, ScooterProperties properties,
+            BalancingService balancingService) {
+
+        this(scooter, electricity, properties.getChargingRule().getExcessCharging().getWindow(), balancingService);
     }
 
     Context context() {
@@ -35,6 +41,8 @@ final class ContextFactory {
 
     final class Context {
         final LazyValue<Scooter.State> scooterState = new LazyValue<>(scooter::state);
+        final LazyValue<Balancing> lastBalancing = new LazyValue<>(balancingService::lastBalancing);
+        final LazyValue<Mileage> mileage = new LazyValue<>(scooter::mileage);
         final LazyValue<Capacity> charge = new LazyValue<>(scooter::charge);
         final LazyValue<Watt> recentExcess = new LazyValue<>(() -> electricity.excessProduction(P75, excessWindow));
         final LazyValue<Watt> currentExcess = new LazyValue<>(

@@ -47,6 +47,14 @@ public class DateUtil {
         return TIME_FORMATTER.format(time);
     }
 
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter //
+            .ofPattern("dd.MM.yyyy HH:mm") //
+            .withZone(defaultZone());
+
+    public static String formatDate(Instant time) {
+        return DATE_FORMATTER.format(time);
+    }
+
     private static final PrettyTime DURATION_FORMATTER = PrettyTime.of(ENGLISH);
 
     public static String formatDuration(Duration duration) {
