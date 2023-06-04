@@ -47,4 +47,13 @@ public class HotDayEventListener {
         log.info("Opening {} because direct sun light ended", shutter);
         shutter.open();
     }
+
+    public CloseShuttersConfiguration getCloseConfiguration() throws ApiException, InterruptedException {
+        return new CloseShuttersConfiguration(minimumHighestDailyTemperature.toString(),
+                weather.highestDailyTemperature().toString());
+    }
+
+    public static record CloseShuttersConfiguration(String minimumHighestDailyTemperature,
+            String highestDailyTemperature) {
+    }
 }
