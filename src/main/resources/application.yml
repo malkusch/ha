@@ -60,6 +60,7 @@ electricity:
          cool-down: PT30m
          balancing:
             duration: PT6h
+            charging: PT1h
             search-window: P33D
       charging-rule:
          evaluation-rate: PT15m

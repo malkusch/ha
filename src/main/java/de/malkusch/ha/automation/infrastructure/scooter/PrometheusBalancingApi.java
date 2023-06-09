@@ -21,21 +21,25 @@ import lombok.RequiredArgsConstructor;
 class PrometheusBalancingApi implements BalancingService.Api {
 
     private final Prometheus prometheus;
-    private final Duration balancingDuration;
-    private final Duration searchWindow;
+    private final Configuration configuration;
+
+    static record Configuration(Duration balancingDuration, Duration chargingDuration, Duration searchWindow) {
+    }
 
     private static final Duration RESOLUTION = Duration.ofMinutes(5);
-    private static final Query BALANCING = new SimpleQuery(
-            "(niu_Markus_battery_charge * niu_Markus_battery_isCharging)");
 
     @Override
     public Balancing lastBalancing() throws IOException {
         try {
-            var query = BALANCING //
-                    .subquery(balancingDuration, RESOLUTION) //
-                    .aggregate(MINIMUM)//
-                    .query("timestamp(%s == 100)") //
-                    .subquery(searchWindow, balancingDuration) //
+            var charge = new SimpleQuery("niu_Markus_battery_charge")
+                    .subquery(configuration.balancingDuration, RESOLUTION).aggregate(MINIMUM);
+
+            var charging = new SimpleQuery("niu_Markus_battery_isCharging")
+                    .subquery(configuration.chargingDuration, RESOLUTION).aggregate(MINIMUM);
+
+            var query = new SimpleQuery("(%s * %s) == 100", charge.promQL(), charging.promQL()) //
+                    .query("timestamp(%s)") //
+                    .subquery(configuration.searchWindow, configuration.chargingDuration) //
                     .aggregate(MAXIMUM);
 
             var result = prometheus.query(query);

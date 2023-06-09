@@ -63,6 +63,7 @@ public class ScooterConfiguration {
 
             @Data
             public static class Balancing {
+                private Duration charging;
                 private Duration duration;
                 private Duration searchWindow;
             }
@@ -165,7 +166,9 @@ public class ScooterConfiguration {
     @Bean
     BalancingService.Api balancingServiceApi() throws IOException {
         var balancingDuration = scooterProperties.wallbox.balancing.duration;
+        var chargingDuration = scooterProperties.wallbox.balancing.charging;
         var searchWindow = scooterProperties.wallbox.balancing.searchWindow;
-        return new PrometheusBalancingApi(prometheus, balancingDuration, searchWindow);
+        var configuration = new PrometheusBalancingApi.Configuration(balancingDuration, chargingDuration, searchWindow);
+        return new PrometheusBalancingApi(prometheus, configuration);
     }
 }

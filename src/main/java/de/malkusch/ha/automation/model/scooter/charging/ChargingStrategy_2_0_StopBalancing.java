@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 import de.malkusch.ha.automation.model.scooter.charging.ContextFactory.Context;
 import lombok.RequiredArgsConstructor;
 
- // @Component
+@Component
 @RequiredArgsConstructor
 final class ChargingStrategy_2_0_StopBalancing extends ChargingStrategy {
 
