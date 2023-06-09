@@ -5,12 +5,14 @@ import java.util.concurrent.Callable;
 
 import org.springframework.stereotype.Service;
 
+import de.malkusch.ha.automation.application.scooter.ScooterChargingApplicationService.ChargingState.Balancing;
 import de.malkusch.ha.automation.infrastructure.socket.Socket;
 import de.malkusch.ha.automation.model.geo.DistanceCalculator;
 import de.malkusch.ha.automation.model.scooter.BalancingService;
 import de.malkusch.ha.automation.model.scooter.Scooter;
 import de.malkusch.ha.automation.model.scooter.ScooterWallbox;
 import de.malkusch.ha.automation.model.scooter.ScooterWallbox.WallboxException;
+import de.malkusch.ha.automation.model.scooter.charging.ChargingStrategy_2_1_StartBalancing;
 import de.malkusch.ha.shared.infrastructure.CoolDown.CoolDownException;
 import lombok.RequiredArgsConstructor;
 
@@ -24,6 +26,7 @@ public final class ScooterChargingApplicationService {
     private final Socket wallboxSocket;
     private final Scooter scooter;
     private final DistanceCalculator distanceCalculator;
+    private final ChargingStrategy_2_1_StartBalancing startBalancingRule;
 
     public void startCharging() throws IOException, WallboxException, CoolDownException {
         wallbox.startCharging();
@@ -39,14 +42,22 @@ public final class ScooterChargingApplicationService {
         var charging = query(() -> wallbox.isCharging() ? "CHARGING" : "NOT_CHARGING");
         var scooterState = query(scooter::state);
         var charge = query(scooter::charge);
+        var mileage = query(scooter::mileage);
         var lastBalancing = query(balancingService::lastBalancing);
+        var earliestBalancing = query(() -> startBalancingRule.earliest);
+        var latestBalancing = query(() -> startBalancingRule.latest);
         var distance = query(() -> distanceCalculator.between(wallbox.location, scooter.location()));
 
-        return new ChargingState(wallboxOnline, socket, charging, scooterState, charge, lastBalancing, distance);
+        return new ChargingState(wallboxOnline, socket, charging, scooterState, charge, mileage,
+                new ChargingState.Balancing(lastBalancing, earliestBalancing, latestBalancing), distance);
     }
 
     public static record ChargingState(boolean wallboxOnline, String socket, String charging, String scooterState,
-            String charge, String lastBalancing, String distance) {
+            String charge, String mileage, Balancing balancing, String distance) {
+
+        public static record Balancing(String last, String earliest, String latest) {
+
+        }
     }
 
     private static String query(Callable<Object> query) {

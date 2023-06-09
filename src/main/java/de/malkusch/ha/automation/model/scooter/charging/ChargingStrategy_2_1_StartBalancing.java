@@ -18,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-final class ChargingStrategy_2_1_StartBalancing extends ChargingStrategy {
+public final class ChargingStrategy_2_1_StartBalancing extends ChargingStrategy {
 
     private static record Interval(Duration duration, Kilometers kilometers) {
 
@@ -28,8 +28,8 @@ final class ChargingStrategy_2_1_StartBalancing extends ChargingStrategy {
         }
     }
 
-    private final Interval earliest;
-    private final Interval latest;
+    public final Interval earliest;
+    public  final Interval latest;
     private final Capacity earlyBalancingStartCharge;
 
     @Autowired
