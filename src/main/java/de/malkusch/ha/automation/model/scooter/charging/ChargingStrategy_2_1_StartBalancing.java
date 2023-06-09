@@ -16,7 +16,7 @@ import de.malkusch.ha.automation.model.scooter.Kilometers;
 import de.malkusch.ha.automation.model.scooter.charging.ContextFactory.Context;
 import lombok.RequiredArgsConstructor;
 
-@Component
+ // @Component
 @RequiredArgsConstructor
 final class ChargingStrategy_2_1_StartBalancing extends ChargingStrategy {
 
