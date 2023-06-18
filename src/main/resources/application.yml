@@ -59,7 +59,7 @@ electricity:
             discover-cron: 59 */30 * * * * # Every half an hour
          cool-down: PT30m
          balancing:
-            duration: PT6h
+            duration: PT3h
             charging: PT1h
             search-window: P33D
       charging-rule:
