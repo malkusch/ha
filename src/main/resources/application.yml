@@ -67,11 +67,11 @@ electricity:
          balancing:
             early-start-charge: 0.8
             earliest:
-               interval: P20D
-               kilometers: 200
-            latest:
                interval: P30D
                kilometers: 300
+            latest:
+               interval: P60D
+               kilometers: 500
          maximum-distance: 15
          minimum-charge:
             start: 0.4
