@@ -66,7 +66,7 @@
 		<dependency>
 			<groupId>de.malkusch</groupId>
 			<artifactId>broadlink-bulb-api</artifactId>
-			<version>1.0.2</version>
+			<version>1.0.3</version>
 		</dependency>
 		<dependency>
 			<groupId>de.malkusch.niu</groupId>
