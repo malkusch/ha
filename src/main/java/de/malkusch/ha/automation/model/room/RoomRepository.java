@@ -6,4 +6,6 @@ public interface RoomRepository {
 
     Collection<Room> findAll();
 
+    Room find(RoomId room);
+
 }

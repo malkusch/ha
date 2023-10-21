@@ -18,6 +18,7 @@ dehumidifier:
 room:
    rooms:
       - id: keller
+        lights: []
 shutters:
    shelly:
       url: https://shelly-31-eu.shelly.cloud

@@ -1,5 +1,7 @@
 package de.malkusch.ha.automation.model.room;
 
+import java.util.Collection;
+
 import de.malkusch.ha.automation.model.light.LightId;
 import lombok.RequiredArgsConstructor;
 
@@ -7,11 +9,7 @@ import lombok.RequiredArgsConstructor;
 public final class Room {
 
     public final RoomId id;
-    public final LightId signal;
-
-    public LightId signalLight() {
-        return signal;
-    }
+    final Collection<LightId> roomLights;
 
     @Override
     public String toString() {

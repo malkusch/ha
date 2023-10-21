@@ -4,33 +4,37 @@ prometheus:
    climate:
       outside-prefix: aussen
       rooms:
-         - room: keller
-           prefix: kellerSensors
+      -  room: keller
+         prefix: kellerSensors
 dehumidifier:
    tasmota:
    -  name: keller
       room: keller
       power: 250
       desired-humidity:
-         minimum: 0.40
-         maximum: 0.50
+         minimum: 0.4
+         maximum: 0.5
       url: http://tasmota-1
+theater:
+   room: keller
+   avr:
+      host: denon
 room:
    rooms:
-      - id: keller
-        signal-light: ec:0b:ae:50:f9:c2
+   -  id: keller
+      lights: [light]
 shutters:
    shelly:
       url: https://shelly-31-eu.shelly.cloud
       key: 123abc
       shutters:
-       - id: KUECHENTUER
+      -  id: KUECHENTUER
          device-id: 123abc
          direct-sun-light:
             start: 10
             end: 20
       blinds:
-       - id: WOHNZIMMER_KLEIN
+      -  id: WOHNZIMMER_KLEIN
          device-id: 456
          direct-sun-light:
             start: 12
@@ -56,4 +60,3 @@ electricity:
          account: foo@examaple.org
          password: Secret
          countryCode: 45
-      

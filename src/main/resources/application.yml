@@ -6,15 +6,11 @@ dehumidifier:
       buffer: 50
       window: PT30m
       evaluationRate: PT10m
+theater:
+   avr:
+      timeout: PT10s
+      reconnect-interval: 59 */5 * * * * # Every 5 minutes
 room:
-   rules:
-      open-window:
-         evaluationRate: PT2m
-         co2-threshold:
-            best: 500
-            old: 1500
-            unhealthy: 2500
-         dust-buffer-pm25: 3
 shutters:
    minimum-highest-daily-temperature: 25
    cold-night-temperature: 21
