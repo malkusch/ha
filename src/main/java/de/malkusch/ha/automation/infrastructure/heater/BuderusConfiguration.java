@@ -1,4 +1,4 @@
-package de.malkusch.ha.shared.infrastructure.buderus;
+package de.malkusch.ha.automation.infrastructure.heater;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -28,7 +28,7 @@ class BuderusConfiguration {
 
     @Bean
     public KM200 km200(BuderusProperties properties) throws KM200Exception, IOException, InterruptedException {
-        return new KM200(properties.host, properties.timeout, properties.gatewayPassword,
-                properties.privatePassword, properties.salt);
+        return new KM200(properties.host, properties.timeout, properties.gatewayPassword, properties.privatePassword,
+                properties.salt);
     }
 }
