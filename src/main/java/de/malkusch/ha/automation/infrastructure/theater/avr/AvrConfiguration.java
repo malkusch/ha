@@ -10,6 +10,9 @@ import org.springframework.stereotype.Component;
 import de.malkusch.ha.automation.infrastructure.theater.avr.denon.DenonAvrFactory;
 import de.malkusch.ha.automation.model.room.RoomId;
 import de.malkusch.ha.automation.model.theater.Theater;
+import de.malkusch.ha.shared.infrastructure.event.AsyncEventPublisher;
+import de.malkusch.ha.shared.infrastructure.event.DebouncingEventPublisher;
+import de.malkusch.ha.shared.infrastructure.event.EventPublisher;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
@@ -31,6 +34,7 @@ class AvrConfiguration {
         public static class Avr {
             private String host;
             private Duration timeout;
+            private Duration debouncingInterval;
         }
 
     }
@@ -41,8 +45,15 @@ class AvrConfiguration {
     }
 
     @Bean
-    ReconnectingAvr avr() {
-        var factory = new DenonAvrFactory(properties.avr.host, properties.avr.timeout);
-        return new ReconnectingAvr(factory);
+    AvrEventPublisher avrEventPublisher(EventPublisher publisher) {
+        publisher = new AsyncEventPublisher("Denon-Event", publisher);
+        publisher = new DebouncingEventPublisher(publisher, properties.avr.debouncingInterval);
+        return new AvrEventPublisher(publisher);
+    }
+
+    @Bean
+    ReconnectingAvr avr(AvrEventPublisher publisher) throws InterruptedException {
+        var factory = new DenonAvrFactory(publisher, properties.avr.host, properties.avr.timeout);
+        return new ReconnectingAvr(factory, publisher);
     }
 }

@@ -1,18 +1,17 @@
 package de.malkusch.ha.automation.infrastructure.theater.avr.denon;
 
-import de.malkusch.ha.automation.model.theater.AvrTurnedOff;
-import de.malkusch.ha.automation.model.theater.AvrTurnedOn;
+import de.malkusch.ha.automation.infrastructure.theater.avr.AvrEventPublisher;
 import io.theves.denon4j.controls.AbstractControl;
 import io.theves.denon4j.net.Event;
 import io.theves.denon4j.net.Protocol;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-final class PowerEvent extends AbstractControl {
+final class PowerEventHandler extends AbstractControl {
 
-    private final EventPublisher publisher;
+    private final AvrEventPublisher publisher;
 
-    public PowerEvent(Protocol protocol, EventPublisher publisher) {
+    public PowerEventHandler(Protocol protocol, AvrEventPublisher publisher) {
         super("PW", protocol);
         this.publisher = publisher;
     }
@@ -20,8 +19,8 @@ final class PowerEvent extends AbstractControl {
     @Override
     protected void doHandle(Event event) {
         switch (event.getParameter().getValue()) {
-        case "STANDBY", "OFF" -> publisher.publish(new AvrTurnedOff());
-        case "ON" -> publisher.publish(new AvrTurnedOn());
+        case "STANDBY", "OFF" -> publisher.publishTurnedOff();
+        case "ON" -> publisher.publishTurnedOn();
         default -> log.warn("Unhandled AVR Power Event: {}", event);
         }
     }

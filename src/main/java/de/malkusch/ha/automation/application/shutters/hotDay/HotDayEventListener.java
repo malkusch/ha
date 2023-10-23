@@ -1,6 +1,6 @@
 package de.malkusch.ha.automation.application.shutters.hotDay;
 
-import static de.malkusch.ha.shared.infrastructure.event.EventPublisher.publish;
+import static de.malkusch.ha.shared.infrastructure.event.StaticEventPublisher.publish;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;

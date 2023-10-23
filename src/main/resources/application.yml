@@ -9,6 +9,7 @@ dehumidifier:
 theater:
    avr:
       timeout: PT10s
+      debouncing-interval: PT15s
       reconnect-interval: 59 */5 * * * * # Every 5 minutes
 room:
 shutters:

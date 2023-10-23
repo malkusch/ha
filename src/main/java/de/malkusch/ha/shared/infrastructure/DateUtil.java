@@ -35,15 +35,23 @@ public class DateUtil {
         return date.atZone(zone).toEpochSecond();
     }
 
+    private static final DateTimeFormatter EXACT_TIME_FORMATTER = DateTimeFormatter //
+            .ofPattern("HH:mm:ss") //
+            .withZone(defaultZone());
+
+    public static String formatExactTime(Instant time) {
+        return EXACT_TIME_FORMATTER.format(time);
+    }
+
+    public static String formatTime(LocalTime time) {
+        return TIME_FORMATTER.format(time);
+    }
+
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter //
             .ofPattern("HH:mm") //
             .withZone(defaultZone());
 
     public static String formatTime(Instant time) {
-        return TIME_FORMATTER.format(time);
-    }
-
-    public static String formatTime(LocalTime time) {
         return TIME_FORMATTER.format(time);
     }
 

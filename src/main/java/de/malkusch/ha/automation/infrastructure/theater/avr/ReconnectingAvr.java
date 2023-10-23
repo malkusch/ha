@@ -4,6 +4,7 @@ import static de.malkusch.ha.automation.infrastructure.theater.avr.Avr.Unconnect
 
 import org.springframework.scheduling.annotation.Scheduled;
 
+import de.malkusch.ha.shared.model.ApiException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -11,16 +12,19 @@ class ReconnectingAvr implements AutoCloseable {
 
     private volatile Avr avr;
     private final Avr.Factory factory;
+    private final AvrEventPublisher publisher;
 
-    public ReconnectingAvr(Avr.Factory factory) {
+    public ReconnectingAvr(Avr.Factory factory, AvrEventPublisher publisher) throws InterruptedException {
         this.factory = factory;
+        this.publisher = publisher;
 
         try {
             this.avr = factory.connect();
+            republishEvents();
 
-        } catch (Exception e) {
+        } catch (ApiException e) {
             avr = UNCONNECTED;
-            log.warn("Can't connect to {}", factory);
+            log.warn("Can't connect to {}", factory, e);
         }
     }
 
@@ -48,6 +52,17 @@ class ReconnectingAvr implements AutoCloseable {
             log.info("Reconnecting {}", factory);
             avr = factory.connect();
             log.info("Reconnected {}", avr);
+
+            log.debug("Republish events on reconnect");
+            republishEvents();
+        }
+    }
+
+    private void republishEvents() throws ApiException, InterruptedException {
+        if (avr.isTurnedOn()) {
+            publisher.publishTurnedOn();
+        } else {
+            publisher.publishTurnedOff();
         }
     }
 

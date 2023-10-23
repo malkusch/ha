@@ -1,24 +1,24 @@
 package de.malkusch.ha.shared.infrastructure.event;
 
-import org.springframework.context.ApplicationEventPublisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import lombok.extern.slf4j.Slf4j;
+public interface EventPublisher extends AutoCloseable {
 
-@Slf4j
-public final class EventPublisher {
+    static final Logger log = LoggerFactory.getLogger(EventPublisher.class);
 
-    static volatile ApplicationEventPublisher publisher;
+    void publish(Event event);
 
-    public static void publish(Event event) {
-        publisher.publishEvent(event);
-    }
-
-    public static void publishSafely(Event event) {
+    default void publishSafely(Event event) {
         try {
             publish(event);
 
         } catch (Exception e) {
             log.error("Failed publishing {}", event.getClass().getName(), e);
         }
+    }
+
+    @Override
+    default void close() throws Exception {
     }
 }

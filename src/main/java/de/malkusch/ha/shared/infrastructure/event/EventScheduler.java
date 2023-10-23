@@ -2,7 +2,6 @@ package de.malkusch.ha.shared.infrastructure.event;
 
 import static de.malkusch.ha.shared.infrastructure.DateUtil.formatSeconds;
 import static de.malkusch.ha.shared.infrastructure.DateUtil.formatTime;
-import static de.malkusch.ha.shared.infrastructure.event.EventPublisher.publishSafely;
 import static de.malkusch.ha.shared.infrastructure.scheduler.Schedulers.singleThreadScheduler;
 import static java.time.temporal.ChronoUnit.SECONDS;
 
@@ -21,13 +20,16 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import de.malkusch.ha.shared.infrastructure.scheduler.Schedulers;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public final class EventScheduler implements AutoCloseable {
 
-    private final ScheduledExecutorService scheduler = singleThreadScheduler("event-publisher");
+    private final EventPublisher publisher;
+    private final ScheduledExecutorService scheduler = singleThreadScheduler("event-scheduler");
 
     private final Map<Class<? extends Event>, Collection<ScheduledFuture<?>>> events = new ConcurrentHashMap<>();
 
@@ -47,7 +49,7 @@ public final class EventScheduler implements AutoCloseable {
         var seconds = now.until(scheduledDateTime, SECONDS);
 
         log.info("Scheduling {} at {} ({})", event, formatTime(time), formatSeconds(seconds));
-        var future = scheduler.schedule(() -> publishSafely(event), seconds, TimeUnit.SECONDS);
+        var future = scheduler.schedule(() -> publisher.publishSafely(event), seconds, TimeUnit.SECONDS);
         var bucket = events.computeIfAbsent(event.getClass(), it -> new ConcurrentLinkedQueue<>());
         bucket.add(future);
     }

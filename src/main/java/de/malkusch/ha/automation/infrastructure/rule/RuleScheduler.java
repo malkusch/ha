@@ -1,7 +1,7 @@
 package de.malkusch.ha.automation.infrastructure.rule;
 
 import static de.malkusch.ha.shared.infrastructure.DateUtil.formatDuration;
-import static de.malkusch.ha.shared.infrastructure.event.EventPublisher.publishSafely;
+import static de.malkusch.ha.shared.infrastructure.event.StaticEventPublisher.publishSafely;
 import static java.lang.System.exit;
 import static java.time.Duration.ZERO;
 import static java.util.UUID.randomUUID;

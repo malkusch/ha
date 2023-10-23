@@ -1,35 +1,47 @@
 package de.malkusch.ha.automation.infrastructure.theater.avr.denon;
 
 import static de.malkusch.ha.shared.infrastructure.scheduler.Schedulers.singleThreadScheduler;
+import static java.lang.Thread.interrupted;
+import static java.util.Optional.ofNullable;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.time.Duration;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeoutException;
 
 import de.malkusch.ha.automation.infrastructure.theater.avr.Avr;
+import de.malkusch.ha.automation.infrastructure.theater.avr.AvrEventPublisher;
 import de.malkusch.ha.shared.infrastructure.scheduler.Schedulers;
+import de.malkusch.ha.shared.model.ApiException;
 import io.theves.denon4j.AccessibleDenonReceiver;
 import io.theves.denon4j.controls.Control;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-@RequiredArgsConstructor
 @Slf4j
+@RequiredArgsConstructor
 public final class DenonAvrFactory implements Avr.Factory, AutoCloseable {
 
-    private final ScheduledExecutorService check_connection_thread = singleThreadScheduler("denon-connection-check");
-    private final EventPublisher publisher = new EventPublisher();
+    private final ScheduledExecutorService apiThread = singleThreadScheduler("Denon-api");
+
+    private final AvrEventPublisher publisher;
+    private final String host;
+    private final Duration timeout;
 
     final class DenonAvr implements Avr, AutoCloseable {
 
-        final AccessibleDenonReceiver denon;
+        private final AccessibleDenonReceiver denon;
+        private final PowerEventHandler eventHandler;
 
-        DenonAvr(AccessibleDenonReceiver denon) throws Exception {
+        DenonAvr(AccessibleDenonReceiver denon) {
             this.denon = denon;
+            eventHandler = new PowerEventHandler(denon.protocol(), publisher);
 
-            registerEventHandler(new PowerEvent(denon.protocol(), publisher));
+            registerEventHandler(eventHandler);
         }
 
         private void registerEventHandler(Control handler) {
@@ -38,17 +50,25 @@ public final class DenonAvrFactory implements Avr.Factory, AutoCloseable {
         }
 
         @Override
-        public boolean isConnected() {
+        public boolean isTurnedOn() throws ApiException, InterruptedException {
+            var power = withTimeout(apiThread, denon.power()::state);
+            return switch (power) {
+            case ON -> true;
+            case STANDBY, OFF -> false;
+            };
+        }
+
+        @Override
+        public boolean isConnected() throws InterruptedException {
             if (!denon.isConnected() || !canConnect()) {
                 return false;
             }
 
             try {
-                check_connection_thread.submit(() -> denon.mainZone().state()) //
-                        .get(timeout.toMillis(), MILLISECONDS);
+                withTimeout(apiThread, denon.mainZone()::state);
                 return true;
 
-            } catch (Exception e) {
+            } catch (ApiException e) {
                 return false;
             }
         }
@@ -56,7 +76,10 @@ public final class DenonAvrFactory implements Avr.Factory, AutoCloseable {
         @Override
         public void close() throws Exception {
             log.info("Disconnecting {}", this);
-            denon.close();
+            try (denon) {
+                denon.eventDispatcher().removeControl(eventHandler);
+                eventHandler.dispose();
+            }
         }
 
         @Override
@@ -65,24 +88,20 @@ public final class DenonAvrFactory implements Avr.Factory, AutoCloseable {
         }
     }
 
-    private final String host;
-    private final Duration timeout;
-
     @Override
-    public Avr connect() throws Exception {
+    public Avr connect() throws ApiException, InterruptedException {
         if (!canConnect()) {
-            throw new IOException("Can't connect to " + host);
+            throw new ApiException("Can't connect to " + host);
         }
 
         var daemonThread = singleThreadScheduler("denon-factory");
         try {
             // That's necessary to start Denon's EventReader thread as daemon
-            var denon = daemonThread.submit(() -> AccessibleDenonReceiver.build(host, null)) //
-                    .get(timeout.toMillis(), MILLISECONDS);
+            var denon = withTimeout(daemonThread, () -> AccessibleDenonReceiver.build(host, null));
+
             try {
                 var avr = new DenonAvr(denon);
-                daemonThread.submit(() -> denon.connect((int) timeout.toMillis())) //
-                        .get(timeout.toMillis(), MILLISECONDS);
+                withTimeout(daemonThread, () -> denon.connect((int) timeout.toMillis()));
                 return avr;
 
             } catch (Exception e) {
@@ -95,13 +114,42 @@ public final class DenonAvrFactory implements Avr.Factory, AutoCloseable {
         }
     }
 
+    private void withTimeout(ScheduledExecutorService executor, Runnable call)
+            throws ApiException, InterruptedException {
+
+        withTimeout(executor, () -> {
+            call.run();
+            return null;
+        });
+    }
+
+    private <T> T withTimeout(ScheduledExecutorService executor, Callable<T> call)
+            throws ApiException, InterruptedException {
+
+        try {
+            return executor.submit(call).get(timeout.toMillis(), MILLISECONDS);
+
+        } catch (TimeoutException e) {
+            throw new ApiException(e);
+
+        } catch (ExecutionException e) {
+            throw new ApiException(ofNullable(e.getCause()).orElse(e));
+        }
+    }
+
     @Override
-    public boolean canConnect() {
+    public boolean canConnect() throws InterruptedException {
+        if (interrupted()) {
+            throw new InterruptedException();
+        }
         try {
             var address = InetAddress.getByName(host);
             return address.isReachable((int) timeout.toMillis());
 
-        } catch (Exception e) {
+        } catch (IOException e) {
+            if (interrupted()) {
+                throw new InterruptedException();
+            }
             return false;
         }
     }
@@ -113,7 +161,6 @@ public final class DenonAvrFactory implements Avr.Factory, AutoCloseable {
 
     @Override
     public void close() throws Exception {
-        Schedulers.close(check_connection_thread);
-        publisher.close();
+        Schedulers.close(apiThread);
     }
 }
