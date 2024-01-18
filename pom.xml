@@ -51,7 +51,7 @@
 		<dependency>
 			<groupId>org.shredzone.commons</groupId>
 			<artifactId>commons-suncalc</artifactId>
-			<version>3.7</version>
+			<version>3.8</version>
 		</dependency>
 		<dependency>
 			<groupId>de.malkusch</groupId>
