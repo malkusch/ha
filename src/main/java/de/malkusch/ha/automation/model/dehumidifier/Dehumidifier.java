@@ -13,13 +13,11 @@ import de.malkusch.ha.automation.model.room.RoomId;
 import de.malkusch.ha.shared.infrastructure.CoolDown;
 import de.malkusch.ha.shared.infrastructure.CoolDown.CoolDownException;
 import de.malkusch.ha.shared.model.ApiException;
-import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 @RequiredArgsConstructor
-@EqualsAndHashCode(of = "id")
 @Slf4j
 public final class Dehumidifier {
 
@@ -81,5 +79,18 @@ public final class Dehumidifier {
     @Override
     public String toString() {
         return id.toString();
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return switch (obj) {
+        case Dehumidifier other -> other.id.equals(id);
+        default -> false;
+        };
     }
 }
