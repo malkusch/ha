@@ -122,3 +122,6 @@ http:
    retry:
       delay: PT5S
       retries: 10
+notification:
+   telegram:
+      timeout: PT10S
