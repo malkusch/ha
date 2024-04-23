@@ -24,8 +24,12 @@ class TelegramConfiguration {
     }
 
     @Bean
-    NotificationService notificationService(TelegramProperties properties) {
-        var api = new TelegramApi(properties.chatId, properties.token, properties.timeout);
+    TelegramApi telegramApi(TelegramProperties properties) {
+        return new TelegramApi(properties.chatId, properties.token, properties.timeout);
+    }
+
+    @Bean
+    NotificationService notificationService(TelegramApi api) {
         return new TelegramNotificationService(api);
     }
 }

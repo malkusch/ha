@@ -61,6 +61,15 @@ public class Shutter {
         setState(OPEN);
     }
 
+    public final void forceOpen() throws ApiException, InterruptedException {
+        synchronized (_jvmLock) {
+            lock = UNLOCKED;
+            desired = OPEN;
+        }
+        log.info("Force shutter {} to {}", this, OPEN);
+        api.setState(OPEN);
+    }
+
     public final void close() throws ApiException, InterruptedException {
         syncState();
         setState(CLOSED);

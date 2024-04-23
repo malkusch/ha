@@ -181,6 +181,25 @@ public class ShutterTest {
         assertEquals(CLOSED, api.state());
     }
 
+    @Test
+    public void forceOpenShouldOpenWhenLocked() throws Exception {
+        shutter.close();
+        shutter.lock(CLOSED, ANY_LOCK_DURATION);
+
+        shutter.forceOpen();
+
+        assertEquals(OPEN, api.state());
+    }
+    
+    @Test
+    public void forceOpenShouldOpenWhenClosed() throws Exception {
+        shutter.close();
+        
+        shutter.forceOpen();
+        
+        assertEquals(OPEN, api.state());
+    }
+
     private static Api.State state(String state) {
         return switch (state) {
         case "OPEN" -> OPEN;
