@@ -1,10 +1,12 @@
 package de.malkusch.ha.automation.model.shutters;
 
-import static java.util.Objects.requireNonNull;
-
 import de.malkusch.ha.automation.model.astronomy.Azimuth;
 
+import static java.util.Objects.requireNonNull;
+
 public record DirectSunLightRange(Azimuth start, Azimuth end) {
+
+    public static final DirectSunLightRange EMPTY = new DirectSunLightRange(new Azimuth(0), new Azimuth(0));
 
     public DirectSunLightRange(Azimuth start, Azimuth end) {
         this.start = requireNonNull(start);
@@ -12,6 +14,10 @@ public record DirectSunLightRange(Azimuth start, Azimuth end) {
         if (start.isLessThan(start)) {
             throw new IllegalArgumentException(String.format("end %s must not be less than start %s", end, start));
         }
+    }
+
+    public boolean isEmpty() {
+        return this == EMPTY;
     }
 
     @Override

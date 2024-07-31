@@ -117,6 +117,9 @@ class ShutterConfiguration {
     }
 
     private static DirectSunLightRange directSunLightRange(DirectSunLightRangeProperty property) {
+        if (property == null) {
+            return DirectSunLightRange.EMPTY;
+        }
         var start = new Azimuth(property.start);
         var end = new Azimuth(property.end);
         return new DirectSunLightRange(start, end);
