@@ -1,18 +1,17 @@
 package de.malkusch.ha.automation.presentation.chat;
 
-import static de.malkusch.ha.automation.model.shutters.ShutterId.KUECHENTUER;
-import static de.malkusch.ha.automation.model.shutters.ShutterId.TERRASSE;
-
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
-
 import de.malkusch.ha.automation.model.shutters.ShutterId;
-import de.malkusch.telgrambot.Message.CallbackMessage.Callback;
 import de.malkusch.telgrambot.MessageId;
 import de.malkusch.telgrambot.TelegramApi;
 import de.malkusch.telgrambot.TelegramApi.Button;
+import de.malkusch.telgrambot.Update.CallbackUpdate.Callback;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+
+import static de.malkusch.ha.automation.model.shutters.ShutterId.KUECHENTUER;
+import static de.malkusch.ha.automation.model.shutters.ShutterId.TERRASSE;
 
 @Configuration
 @RequiredArgsConstructor
