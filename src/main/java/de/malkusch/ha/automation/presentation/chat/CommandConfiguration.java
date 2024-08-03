@@ -1,13 +1,11 @@
 package de.malkusch.ha.automation.presentation.chat;
 
-import static java.util.Arrays.asList;
-
-import org.springframework.context.annotation.Configuration;
-
-import de.malkusch.telgrambot.Handler;
 import de.malkusch.telgrambot.TelegramApi;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Configuration;
+
+import static de.malkusch.telgrambot.UpdateReceiver.onCallback;
 
 @Configuration
 @RequiredArgsConstructor
@@ -18,8 +16,8 @@ class CommandConfiguration {
 
     @PostConstruct
     public void setup() {
-        telegram.startDispatcher(asList( //
-                new Handler.CallbackHandler(Open.COMMAND, open) //
-        ));
+        telegram.receiveUpdates( //
+                onCallback(Open.COMMAND, open) //
+        );
     }
 }
