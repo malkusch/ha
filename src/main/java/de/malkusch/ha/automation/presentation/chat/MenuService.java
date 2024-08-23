@@ -1,10 +1,10 @@
 package de.malkusch.ha.automation.presentation.chat;
 
 import de.malkusch.ha.automation.model.shutters.ShutterId;
+import de.malkusch.telgrambot.Callback;
 import de.malkusch.telgrambot.MessageId;
 import de.malkusch.telgrambot.TelegramApi;
 import de.malkusch.telgrambot.TelegramApi.Button;
-import de.malkusch.telgrambot.Update.CallbackUpdate.Callback;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
