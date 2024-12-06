@@ -16,7 +16,7 @@ import de.malkusch.ha.automation.model.scooter.charging.ChargingStrategy_2_1_Sta
 import de.malkusch.ha.shared.infrastructure.CoolDown.CoolDownException;
 import lombok.RequiredArgsConstructor;
 
-@Service
+// @Service
 @RequiredArgsConstructor
 public final class ScooterChargingApplicationService {
 

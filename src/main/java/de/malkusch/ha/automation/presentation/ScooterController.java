@@ -17,7 +17,7 @@ import de.malkusch.ha.automation.model.scooter.ScooterWallbox.WallboxException;
 import de.malkusch.ha.shared.infrastructure.CoolDown.CoolDownException;
 import lombok.RequiredArgsConstructor;
 
-@RestController
+// @RestController
 @RequiredArgsConstructor
 public final class ScooterController {
 
