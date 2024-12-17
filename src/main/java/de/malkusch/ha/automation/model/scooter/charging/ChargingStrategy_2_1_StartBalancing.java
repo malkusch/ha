@@ -6,6 +6,7 @@ import static de.malkusch.ha.shared.infrastructure.DateUtil.formatDuration;
 import java.time.Duration;
 import java.time.Instant;
 
+import de.malkusch.ha.automation.infrastructure.scooter.ScooterEnabled;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
+@ScooterEnabled
 public final class ChargingStrategy_2_1_StartBalancing extends ChargingStrategy {
 
     private static record Interval(Duration duration, Kilometers kilometers) {

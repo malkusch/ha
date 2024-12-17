@@ -1,11 +1,6 @@
 package de.malkusch.ha.automation.application.scooter;
 
-import java.io.IOException;
-import java.util.concurrent.Callable;
-
-import org.springframework.stereotype.Service;
-
-import de.malkusch.ha.automation.application.scooter.ScooterChargingApplicationService.ChargingState.Balancing;
+import de.malkusch.ha.automation.infrastructure.scooter.ScooterEnabled;
 import de.malkusch.ha.automation.infrastructure.socket.Socket;
 import de.malkusch.ha.automation.model.geo.DistanceCalculator;
 import de.malkusch.ha.automation.model.scooter.BalancingService;
@@ -15,9 +10,14 @@ import de.malkusch.ha.automation.model.scooter.ScooterWallbox.WallboxException;
 import de.malkusch.ha.automation.model.scooter.charging.ChargingStrategy_2_1_StartBalancing;
 import de.malkusch.ha.shared.infrastructure.CoolDown.CoolDownException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
-// @Service
+import java.io.IOException;
+import java.util.concurrent.Callable;
+
+@Service
 @RequiredArgsConstructor
+@ScooterEnabled
 public final class ScooterChargingApplicationService {
 
     private final ScooterWallbox wallbox;
@@ -52,10 +52,10 @@ public final class ScooterChargingApplicationService {
                 new ChargingState.Balancing(lastBalancing, earliestBalancing, latestBalancing), distance);
     }
 
-    public static record ChargingState(boolean wallboxOnline, String socket, String charging, String scooterState,
-            String charge, String mileage, Balancing balancing, String distance) {
+    public record ChargingState(boolean wallboxOnline, String socket, String charging, String scooterState,
+                                       String charge, String mileage, Balancing balancing, String distance) {
 
-        public static record Balancing(String last, String earliest, String latest) {
+        public record Balancing(String last, String earliest, String latest) {
 
         }
     }

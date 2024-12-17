@@ -49,6 +49,7 @@ electricity:
       minimum-loading-consumption: 4000
       minimum-loading-duration: PT30m
    scooter:
+      enabled: true
       wallbox:
          tuya-socket:
             timeout: PT5s

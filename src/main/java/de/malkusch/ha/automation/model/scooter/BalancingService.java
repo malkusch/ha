@@ -8,12 +8,14 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 
+import de.malkusch.ha.automation.infrastructure.scooter.ScooterEnabled;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@ScooterEnabled
 public final class BalancingService {
 
     private final Api api;

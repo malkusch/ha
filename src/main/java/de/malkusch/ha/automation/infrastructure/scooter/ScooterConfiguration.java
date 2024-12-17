@@ -25,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Configuration
+@ScooterEnabled
 public class ScooterConfiguration {
 
     private final ScooterProperties scooterProperties;

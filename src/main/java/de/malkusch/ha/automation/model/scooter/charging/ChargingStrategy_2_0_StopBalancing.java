@@ -7,6 +7,7 @@ import static de.malkusch.ha.shared.infrastructure.DateUtil.formatTime;
 import java.time.Duration;
 import java.time.Instant;
 
+import de.malkusch.ha.automation.infrastructure.scooter.ScooterEnabled;
 import org.springframework.stereotype.Component;
 
 import de.malkusch.ha.automation.model.scooter.charging.ContextFactory.Context;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
+@ScooterEnabled
 final class ChargingStrategy_2_0_StopBalancing extends ChargingStrategy {
 
     private static final Duration MAX_BALANCE_AGE = Duration.ofDays(1);

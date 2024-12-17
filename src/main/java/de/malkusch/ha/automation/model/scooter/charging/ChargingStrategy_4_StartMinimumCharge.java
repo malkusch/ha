@@ -3,6 +3,7 @@ package de.malkusch.ha.automation.model.scooter.charging;
 import static de.malkusch.ha.automation.model.scooter.Scooter.State.CHARGING;
 import static de.malkusch.ha.automation.model.scooter.charging.ChargingStrategy.Evaluation.NONE;
 
+import de.malkusch.ha.automation.infrastructure.scooter.ScooterEnabled;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
+@ScooterEnabled
 final class ChargingStrategy_4_StartMinimumCharge extends ChargingStrategy {
 
     @Autowired

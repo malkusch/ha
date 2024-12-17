@@ -1,9 +1,9 @@
 package de.malkusch.ha.automation.model.scooter.charging;
 
+import de.malkusch.ha.automation.infrastructure.scooter.ScooterEnabled;
 import de.malkusch.ha.automation.model.scooter.charging.ChargingStrategy.Evaluation.Reason;
 import de.malkusch.ha.automation.model.scooter.charging.ChargingStrategy.Evaluation.Request;
 import de.malkusch.ha.automation.model.scooter.charging.ContextFactory.Context;
-
 abstract class ChargingStrategy implements Comparable<ChargingStrategy> {
 
     abstract public Evaluation evaluate(Context context) throws Exception;

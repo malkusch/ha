@@ -7,6 +7,7 @@ import static java.util.Collections.unmodifiableList;
 import java.time.Duration;
 import java.util.List;
 
+import de.malkusch.ha.automation.infrastructure.scooter.ScooterEnabled;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@ScooterEnabled
 public final class ChargingRule implements Rule {
 
     private final Duration evaluationRate;

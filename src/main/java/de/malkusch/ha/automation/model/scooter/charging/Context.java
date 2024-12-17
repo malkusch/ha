@@ -3,8 +3,11 @@ package de.malkusch.ha.automation.model.scooter.charging;
 import static de.malkusch.ha.automation.model.electricity.Electricity.Aggregation.P75;
 import static de.malkusch.ha.automation.model.electricity.Watt.min;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.time.Duration;
 
+import de.malkusch.ha.automation.infrastructure.scooter.ScooterEnabled;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@ScooterEnabled
 final class ContextFactory {
 
     private final Scooter scooter;
