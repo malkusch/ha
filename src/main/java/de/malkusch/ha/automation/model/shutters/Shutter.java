@@ -16,21 +16,20 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class Shutter {
 
-    public static interface Api {
+    public interface Api {
         void setState(State state) throws ApiException, InterruptedException;
 
         State state() throws ApiException, InterruptedException;
 
-        static record State(int percent) {
+        record State(int percent) {
 
             public static final State OPEN = new State(0);
             public static final State CLOSED = new State(100);
 
-            public State(int percent) {
+            public State {
                 if (percent < 0 || percent > 100) {
                     throw new IllegalArgumentException("percent must be between 0 and 100");
                 }
-                this.percent = percent;
             }
 
             @Override
@@ -92,7 +91,7 @@ public class Shutter {
         MILLISECONDS.sleep(delay.toMillis());
     }
 
-    private static record Lock(State state, Instant until) {
+    private record Lock(State state, Instant until) {
     }
 
     private static final Lock UNLOCKED = new Lock(OPEN, Instant.MIN);

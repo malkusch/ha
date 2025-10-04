@@ -20,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public final class ShellyCloudApi implements Api {
 
-    public static interface Factory {
+    public interface Factory {
         Api build(ShutterId id, String deviceId);
     }
     
@@ -47,13 +47,13 @@ public final class ShellyCloudApi implements Api {
         public Data data;
 
         @JsonIgnoreProperties(ignoreUnknown = true)
-        private static record Data(DeviceStatus device_status) {
+        private record Data(DeviceStatus device_status) {
 
             @JsonIgnoreProperties(ignoreUnknown = true)
-            private static record DeviceStatus(Roller[] rollers) {
+            private record DeviceStatus(Roller[] rollers) {
 
                 @JsonIgnoreProperties(ignoreUnknown = true)
-                private static record Roller(int current_pos, String state) {
+                private record Roller(int current_pos, String state) {
                 }
             }
         }
