@@ -1,24 +1,7 @@
 package de.malkusch.ha;
 
-import static de.malkusch.ha.automation.model.shutters.Shutter.Api.State.OPEN;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.LocalDate;
-
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
-import org.springframework.test.context.ActiveProfiles;
-
 import de.malkusch.ha.automation.infrastructure.prometheus.Prometheus;
-import de.malkusch.ha.automation.infrastructure.shutters.ShellyCloudApi;
+import de.malkusch.ha.automation.infrastructure.shutters.ShellyCloudV2Api;
 import de.malkusch.ha.automation.model.shutters.Shutter.Api;
 import de.malkusch.ha.shared.model.ApiException;
 import de.malkusch.km200.KM200;
@@ -26,6 +9,22 @@ import de.malkusch.km200.KM200Exception;
 import de.malkusch.niu.Niu;
 import de.malkusch.niu.Niu.BatteryInfo;
 import de.malkusch.niu.Niu.Vehicle;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
+import org.springframework.test.context.ActiveProfiles;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+
+import static de.malkusch.ha.automation.model.shutters.Shutter.Api.State.OPEN;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ActiveProfiles(profiles = "test")
@@ -36,7 +35,7 @@ public class ApplicationIT {
 
         @Bean
         @Primary
-        public ShellyCloudApi.Factory shellyCloudApiFactory() throws ApiException, InterruptedException {
+        public ShellyCloudV2Api.Factory shellyCloudApiFactory() throws ApiException, InterruptedException {
             var api = mock(Api.class);
             when(api.state()).thenReturn(OPEN);
             return (id, deviceId) -> api;
@@ -70,7 +69,7 @@ public class ApplicationIT {
             var vehicleInfo = new Niu.VehicleInfo(null, null, 0, 0, 0, 0, null, 0, null, 0, 0, true, 0, 1, null);
             when(niu.vehicle(any())).thenReturn(vehicleInfo);
 
-            when(niu.vehicles()).thenReturn(new Vehicle[] { new Vehicle("asdfdsf", "foo") });
+            when(niu.vehicles()).thenReturn(new Vehicle[]{new Vehicle("asdfdsf", "foo")});
             return niu;
         }
     }

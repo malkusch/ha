@@ -1,34 +1,28 @@
 package de.malkusch.ha.automation.infrastructure.shutters;
 
-import static java.util.stream.Collectors.toList;
-
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.util.concurrent.RateLimiter;
+import de.malkusch.ha.automation.infrastructure.shutters.ShutterConfiguration.Properties.ShellyProperties.ShutterProperty.DirectSunLightRangeProperty;
+import de.malkusch.ha.automation.model.astronomy.Azimuth;
+import de.malkusch.ha.automation.model.shutters.*;
+import de.malkusch.ha.automation.model.shutters.Shutter.Api;
+import de.malkusch.ha.automation.model.weather.WindSpeed;
+import de.malkusch.ha.shared.infrastructure.http.HttpClient;
+import de.malkusch.ha.shared.infrastructure.http.JsonHttpExchange;
+import de.malkusch.ha.shared.infrastructure.http.RateLimitingHttpClient;
+import de.malkusch.ha.shared.model.ApiException;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.util.concurrent.RateLimiter;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 
-import de.malkusch.ha.automation.infrastructure.shutters.ShutterConfiguration.Properties.ShellyProperties.ShutterProperty.DirectSunLightRangeProperty;
-import de.malkusch.ha.automation.model.astronomy.Azimuth;
-import de.malkusch.ha.automation.model.shutters.Blind;
-import de.malkusch.ha.automation.model.shutters.DirectSunLightRange;
-import de.malkusch.ha.automation.model.shutters.Shutter;
-import de.malkusch.ha.automation.model.shutters.Shutter.Api;
-import de.malkusch.ha.automation.model.shutters.ShutterId;
-import de.malkusch.ha.automation.model.shutters.ShutterRepository;
-import de.malkusch.ha.automation.model.shutters.WindProtectionService;
-import de.malkusch.ha.automation.model.weather.WindSpeed;
-import de.malkusch.ha.shared.infrastructure.http.HttpClient;
-import de.malkusch.ha.shared.infrastructure.http.RateLimitingHttpClient;
-import de.malkusch.ha.shared.model.ApiException;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import static java.util.stream.Collectors.toList;
 
 @Configuration
 @RequiredArgsConstructor
@@ -128,15 +122,15 @@ class ShutterConfiguration {
     private final HttpClient http;
 
     @Bean
-    public HttpClient shellyHttpClient() {
+    public JsonHttpExchange shellyJsonHttpExchange() {
         var limiter = RateLimiter.create(0.20);
-        return new RateLimitingHttpClient(http, limiter);
+        var shellyHttp = new RateLimitingHttpClient(http, limiter);
+        return new JsonHttpExchange(shellyHttp, mapper);
     }
 
     @Bean
-    public ShellyCloudApi.Factory shellyCloudApiFactory() {
-        return (id, deviceId) -> new ShellyCloudApi(properties.shelly.url, properties.shelly.key, shellyHttpClient(),
-                mapper, deviceId);
+    public ShellyCloudV2Api.Factory shellyCloudApiFactory() {
+        return (id, deviceId) -> new ShellyCloudV2Api(properties.shelly.url, properties.shelly.key, shellyJsonHttpExchange(), deviceId);
     }
 
     private Shutter shellyBlind(ShutterId id, String deviceId, DirectSunLightRange directSunLightRange) {
