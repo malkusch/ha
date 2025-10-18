@@ -36,7 +36,7 @@ shutters:
          lock-duration: PT12h
 electricity:
    battery:
-      fully-charged: 0.96
+      fully-charged: 0.80
    prediction:
       minimumPeak: 4000
       peakWindow: P14D
