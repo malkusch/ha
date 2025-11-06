@@ -13,7 +13,7 @@ public interface AstronomicalEvent extends Event {
         return dateTime().toLocalTime();
     }
 
-    public record AstronomicalSunriseStarted(ZonedDateTime dateTime) implements AstronomicalEvent {
+    record AstronomicalSunriseStarted(ZonedDateTime dateTime) implements AstronomicalEvent {
 
         @Override
         public String toString() {
@@ -21,7 +21,7 @@ public interface AstronomicalEvent extends Event {
         }
     }
 
-    public record AstronomicalSunsetStarted(ZonedDateTime dateTime) implements AstronomicalEvent {
+    record AstronomicalSunsetStarted(ZonedDateTime dateTime) implements AstronomicalEvent {
 
         @Override
         public String toString() {
@@ -29,7 +29,7 @@ public interface AstronomicalEvent extends Event {
         }
     }
 
-    public record CivilSunriseStarted(ZonedDateTime dateTime) implements AstronomicalEvent {
+    record CivilSunriseStarted(ZonedDateTime dateTime) implements AstronomicalEvent {
 
         @Override
         public String toString() {
@@ -37,7 +37,7 @@ public interface AstronomicalEvent extends Event {
         }
     }
 
-    public record CivilSunsetStarted(ZonedDateTime dateTime) implements AstronomicalEvent {
+    record CivilSunsetStarted(ZonedDateTime dateTime) implements AstronomicalEvent {
 
         @Override
         public String toString() {
@@ -45,7 +45,7 @@ public interface AstronomicalEvent extends Event {
         }
     }
 
-    public record NauticalSunriseStarted(ZonedDateTime dateTime) implements AstronomicalEvent {
+    record NauticalSunriseStarted(ZonedDateTime dateTime) implements AstronomicalEvent {
 
         @Override
         public String toString() {
@@ -53,7 +53,7 @@ public interface AstronomicalEvent extends Event {
         }
     }
 
-    public record NauticalSunsetStarted(ZonedDateTime dateTime) implements AstronomicalEvent {
+    record NauticalSunsetStarted(ZonedDateTime dateTime) implements AstronomicalEvent {
 
         @Override
         public String toString() {
