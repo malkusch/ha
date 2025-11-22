@@ -10,8 +10,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import de.malkusch.ha.automation.infrastructure.MapRepository;
 import de.malkusch.ha.automation.infrastructure.TasmotaApi;
 import de.malkusch.ha.automation.model.NotFoundException;
@@ -27,6 +25,7 @@ import de.malkusch.ha.shared.infrastructure.http.HttpClient;
 import de.malkusch.ha.shared.model.ApiException;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import tools.jackson.databind.ObjectMapper;
 
 @Configuration
 @Slf4j

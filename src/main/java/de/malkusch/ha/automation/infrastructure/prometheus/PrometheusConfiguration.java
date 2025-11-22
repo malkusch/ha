@@ -1,15 +1,5 @@
 package de.malkusch.ha.automation.infrastructure.prometheus;
 
-import java.util.HashMap;
-import java.util.List;
-
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.stereotype.Component;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import de.malkusch.ha.automation.infrastructure.electricity.ElectricityConfiguration.ElectricityProperties;
 import de.malkusch.ha.automation.model.climate.ClimateService;
 import de.malkusch.ha.automation.model.electricity.Capacity;
@@ -18,6 +8,14 @@ import de.malkusch.ha.automation.model.room.RoomId;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
+
+import java.util.HashMap;
+import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor

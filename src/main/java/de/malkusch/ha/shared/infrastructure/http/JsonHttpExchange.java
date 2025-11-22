@@ -1,9 +1,9 @@
 package de.malkusch.ha.shared.infrastructure.http;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient.Header;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 

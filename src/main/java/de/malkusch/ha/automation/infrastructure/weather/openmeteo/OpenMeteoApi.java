@@ -1,6 +1,13 @@
 package de.malkusch.ha.automation.infrastructure.weather.openmeteo;
 
-import static java.time.temporal.ChronoUnit.HOURS;
+import de.malkusch.ha.automation.model.Temperature;
+import de.malkusch.ha.automation.model.electricity.ElectricityPredictionService.SolarIrradianceForecast.Irradiance;
+import de.malkusch.ha.automation.model.geo.Location;
+import de.malkusch.ha.automation.model.weather.WindSpeed;
+import de.malkusch.ha.shared.infrastructure.http.HttpClient;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -11,18 +18,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
 
-import org.springframework.stereotype.Service;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import de.malkusch.ha.automation.infrastructure.weather.openmeteo.OpenMeteoApi.Forecast.Daily;
-import de.malkusch.ha.automation.infrastructure.weather.openmeteo.OpenMeteoApi.Forecast.Hourly;
-import de.malkusch.ha.automation.model.Temperature;
-import de.malkusch.ha.automation.model.electricity.ElectricityPredictionService.SolarIrradianceForecast.Irradiance;
-import de.malkusch.ha.automation.model.geo.Location;
-import de.malkusch.ha.automation.model.weather.WindSpeed;
-import de.malkusch.ha.shared.infrastructure.http.HttpClient;
-import lombok.extern.slf4j.Slf4j;
+import static java.time.temporal.ChronoUnit.HOURS;
 
 @Service
 @Slf4j
@@ -86,7 +82,7 @@ final class OpenMeteoApi {
     }
 
     private static record ForecastResponse(Daily daily, Hourly hourly, String timezone, double latitude,
-            double longitude) {
+                                           double longitude) {
 
         private static record Daily(String[] time, double[] temperature_2m_max, double[] shortwave_radiation_sum) {
         }

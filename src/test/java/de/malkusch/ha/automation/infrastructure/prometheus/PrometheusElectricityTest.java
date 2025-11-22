@@ -1,5 +1,24 @@
 package de.malkusch.ha.automation.infrastructure.prometheus;
 
+import de.malkusch.ha.automation.model.electricity.Capacity;
+import de.malkusch.ha.automation.model.electricity.Electricity.Aggregation;
+import de.malkusch.ha.automation.model.electricity.Watt;
+import de.malkusch.ha.shared.infrastructure.http.HttpClient;
+import de.malkusch.ha.shared.infrastructure.http.HttpResponse;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import tools.jackson.databind.ObjectMapper;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.util.Optional;
+
 import static de.malkusch.ha.automation.model.electricity.Electricity.Aggregation.MAXIMUM;
 import static de.malkusch.ha.shared.infrastructure.DateUtil.toTimestamp;
 import static java.util.Optional.empty;
@@ -8,27 +27,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.matches;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.time.Duration;
-import java.time.LocalDate;
-import java.util.Optional;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import de.malkusch.ha.automation.model.electricity.Capacity;
-import de.malkusch.ha.automation.model.electricity.Electricity.Aggregation;
-import de.malkusch.ha.automation.model.electricity.Watt;
-import de.malkusch.ha.shared.infrastructure.http.HttpClient;
-import de.malkusch.ha.shared.infrastructure.http.HttpResponse;
 
 @ExtendWith(MockitoExtension.class)
 public class PrometheusElectricityTest {
@@ -46,7 +44,7 @@ public class PrometheusElectricityTest {
     }
 
     @ParameterizedTest
-    @CsvSource({ "MAXIMUM, PT1h, 2317, 2317", //
+    @CsvSource({"MAXIMUM, PT1h, 2317, 2317", //
             "MAXIMUM, PT5m, 100, 100", //
             "MAXIMUM, PT5m, 0, 0", //
             "MAXIMUM, PT5m, ,0", //
@@ -55,7 +53,7 @@ public class PrometheusElectricityTest {
             "P75, PT5m, ,0", //
             "MINIMUM, PT1h, 123, 123", //
             "P25, PT1h, 1234, 1234", //
-            "P75, PT1h, 1235, 1235" })
+            "P75, PT1h, 1235, 1235"})
     void testBatteryConsumption(String aggregationString, String durationString, String response, String expectedString)
             throws Exception {
 
@@ -71,7 +69,7 @@ public class PrometheusElectricityTest {
     }
 
     @ParameterizedTest
-    @CsvSource({ "0, 0", ", 0", "100, 1", "99, 0.99" })
+    @CsvSource({"0, 0", ", 0", "100, 1", "99, 0.99"})
     void testCapacity(String response, String expected) throws Exception {
         mock(response);
 
@@ -105,7 +103,7 @@ public class PrometheusElectricityTest {
     }
 
     @ParameterizedTest
-    @CsvSource({ "0, 0", ", 0", "100, 100", "99, 99" })
+    @CsvSource({"0, 0", ", 0", "100, 100", "99, 99"})
     void testExcess(String response, String expected) throws Exception {
         mock(response);
 
@@ -162,7 +160,7 @@ public class PrometheusElectricityTest {
     }
 
     @ParameterizedTest
-    @CsvSource({ "0, 0", ", 0", "100, 100", "99, 99" })
+    @CsvSource({"0, 0", ", 0", "100, 100", "99, 99"})
     void testExcessProduction(String response, String expected) throws Exception {
         mock(response);
 
@@ -196,7 +194,7 @@ public class PrometheusElectricityTest {
     }
 
     @ParameterizedTest
-    @CsvSource({ "2023-03-11, 0, false", //
+    @CsvSource({"2023-03-11, 0, false", //
             "2023-03-11,  , false", //
             "2023-03-11, 1, false", //
             "2023-03-11, 99, false", //
@@ -220,7 +218,7 @@ public class PrometheusElectricityTest {
             "2023-03-11, 4000, PT30m, 0, false", //
     })
     void testIsConsumptionDuringProductionGreaterThan(String dateString, String thresholdString, String durationString,
-            String response, boolean expected) throws Exception {
+                                                      String response, boolean expected) throws Exception {
 
         var date = LocalDate.parse(dateString);
         var threshold = watt(thresholdString);
@@ -261,7 +259,7 @@ public class PrometheusElectricityTest {
     }
 
     private static record QueryMatcher(Optional<Aggregation> aggregation, String query, Optional<Duration> duration,
-            Optional<LocalDate> date) {
+                                       Optional<LocalDate> date) {
 
         public String regexp() {
             return aggregation.map(it -> ".*\\Q" + expectedAggregation(it) + "\\E.*").orElse("")//
@@ -274,10 +272,10 @@ public class PrometheusElectricityTest {
 
     private static String expectedAggregation(Aggregation aggregation) {
         return PrometheusHttpClient.encode(switch (aggregation) {
-        case MINIMUM -> "min_over_time";
-        case P25 -> "quantile_over_time(0.25,";
-        case MAXIMUM -> "max_over_time";
-        case P75 -> "quantile_over_time(0.75,";
+            case MINIMUM -> "min_over_time";
+            case P25 -> "quantile_over_time(0.25,";
+            case MAXIMUM -> "max_over_time";
+            case P75 -> "quantile_over_time(0.75,";
         });
     }
 
@@ -307,7 +305,7 @@ public class PrometheusElectricityTest {
                 """, value)));
     }
 
-    private void mockEmpty()  throws IOException, InterruptedException {
+    private void mockEmpty() throws IOException, InterruptedException {
         when(http.get(any())).thenReturn(response("""
                 {"status":"success","data":{"resultType":"vector","result":[]}}
                 """));

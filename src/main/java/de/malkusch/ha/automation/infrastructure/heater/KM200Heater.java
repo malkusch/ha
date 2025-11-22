@@ -1,31 +1,6 @@
 package de.malkusch.ha.automation.infrastructure.heater;
 
-import static de.malkusch.ha.automation.infrastructure.prometheus.Prometheus.AggregationQuery.Aggregation.DELTA;
-import static java.math.BigDecimal.ZERO;
-import static java.time.DayOfWeek.FRIDAY;
-import static java.time.DayOfWeek.MONDAY;
-import static java.time.DayOfWeek.SATURDAY;
-import static java.time.DayOfWeek.SUNDAY;
-import static java.time.DayOfWeek.THURSDAY;
-import static java.time.DayOfWeek.TUESDAY;
-import static java.time.DayOfWeek.WEDNESDAY;
-import static java.time.LocalTime.MIDNIGHT;
-import static java.util.Comparator.comparingInt;
-
-import java.io.IOException;
-import java.time.DayOfWeek;
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.List;
-import java.util.Map;
-
-import org.springframework.stereotype.Service;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import de.malkusch.ha.automation.infrastructure.prometheus.Prometheus;
 import de.malkusch.ha.automation.infrastructure.prometheus.Prometheus.SimpleQuery;
 import de.malkusch.ha.automation.model.Temperature;
@@ -36,6 +11,19 @@ import de.malkusch.km200.KM200Exception;
 import de.malkusch.km200.KM200Exception.NotFound;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import tools.jackson.databind.ObjectMapper;
+
+import java.io.IOException;
+import java.time.*;
+import java.util.List;
+import java.util.Map;
+
+import static de.malkusch.ha.automation.infrastructure.prometheus.Prometheus.AggregationQuery.Aggregation.DELTA;
+import static java.math.BigDecimal.ZERO;
+import static java.time.DayOfWeek.*;
+import static java.time.LocalTime.MIDNIGHT;
+import static java.util.Comparator.comparingInt;
 
 @Service
 @RequiredArgsConstructor
@@ -80,8 +68,8 @@ class KM200Heater implements Heater {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    static record SwitchProgram(List<SwitchPoint> switchPoints) {
-        private static record SwitchPoint(String dayOfWeek, String setpoint, int time) {
+    record SwitchProgram(List<SwitchPoint> switchPoints) {
+        private record SwitchPoint(String dayOfWeek, String setpoint, int time) {
 
             LocalTime localTime() {
                 return MIDNIGHT.plusMinutes(time);
@@ -118,7 +106,7 @@ class KM200Heater implements Heater {
     }
 
     @FunctionalInterface
-    private static interface Query<T> {
+    private interface Query<T> {
         T query() throws IOException, InterruptedException;
     }
 
@@ -131,7 +119,7 @@ class KM200Heater implements Heater {
     }
 
     @FunctionalInterface
-    private static interface Update {
+    private interface Update {
         void update() throws IOException, InterruptedException;
     }
 

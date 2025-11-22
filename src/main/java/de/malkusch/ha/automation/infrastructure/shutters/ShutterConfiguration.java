@@ -1,6 +1,5 @@
 package de.malkusch.ha.automation.infrastructure.shutters;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.RateLimiter;
 import de.malkusch.ha.automation.infrastructure.shutters.ShutterConfiguration.Properties.ShellyProperties.ShutterProperty.DirectSunLightRangeProperty;
 import de.malkusch.ha.automation.model.astronomy.Azimuth;
@@ -17,6 +16,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.Duration;
 import java.util.ArrayList;

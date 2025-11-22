@@ -1,24 +1,5 @@
 package de.malkusch.ha.automation.infrastructure.prometheus;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.matches;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.util.Map;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import de.malkusch.ha.automation.model.Percent;
 import de.malkusch.ha.automation.model.climate.CO2;
 import de.malkusch.ha.automation.model.climate.Dust;
@@ -27,6 +8,23 @@ import de.malkusch.ha.automation.model.climate.Humidity;
 import de.malkusch.ha.automation.model.room.RoomId;
 import de.malkusch.ha.shared.infrastructure.http.HttpClient;
 import de.malkusch.ha.shared.infrastructure.http.HttpResponse;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import tools.jackson.databind.ObjectMapper;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.matches;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class PrometheusClimateServiceTest {
@@ -50,7 +48,7 @@ public class PrometheusClimateServiceTest {
     }
 
     @ParameterizedTest
-    @CsvSource({ "any, 0, 0, anysensor_humidity", //
+    @CsvSource({"any, 0, 0, anysensor_humidity", //
             "any, , 0, anysensor_humidity", //
             "any, 1, 0.01, anysensor_humidity", //
             "any, 99, 0.99, anysensor_humidity", //
@@ -69,7 +67,7 @@ public class PrometheusClimateServiceTest {
     }
 
     @ParameterizedTest
-    @CsvSource({ "any, 0, 0, anysensor_pm25", //
+    @CsvSource({"any, 0, 0, anysensor_pm25", //
             "any, , 0, anysensor_pm25", //
             "any, 1, 1, anysensor_pm25", //
             "any, 1.0, 1, anysensor_pm25", //
@@ -89,7 +87,7 @@ public class PrometheusClimateServiceTest {
     }
 
     @ParameterizedTest
-    @CsvSource({ "0, 0, aussen_pm25", //
+    @CsvSource({"0, 0, aussen_pm25", //
             ", 0, aussen_pm25", //
             "1, 1, aussen_pm25", //
             "1.0, 1, aussen_pm25", //
@@ -107,7 +105,7 @@ public class PrometheusClimateServiceTest {
     }
 
     @ParameterizedTest
-    @CsvSource({ "any, 391, 391, quantile_over_time(0.95, anysensor_co2[5m])", //
+    @CsvSource({"any, 391, 391, quantile_over_time(0.95, anysensor_co2[5m])", //
             "any, 400, 400, quantile_over_time(0.95, anysensor_co2[5m])", //
             "another, 400, 400, quantile_over_time(0.95, anothersensor_co2[5m])", //
     })
@@ -140,7 +138,7 @@ public class PrometheusClimateServiceTest {
                 """, value)));
     }
 
-    private void mockEmpty()  throws IOException, InterruptedException {
+    private void mockEmpty() throws IOException, InterruptedException {
         when(http.get(any())).thenReturn(response("""
                 {"status":"success","data":{"resultType":"vector","result":[]}}
                 """));
