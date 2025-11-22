@@ -82,6 +82,13 @@
 			<groupId>io.theves</groupId>
 			<artifactId>denon4j</artifactId>
 			<version>0.8</version>
+            <exclusions>
+                <exclusion>
+                    <!-- Since Spring-Boot-4.0.0 -->
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-nop</artifactId>
+                </exclusion>
+            </exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
