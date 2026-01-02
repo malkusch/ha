@@ -1,6 +1,8 @@
 logging.level.de.malkusch.ha.shared.infrastructure.buderus: INFO
+server.tomcat.threads.max: 5
 scheduler:
    delay: PT60s
+   pool-size: 3
 dehumidifier:
    rules:
       buffer: 50
