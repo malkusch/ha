@@ -32,7 +32,7 @@
 		<dependency>
 			<groupId>de.malkusch.telegrambot</groupId>
 			<artifactId>telegrambot</artifactId>
-			<version>0.0.29</version>
+			<version>0.0.31</version>
 		</dependency>
 		<dependency>
 			<groupId>de.malkusch.km200</groupId>
