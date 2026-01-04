@@ -1,24 +1,24 @@
 package de.malkusch.ha.automation.infrastructure.rule;
 
-import static de.malkusch.ha.shared.infrastructure.DateUtil.formatDuration;
-import static de.malkusch.ha.shared.infrastructure.event.StaticEventPublisher.publishSafely;
-import static java.lang.System.exit;
-import static java.time.Duration.ZERO;
-import static java.util.UUID.randomUUID;
-import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
-import static java.util.concurrent.TimeUnit.SECONDS;
-
-import java.time.Duration;
-import java.util.concurrent.ScheduledExecutorService;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
 import de.malkusch.ha.automation.model.Rule;
+import de.malkusch.ha.shared.infrastructure.circuitbreaker.CircuitBreakerFactory;
+import de.malkusch.ha.shared.infrastructure.circuitbreaker.VoidCircuitBreaker;
 import de.malkusch.ha.shared.infrastructure.event.Event;
 import de.malkusch.ha.shared.infrastructure.scheduler.Schedulers;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.time.Duration;
+import java.util.concurrent.ScheduledExecutorService;
+
+import static de.malkusch.ha.shared.infrastructure.DateUtil.formatDuration;
+import static de.malkusch.ha.shared.infrastructure.event.StaticEventPublisher.publishSafely;
+import static java.time.Duration.ZERO;
+import static java.util.UUID.randomUUID;
+import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Service
 @Slf4j
@@ -27,15 +27,21 @@ public final class RuleScheduler implements AutoCloseable {
     private final ScheduledExecutorService scheduler = newSingleThreadScheduledExecutor(r -> {
         var thread = new Thread(r, "RuleScheduler");
         thread.setUncaughtExceptionHandler((t, e) -> {
-            log.error("Shutting down due to an error in RuleScheduler", e);
-            exit(-1);
+            log.error("Unhandled error in RuleScheduler", e);
         });
         thread.setDaemon(true);
         return thread;
     });
 
-    RuleScheduler(@Value("${scheduler.delay}") Duration delay) {
+    RuleScheduler(@Value("${scheduler.delay}") Duration delay, CircuitBreakerFactory circuitBreakerFactory) {
         this.delay = delay;
+        this.circuitBreakerFactory = circuitBreakerFactory;
+    }
+
+    private final CircuitBreakerFactory circuitBreakerFactory;
+
+    public void scheduleWithCircuitBreaker(Rule rule) {
+        schedule(new CircuitBreakerRule(rule, circuitBreakerFactory.buildSilentCircuitBreaker(rule.toString())));
     }
 
     private final Duration delay;

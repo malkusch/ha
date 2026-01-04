@@ -128,3 +128,7 @@ http:
 notification:
    telegram:
       timeout: PT10S
+circuit-breaker:
+  failure-threshold: 3
+  success-threshold: 2
+  delay: PT1H
