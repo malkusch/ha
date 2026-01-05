@@ -12,6 +12,11 @@ final class FailSafeCircuitBreakerFactory implements CircuitBreakerFactory {
 
     @Override
     public CircuitBreaker buildCircuitBreaker(String name) {
-        return new FailSafeCircuitBreaker(name, defaults, Throwable.class);
+        return buildCircuitBreaker(name, defaults);
+    }
+
+    @Override
+    public CircuitBreaker buildCircuitBreaker(String name, CircuitBreakerConfiguration configuration) {
+        return new FailSafeCircuitBreaker(name, configuration, Throwable.class);
     }
 }

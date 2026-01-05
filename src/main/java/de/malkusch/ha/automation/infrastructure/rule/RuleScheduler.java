@@ -1,6 +1,7 @@
 package de.malkusch.ha.automation.infrastructure.rule;
 
 import de.malkusch.ha.automation.model.Rule;
+import de.malkusch.ha.shared.infrastructure.circuitbreaker.CircuitBreakerConfiguration;
 import de.malkusch.ha.shared.infrastructure.circuitbreaker.CircuitBreakerFactory;
 import de.malkusch.ha.shared.infrastructure.circuitbreaker.VoidCircuitBreaker;
 import de.malkusch.ha.shared.infrastructure.event.Event;
@@ -8,6 +9,7 @@ import de.malkusch.ha.shared.infrastructure.scheduler.Schedulers;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -33,25 +35,27 @@ public final class RuleScheduler implements AutoCloseable {
         return thread;
     });
 
-    RuleScheduler(@Value("${scheduler.delay}") Duration delay, CircuitBreakerFactory circuitBreakerFactory) {
-        this.delay = delay;
+    @ConfigurationProperties("scheduler")
+    record Configuration(Duration delay, CircuitBreakerConfiguration circuitBreaker) {
+    }
+
+    RuleScheduler(Configuration configuration, CircuitBreakerFactory circuitBreakerFactory) {
+        this.delay = configuration.delay;
+        this.circuitBreakerConfiguration = configuration.circuitBreaker;
         this.circuitBreakerFactory = circuitBreakerFactory;
     }
 
-    private final CircuitBreakerFactory circuitBreakerFactory;
-
-    public void scheduleWithCircuitBreaker(Rule rule) {
-        schedule(new CircuitBreakerRule(rule, circuitBreakerFactory.buildSilentCircuitBreaker(rule.toString())));
-    }
-
     private final Duration delay;
+    private final CircuitBreakerConfiguration circuitBreakerConfiguration;
+    private final CircuitBreakerFactory circuitBreakerFactory;
     private Duration nextDelay = ZERO;
 
     public void schedule(Rule rule) {
         nextDelay = nextDelay.plus(delay);
         log.info("Scheduling {} in {}", rule, formatDuration(nextDelay));
         var rateInSeconds = rule.evaluationRate().toSeconds();
-        scheduler.scheduleAtFixedRate(() -> evaluate(rule), nextDelay.toSeconds(), rateInSeconds, SECONDS);
+        var withCircuitBreaker = new CircuitBreakerRule(rule, circuitBreakerFactory.buildSilentCircuitBreaker(rule.toString(), circuitBreakerConfiguration));
+        scheduler.scheduleAtFixedRate(() -> evaluate(withCircuitBreaker), nextDelay.toSeconds(), rateInSeconds, SECONDS);
     }
 
     @RequiredArgsConstructor

@@ -33,10 +33,10 @@ public final class ScheduleDehumidiferRulesApplicationService {
 
         var turnOn = new TurnOnDehumidifiersRule(dehumidifiers, electricity, buffer, properties.window,
                 properties.evaluationRate, climateService);
-        scheduler.scheduleWithCircuitBreaker(turnOn);
+        scheduler.schedule(turnOn);
 
         var turnOff = new TurnOffDehumidifiersRule(dehumidifiers, electricity, buffer, properties.window,
                 properties.evaluationRate, climateService);
-        scheduler.scheduleWithCircuitBreaker(turnOff);
+        scheduler.schedule(turnOff);
     }
 }

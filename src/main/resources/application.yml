@@ -3,6 +3,10 @@ server.tomcat.threads.max: 5
 scheduler:
    delay: PT60s
    pool-size: 3
+   circuit-breaker:
+     failure-threshold: 3
+     success-threshold: 2
+     delay: PT12H
 dehumidifier:
    rules:
       buffer: 50
