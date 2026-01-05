@@ -1,12 +1,11 @@
 package de.malkusch.ha.shared.infrastructure.scheduler;
 
-import static java.lang.System.exit;
-import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
-import static java.util.concurrent.TimeUnit.SECONDS;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.ScheduledExecutorService;
 
-import lombok.extern.slf4j.Slf4j;
+import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
 public final class Schedulers {
@@ -37,8 +36,7 @@ public final class Schedulers {
         return newSingleThreadScheduledExecutor(r -> {
             var thread = new Thread(r, name);
             thread.setUncaughtExceptionHandler((t, e) -> {
-                log.error("Shutting down due to an error in " + name, e);
-                exit(-1);
+                log.error("Unhandled exception in {}", name, e);
             });
             thread.setDaemon(true);
             return thread;
