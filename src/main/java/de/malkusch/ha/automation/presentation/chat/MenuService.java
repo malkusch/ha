@@ -7,6 +7,7 @@ import de.malkusch.telgrambot.TelegramApi;
 import de.malkusch.telgrambot.TelegramApi.Button;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
@@ -16,6 +17,7 @@ import static de.malkusch.ha.automation.model.shutters.ShutterId.TERRASSE;
 @Configuration
 @RequiredArgsConstructor
 @Profile("!test")
+@Slf4j
 class MenuService implements AutoCloseable {
 
     private final TelegramApi telegram;
@@ -36,10 +38,20 @@ class MenuService implements AutoCloseable {
 
     @Override
     public void close() throws Exception {
+        var menu = this.menu;
+        this.menu = null;
         if (menu == null) {
             return;
         }
-        telegram.unpin(menu);
-        telegram.delete(menu);
+        try {
+            telegram.unpin(menu);
+
+        } catch (Throwable e) {
+            log.warn("Failed unpinning {} - unpinning all", menu, e);
+            telegram.unpin();
+
+        } finally {
+            telegram.delete(menu);
+        }
     }
 }
