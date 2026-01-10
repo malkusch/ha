@@ -12,6 +12,6 @@ final class TelegramNotificationService implements NotificationService {
 
     @Override
     public void send(Notification notification) {
-        telegram.send(notification.toString());
+        telegram.sendSilently(notification.toString());
     }
 }

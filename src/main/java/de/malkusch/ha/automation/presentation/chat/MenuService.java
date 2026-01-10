@@ -25,7 +25,7 @@ class MenuService implements AutoCloseable {
 
     @PostConstruct
     public void pinMenu() {
-        menu = telegram.send("Menu", //
+        menu = telegram.sendSilently("Menu", //
                 openShutterButton("Öffne Küche", KUECHENTUER), //
                 openShutterButton("Öffne Terrasse", TERRASSE) //
         );
